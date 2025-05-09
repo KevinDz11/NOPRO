@@ -34,16 +34,21 @@ export default function Registro() {
               className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
-            <button
-              type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
-            >
-              Registro
-            </button>
+            <Link to="/registro/verificacion">
+              <button
+                type="submit"
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
+              >
+                Registro
+              </button>
+            </Link>
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Ya estás registrado?{" "}
-              <Link to="/login" className="text-blue-500 hover:underline font-medium">
+              <Link
+                to="/login"
+                className="text-blue-500 hover:underline font-medium"
+              >
                 Acceder
               </Link>
             </p>
