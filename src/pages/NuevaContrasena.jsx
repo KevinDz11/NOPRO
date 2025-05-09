@@ -1,6 +1,5 @@
 import logo from "../assets/logo.png";
-
-export default function Password() {
+export default function NuevaContrasena() {
   return (
     <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
       <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-4xl w-full">
@@ -30,7 +29,7 @@ export default function Password() {
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Ya estás registrado?{" "}
-              <a href="#" className="text-blue-500 hover:underline font-medium">
+              <a href="/login" className="text-blue-500 hover:underline font-medium">
                 Acceder
               </a>
             </p>

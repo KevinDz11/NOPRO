@@ -1,82 +1,106 @@
 import logo from "../assets/logo.PNG";
+import { Link } from "react-router-dom";
 
-const tools = [
-  {
-    title: "Unir PDF",
-    desc: "Une PDFs y ponlos en el orden que prefieras.",
-    icon: "📎",
-  },
-  {
-    title: "Dividir PDF",
-    desc: "Extrae una o varias páginas del PDF.",
-    icon: "✂️",
-  },
-  {
-    title: "Comprimir PDF",
-    desc: "Reduce el tamaño del archivo manteniendo calidad.",
-    icon: "📉",
-  },
-];
+// COMPONENTES INDIVIDUALES DENTRO DE Home.jsx
 
+function TarjetaLaptop() {
+  return (
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+      <div className="text-4xl mb-2">💻</div>
+      <h2 className="font-semibold text-lg">Laptop</h2>
+      <p className="text-sm text-gray-500">
+        Realizar el análisis de normas para una Laptop.
+      </p>
+      <Link to="/subir/laptop">
+        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          Realizar análisis
+        </button>
+      </Link>
+    </div>
+  );
+}
+
+function TarjetaSmartTV() {
+  return (
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+      <div className="text-4xl mb-2">📺</div>
+      <h2 className="font-semibold text-lg">Smart TV</h2>
+      <p className="text-sm text-gray-500">
+        Realizar el análisis de normas para una Smart TV.
+      </p>
+      <Link to="/subir/smarttv">
+        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          Realizar análisis
+        </button>
+      </Link>
+    </div>
+  );
+}
+
+function TarjetaLuminaria() {
+  return (
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+      <div className="text-4xl mb-2">💡</div>
+      <h2 className="font-semibold text-lg">Luminaria para Exterior</h2>
+      <p className="text-sm text-gray-500">
+        Realizar el análisis de normas para una Luminaria para exterior.
+      </p>
+      <Link to="/subir/luminaria">
+        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          Realizar análisis
+        </button>
+      </Link>
+    </div>
+  );
+}
+
+// COMPONENTE PRINCIPAL Home
 export default function Home() {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="flex items-center justify-between px-6 py-3 bg-white shadow">
+      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow">
         <div className="flex items-center space-x-2">
           <img src={logo} alt="NOPRO" className="h-8" />
           <span className="text-xl font-bold text-gray-800">NOPRO</span>
         </div>
 
-        <ul className="flex items-center space-x-6 font-medium text-sm text-gray-700">
+        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
           <li className="hover:text-blue-600 cursor-pointer">UNIR PDF</li>
           <li className="hover:text-blue-600 cursor-pointer">DIVIDIR PDF</li>
           <li className="hover:text-blue-600 cursor-pointer">COMPRIMIR PDF</li>
-          <li className="hover:text-blue-600 cursor-pointer">
-            CONVERTIR PDF ▼
-          </li>
-          <li className="hover:text-blue-600 cursor-pointer">
-            TODAS LAS HERRAMIENTAS ▼
-          </li>
+          <li className="hover:text-blue-600 cursor-pointer">CONVERTIR PDF ▼</li>
+          <li className="hover:text-blue-600 cursor-pointer">TODAS LAS HERRAMIENTAS ▼</li>
         </ul>
 
-        <div className="flex items-center space-x-4">
-          <button className="text-sm text-gray-700 hover:text-blue-600">
+        <div className="flex items-center space-x-4 mt-2 md:mt-0">
+          <Link to="/login" className="text-sm text-gray-700 hover:text-blue-600">
             Acceder
-          </button>
-          <button className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600">
+          </Link>
+          <Link to="/registro" className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600">
             Registro
-          </button>
+          </Link>
         </div>
       </nav>
 
       {/* HERRAMIENTAS */}
-      <main className="min-h-screen bg-gray-50 p-6">
+      <main className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
         <header className="text-center mb-10">
-          <h1 className="text-4xl font-bold">
-            Herramientas online para amantes de los PDF
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+            Aplicación web para identificar normas aplicables a productos
           </h1>
-          <p className="text-gray-600 mt-2">
-            Herramientas online y completamente gratuitas para unir PDF, separar
-            PDF, comprimir PDF, convertir documentos Office a PDF, PDF a JPG y
-            JPG a PDF. No se necesita instalación.
+          <p className="text-gray-600 mt-2 text-sm sm:text-base md:text-lg">
+            Esta herramienta online permite identificar las normas mexicanas
+            aplicables a productos: Smart TV, laptops y luminarias para exterior.
+            <br />
+            No se necesita instalación.
           </p>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {tools.map((tool, index) => (
-            <div
-              key={index}
-              className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow"
-            >
-              <div className="text-4xl mb-2">{tool.icon}</div>
-              <h2 className="font-semibold text-lg">{tool.title}</h2>
-              <p className="text-sm text-gray-500">{tool.desc}</p>
-              <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-                Ir a herramienta
-              </button>
-            </div>
-          ))}
+        <section className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-6xl mx-auto justify-items-center px-4">
+          <TarjetaLaptop />
+          <TarjetaSmartTV />
+          <TarjetaLuminaria />
         </section>
       </main>
     </>

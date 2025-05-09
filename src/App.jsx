@@ -1,4 +1,22 @@
-// src/App.jsx
-export default function App() {
-  return null; // o simplemente bórralo si no lo necesitas
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Registro from "./pages/Registro";
+import Login from "./pages/Login";
+import NuevaContrasena from "./pages/NuevaContrasena";
+import SubirArchivos from "./pages/SubirArchivos";  // Asegúrate de importar el componente
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/nuevaContrasena" element={<NuevaContrasena />} />
+        <Route path="/subir/:producto" element={<SubirArchivos />} />  {/* Ruta para subir PDFs */}
+      </Routes>
+    </BrowserRouter>
+  );
 }
+
+export default App;

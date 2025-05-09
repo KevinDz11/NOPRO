@@ -1,4 +1,5 @@
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   return (
@@ -26,12 +27,9 @@ export default function Login() {
               className="w-full mb-2 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
-            <a
-              href="#"
-              className="text-sm text-blue-500 hover:underline block mb-4"
-            >
+            <Link to="/nuevaContrasena" className="text-sm text-blue-500 hover:underline block mb-4">
               ¿Has olvidado tu contraseña?
-            </a>
+            </Link>
 
             <button
               type="submit"
@@ -42,9 +40,9 @@ export default function Login() {
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Aún no tienes cuenta?{" "}
-              <a href="#" className="text-blue-500 hover:underline font-medium">
+              <Link to="/registro" className="text-blue-500 hover:underline font-medium">
                 Crear una cuenta
-              </a>
+              </Link>
             </p>
           </form>
         </div>
@@ -53,12 +51,11 @@ export default function Login() {
         <div className="hidden md:flex w-1/2 bg-[#d2e8f9] items-center justify-center p-6">
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-700 mb-2">
-              Accede a tu espacio de trabajo
+              Accede a tu cuenta en NOPRO
             </h3>
             <p className="text-sm text-gray-600">
               Ingresa tu correo electrónico y contraseña para acceder a tu
-              cuenta NOPRO. Estás un paso más cerca de ser productivo con tus
-              productos y normas.
+              cuenta en NOPRO.
             </p>
           </div>
         </div>

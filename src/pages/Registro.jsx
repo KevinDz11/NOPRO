@@ -1,4 +1,5 @@
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 
 export default function Registro() {
   return (
@@ -42,9 +43,9 @@ export default function Registro() {
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Ya estás registrado?{" "}
-              <a href="#" className="text-blue-500 hover:underline font-medium">
+              <Link to="/login" className="text-blue-500 hover:underline font-medium">
                 Acceder
-              </a>
+              </Link>
             </p>
           </form>
         </div>
@@ -53,11 +54,11 @@ export default function Registro() {
         <div className="hidden md:flex w-1/2 bg-[#d2e8f9] items-center justify-center p-6">
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-700 mb-2">
-              Crea tu espacio de trabajo
+              Crea tu nueva cuenta
             </h3>
             <p className="text-sm text-gray-600">
               Crea tu nueva cuenta ingresa tu nombre, correo electrónico y
-              contraseña para acceder a tu cuenta NOPRO.
+              contraseña para acceder a tu nueva cuenta en NOPRO.
             </p>
           </div>
         </div>
