@@ -6,6 +6,7 @@ import NuevaContrasena from "./pages/NuevaContrasena";
 import SubirArchivos from "./pages/SubirArchivos";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import ContactoSoporte from "./pages/ContactoSoporte";
+import VerificarCuenta from "./pages/VerificarCuenta";
 
 function App() {
   return (
@@ -16,8 +17,9 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/nuevaContrasena" element={<NuevaContrasena />} />
         <Route path="/perfil" element={<PerfilUsuario />} />
+        <Route path="/subir/:producto" element={<SubirArchivos />} />
         <Route path="/soporte" element={<ContactoSoporte />} />
-        <Route path="/subir/:producto" element={<SubirArchivos />} /> 
+        <Route path="/registro/verificacion" element={<VerificarCuenta />} />
       </Routes>
     </BrowserRouter>
   );
