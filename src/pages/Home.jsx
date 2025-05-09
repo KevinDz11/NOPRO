@@ -11,7 +11,7 @@ function TarjetaLaptop() {
       <p className="text-sm text-gray-500">
         Realizar el análisis de normas para una Laptop.
       </p>
-      <Link to="/subir/laptop">
+      <Link to="/subir/Laptop">
         <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
@@ -28,7 +28,7 @@ function TarjetaSmartTV() {
       <p className="text-sm text-gray-500">
         Realizar el análisis de normas para una Smart TV.
       </p>
-      <Link to="/subir/smarttv">
+      <Link to="/subir/SmartTV">
         <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
@@ -45,7 +45,7 @@ function TarjetaLuminaria() {
       <p className="text-sm text-gray-500">
         Realizar el análisis de normas para una Luminaria para exterior.
       </p>
-      <Link to="/subir/luminaria">
+      <Link to="/subir/Luminaria">
         <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
