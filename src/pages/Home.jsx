@@ -119,13 +119,22 @@ export default function Home() {
           >
             AYUDA{" "}
           </li>
-          <Link to="/perfil" className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
+          <Link
+            to="/perfil"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
             PERFIL
           </Link>
-          <Link to="/soporte" className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
+          <Link
+            to="/soporte"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
             CONTACTAR SOPORTE
           </Link>
-          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">CERRAR SESIÓN</li>
+
+          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
+            CERRAR SESIÓN
+          </li>
         </ul>
 
         <div className="flex items-center space-x-4 mt-2 md:mt-0">
@@ -171,7 +180,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
     </>
   );
 }
