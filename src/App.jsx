@@ -3,7 +3,8 @@ import Home from "./pages/Home";
 import Registro from "./pages/Registro";
 import Login from "./pages/Login";
 import NuevaContrasena from "./pages/NuevaContrasena";
-import SubirArchivos from "./pages/SubirArchivos";  // Asegúrate de importar el componente
+import SubirArchivos from "./pages/SubirArchivos";
+import PerfilUsuario from "./pages/PerfilUsuario";
 
 function App() {
   return (
@@ -13,7 +14,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/nuevaContrasena" element={<NuevaContrasena />} />
-        <Route path="/subir/:producto" element={<SubirArchivos />} />  {/* Ruta para subir PDFs */}
+        <Route path="/perfil" element={<PerfilUsuario />} />
+        <Route path="/subir/:producto" element={<SubirArchivos />} /> 
       </Routes>
     </BrowserRouter>
   );

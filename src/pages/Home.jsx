@@ -66,11 +66,9 @@ export default function Home() {
         </div>
 
         <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
-          <li className="hover:text-blue-600 cursor-pointer">UNIR PDF</li>
-          <li className="hover:text-blue-600 cursor-pointer">DIVIDIR PDF</li>
-          <li className="hover:text-blue-600 cursor-pointer">COMPRIMIR PDF</li>
-          <li className="hover:text-blue-600 cursor-pointer">CONVERTIR PDF ▼</li>
-          <li className="hover:text-blue-600 cursor-pointer">TODAS LAS HERRAMIENTAS ▼</li>
+          <li className="hover:text-blue-600 cursor-pointer">AYUDA</li>
+          <Link to = "/perfil"className="hover:text-blue-600 cursor-pointer">PERFIL</Link>
+          <li className="hover:text-blue-600 cursor-pointer">CERRAR SESIÓN</li>
         </ul>
 
         <div className="flex items-center space-x-4 mt-2 md:mt-0">
