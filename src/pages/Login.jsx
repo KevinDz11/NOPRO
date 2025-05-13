@@ -27,20 +27,28 @@ export default function Login() {
               className="w-full mb-2 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
-            <Link to="/nuevaContrasena" className="text-sm text-blue-500 hover:underline block mb-4">
+            <Link
+              to="/nuevaContrasena"
+              className="text-sm text-blue-500 hover:underline block mb-4"
+            >
               ¿Has olvidado tu contraseña?
             </Link>
 
-            <button
-              type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
-            >
-              Acceder
-            </button>
+            <Link to="/registro/verificacion" className="w-full">
+              <button
+                type="submit"
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
+              >
+                Acceder
+              </button>
+            </Link>
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Aún no tienes cuenta?{" "}
-              <Link to="/registro" className="text-blue-500 hover:underline font-medium">
+              <Link
+                to="/registro"
+                className="text-blue-500 hover:underline font-medium"
+              >
                 Crear una cuenta
               </Link>
             </p>
