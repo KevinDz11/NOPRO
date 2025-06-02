@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import Joyride from "react-joyride"; // Importamos la librería Joyride
+import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
 // COMPONENTES INDIVIDUALES DENTRO DE Home.jsx
 function TarjetaLaptop() {
   return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
       <div className="text-4xl mb-2">💻</div>
       <h2 className="font-semibold text-lg">Laptop</h2>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 flex-grow">
         Realizar el análisis de normas para una Laptop.
       </p>
-      <Link to="/subir/Laptop">
-        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+      <Link to="/subir/Laptop" className="mt-3">
+        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
       </Link>
@@ -23,14 +23,14 @@ function TarjetaLaptop() {
 
 function TarjetaSmartTV() {
   return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
       <div className="text-4xl mb-2">📺</div>
       <h2 className="font-semibold text-lg">Smart TV</h2>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 flex-grow">
         Realizar el análisis de normas para una Smart TV.
       </p>
-      <Link to="/subir/SmartTV">
-        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+      <Link to="/subir/SmartTV" className="mt-3">
+        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
       </Link>
@@ -40,14 +40,14 @@ function TarjetaSmartTV() {
 
 function TarjetaLuminaria() {
   return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full sm:w-auto">
+    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
       <div className="text-4xl mb-2">💡</div>
       <h2 className="font-semibold text-lg">Luminaria para Exterior</h2>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 flex-grow">
         Realizar el análisis de normas para una Luminaria para exterior.
       </p>
-      <Link to="/subir/Luminaria">
-        <button className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+      <Link to="/subir/Luminaria" className="mt-3">
+        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Realizar análisis
         </button>
       </Link>
@@ -61,25 +61,25 @@ export default function Home() {
 
   const steps = [
     {
-      target: ".navbar", // Destino del primer paso (por ejemplo, barra de navegación)
+      target: ".navbar",
       content:
         "Este es el menú de navegación, donde puedes acceder a otras partes de la aplicación.",
     },
     {
-      target: ".tarjeta-laptop", // Destino de la tarjeta Laptop
+      target: ".tarjeta-laptop",
       content: "Aquí puedes realizar el análisis de normas para una Laptop.",
     },
     {
-      target: ".tarjeta-smarttv", // Destino de la tarjeta Smart TV
+      target: ".tarjeta-smarttv",
       content: "Aquí puedes realizar el análisis de normas para una Smart TV.",
     },
     {
-      target: ".tarjeta-luminaria", // Destino de la tarjeta Luminaria
+      target: ".tarjeta-luminaria",
       content:
         "Aquí puedes realizar el análisis de normas para una Luminaria para exterior.",
     },
     {
-      target: ".help-button", // Destino del botón de ayuda
+      target: ".help-button",
       content: "Haz clic aquí para abrir este tutorial.",
     },
   ];
@@ -117,7 +117,7 @@ export default function Home() {
             className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
             onClick={() => setTourOpen(true)}
           >
-            AYUDA{" "}
+            AYUDA
           </li>
           <Link
             to="/perfil"
@@ -168,14 +168,14 @@ export default function Home() {
           </p>
         </header>
 
-        <section className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-6xl mx-auto justify-items-center px-4">
-          <div className="tarjeta-laptop">
+        <section className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 max-w-6xl mx-auto justify-items-center px-4">
+          <div className="tarjeta-laptop w-full sm:w-64 h-64">
             <TarjetaLaptop />
           </div>
-          <div className="tarjeta-smarttv">
+          <div className="tarjeta-smarttv w-full sm:w-64 h-64">
             <TarjetaSmartTV />
           </div>
-          <div className="tarjeta-luminaria">
+          <div className="tarjeta-luminaria w-full sm:w-64 h-64">
             <TarjetaLuminaria />
           </div>
         </section>
