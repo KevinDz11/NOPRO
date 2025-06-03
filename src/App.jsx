@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import NuevaContrasena from "./pages/NuevaContrasena";
 import SubirArchivos from "./pages/SubirArchivos";
 import PerfilUsuario from "./pages/PerfilUsuario";
+import HistorialProductos from "./pages/Historial";
 import ContactoSoporte from "./pages/ContactoSoporte";
 import VerificarCuenta from "./pages/VerificarCuenta";
 
@@ -17,6 +18,7 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/nuevaContrasena" element={<NuevaContrasena />} />
         <Route path="/perfil" element={<PerfilUsuario />} />
+        <Route path="/historial" element={<HistorialProductos />} />
         <Route path="/subir/:producto" element={<SubirArchivos />} />
         <Route path="/soporte" element={<ContactoSoporte />} />
         <Route path="/registro/verificacion" element={<VerificarCuenta />} />

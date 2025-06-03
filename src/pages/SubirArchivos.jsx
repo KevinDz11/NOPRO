@@ -29,8 +29,7 @@ export default function SubirArchivos() {
     },
     {
       target: ".formulario-producto",
-      content:
-        "Aquí puedes verificar el producto y escribir la marca y modelo.",
+      content: "Aquí puedes escribir escribir la marca y modelo del producto.",
     },
     {
       target: ".tarjeta-archivos",
@@ -39,7 +38,7 @@ export default function SubirArchivos() {
     {
       target: ".AnalizarDocs",
       content:
-        "Una vez cargados los documentos, presiona el botón es para analizarlos.",
+        "Una vez cargados los documentos, presiona este botón para analizarlos.",
     },
   ];
 
@@ -117,9 +116,12 @@ export default function SubirArchivos() {
       {/* NAVBAR */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
-          <Link to="/" className="flex items-center space-x-2">
-            <img src={logo} alt="NOPRO" className="h-8" />
-            <span className="text-xl font-bold text-gray-800">NOPRO</span>
+          <img src={logo} alt="NOPRO" className="h-8" />
+          <Link
+            to="/"
+            className="text-xl font-bold text-gray-800 hover:underline"
+          >
+            NOPRO
           </Link>
         </div>
 
@@ -130,11 +132,18 @@ export default function SubirArchivos() {
           >
             AYUDA
           </li>
+
           <Link
             to="/perfil"
             className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
           >
             PERFIL
+          </Link>
+          <Link
+            to="/historial"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            HISTORIAL PRODUCTOS
           </Link>
           <Link
             to="/soporte"
@@ -146,6 +155,21 @@ export default function SubirArchivos() {
             CERRAR SESIÓN
           </li>
         </ul>
+
+        <div className="flex items-center space-x-4 mt-2 md:mt-0">
+          <Link
+            to="/login"
+            className="text-sm text-gray-700 hover:text-blue-600"
+          >
+            Acceder
+          </Link>
+          <Link
+            to="/registro"
+            className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
+          >
+            Registro
+          </Link>
+        </div>
       </nav>
 
       {/* Contenido Principal */}

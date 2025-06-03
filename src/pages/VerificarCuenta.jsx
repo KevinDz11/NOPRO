@@ -1,6 +1,10 @@
+import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 export default function VerificarCuenta() {
+  const location = useLocation();
+  const correo = location.state?.correo || "user@gmail.com"; // fallback si no se envía
+
   return (
     <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
       <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-xl w-full">
@@ -21,7 +25,7 @@ export default function VerificarCuenta() {
           </p>
 
           <p className="text-base font-medium text-gray-700 mb-4 text-center">
-            user@gmail.com
+            {correo}
           </p>
 
           <div className="flex gap-4 mb-6">

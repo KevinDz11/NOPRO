@@ -3,7 +3,7 @@ import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
-// COMPONENTES INDIVIDUALES DENTRO DE Home.jsx
+// COMPONENTES INDIVIDUALES
 function TarjetaLaptop() {
   return (
     <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
@@ -55,7 +55,7 @@ function TarjetaLuminaria() {
   );
 }
 
-// COMPONENTE PRINCIPAL Home
+// COMPONENTE PRINCIPAL
 export default function Home() {
   const [tourOpen, setTourOpen] = useState(false);
 
@@ -109,12 +109,14 @@ export default function Home() {
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
           <img src={logo} alt="NOPRO" className="h-8" />
-          <span className="text-xl font-bold text-gray-800">NOPRO</span>
+          <Link to="/" className="text-xl font-bold text-gray-800 hover:underline">
+            NOPRO
+          </Link>
         </div>
 
         <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
           <li
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300 help-button"
             onClick={() => setTourOpen(true)}
           >
             AYUDA
@@ -126,22 +128,24 @@ export default function Home() {
             PERFIL
           </Link>
           <Link
+            to="/historial"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            HISTORIAL PRODUCTOS
+          </Link>
+          <Link
             to="/soporte"
             className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
           >
             CONTACTAR SOPORTE
           </Link>
-
           <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
             CERRAR SESIÓN
           </li>
         </ul>
 
         <div className="flex items-center space-x-4 mt-2 md:mt-0">
-          <Link
-            to="/login"
-            className="text-sm text-gray-700 hover:text-blue-600"
-          >
+          <Link to="/login" className="text-sm text-gray-700 hover:text-blue-600">
             Acceder
           </Link>
           <Link
@@ -161,8 +165,7 @@ export default function Home() {
           </h1>
           <p className="text-gray-600 mt-2 text-sm sm:text-base md:text-lg">
             Esta herramienta online permite identificar las normas mexicanas
-            aplicables a productos: Smart TV, laptops y luminarias para
-            exterior.
+            aplicables a productos: Smart TV, laptops y luminarias para exterior.
             <br />
             No se necesita instalación.
           </p>
