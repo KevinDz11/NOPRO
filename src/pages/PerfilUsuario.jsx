@@ -3,34 +3,33 @@ import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
 const PerfilUsuario = () => {
-  const [nombre, setNombre] = useState("Juan Pérez");
-  const [correo, setCorreo] = useState("juan.perez@example.com");
+  const nombre = "Juan Pérez"; // Simulación de nombre de usuario
+  const correo = "juan.perez@example.com";
   const [nuevaContrasena, setNuevaContrasena] = useState("");
   const [repiteContrasena, setRepiteContrasena] = useState("");
   const [error, setError] = useState("");
 
   const handleCambiarContrasena = () => {
-  const longitudValida = nuevaContrasena.length >= 8;
-  const tieneMayuscula = /[A-Z]/.test(nuevaContrasena);
-  const tieneNumero = /\d/.test(nuevaContrasena);
-  const contrasenasIguales = nuevaContrasena === repiteContrasena;
+    const longitudValida = nuevaContrasena.length >= 8;
+    const tieneMayuscula = /[A-Z]/.test(nuevaContrasena);
+    const tieneNumero = /\d/.test(nuevaContrasena);
+    const contrasenasIguales = nuevaContrasena === repiteContrasena;
 
-  if (!longitudValida || !tieneMayuscula || !tieneNumero) {
-    setError(
-      "La contraseña debe tener al menos 8 caracteres, una letra mayúscula y un número."
-    );
-    return;
-  }
+    if (!longitudValida || !tieneMayuscula || !tieneNumero) {
+      setError(
+        "La contraseña debe tener al menos 8 caracteres, una letra mayúscula y un número."
+      );
+      return;
+    }
 
-  if (!contrasenasIguales) {
-    setError("Las contraseñas no coinciden.");
-    return;
-  }
+    if (!contrasenasIguales) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
 
-  setError("");
-  alert("Contraseña cambiada correctamente: " + nuevaContrasena);
-};
-
+    setError("");
+    alert("Contraseña cambiada correctamente: " + nuevaContrasena);
+  };
 
   const handleEliminarCuenta = () => {
     const confirmar = window.confirm(
@@ -44,53 +43,47 @@ const PerfilUsuario = () => {
   return (
     <>
       {/* NAVBAR DIRECTAMENTE INCLUIDA */}
-            <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
-              <div className="flex items-center space-x-2">
-              <img src={logo} alt="NOPRO" className="h-8" />
-              <Link to="/" className="text-xl font-bold text-gray-800 hover:underline">
-                  NOPRO
-              </Link>
-              </div>
-      
-              <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
-                <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-                  AYUDA
-                </li>
-                <Link
-                  to="/perfil"
-                  className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-                >
-                  PERFIL
-                </Link>
-                <Link
-                  to="/historial"
-                  className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-                >
-                  HISTORIAL PRODUCTOS
-                </Link>
-                <Link
-                  to="/soporte"
-                  className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-                >
-                  CONTACTAR SOPORTE
-                </Link>
-                <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-                  CERRAR SESIÓN
-                </li>
-              </ul>
-      
-              <div className="flex items-center space-x-4 mt-2 md:mt-0">
-                <Link to="/login" className="text-sm text-gray-700 hover:text-blue-600">
-                  Acceder
-                </Link>
-                <Link
-                  to="/registro"
-                  className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
-                >
-                  Registro
-                </Link>
-              </div>
-            </nav>
+      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
+        <div className="flex items-center space-x-2">
+          <img src={logo} alt="NOPRO" className="h-8" />
+          <Link
+            to="/"
+            className="text-xl font-bold text-gray-800 hover:underline"
+          >
+            NOPRO
+          </Link>
+        </div>
+
+        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
+          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
+            AYUDA
+          </li>
+          <Link
+            to="/perfil"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            PERFIL
+          </Link>
+          <Link
+            to="/historial"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            HISTORIAL PRODUCTOS
+          </Link>
+          <Link
+            to="/soporte"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            CONTACTAR SOPORTE
+          </Link>
+          <Link
+            to="/"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            CERRAR SESIÓN
+          </Link>
+        </ul>
+      </nav>
 
       {/* PERFIL */}
       <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md">
@@ -162,12 +155,17 @@ const PerfilUsuario = () => {
         </div>
 
         <div className="text-center">
-          <button
-            onClick={handleEliminarCuenta}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          <Link
+            to="/"
+            className="text-blue-600 hover:underline mb-4 inline-block"
           >
-            Eliminar cuenta
-          </button>
+            <button
+              onClick={handleEliminarCuenta}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Eliminar cuenta
+            </button>
+          </Link>
         </div>
       </div>
     </>

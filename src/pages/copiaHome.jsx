@@ -3,7 +3,8 @@ import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
-// COMPONENTES INDIVIDUALES
+const isAuthenticated = localStorage.getItem("auth") === "true";
+
 function TarjetaLaptop() {
   return (
     <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
@@ -13,7 +14,14 @@ function TarjetaLaptop() {
         Realizar el análisis de normas para una Laptop.
       </p>
       <Link to="/subir/Laptop" className="mt-3">
-        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+        <button
+          disabled={!isAuthenticated}
+          className={`w-full py-2 rounded ${
+            isAuthenticated
+              ? "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
           Realizar análisis
         </button>
       </Link>
@@ -30,7 +38,14 @@ function TarjetaSmartTV() {
         Realizar el análisis de normas para una Smart TV.
       </p>
       <Link to="/subir/SmartTV" className="mt-3">
-        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+        <button
+          disabled={!isAuthenticated}
+          className={`w-full py-2 rounded ${
+            isAuthenticated
+              ? "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
           Realizar análisis
         </button>
       </Link>
@@ -47,7 +62,14 @@ function TarjetaLuminaria() {
         Realizar el análisis de normas para una Luminaria para exterior.
       </p>
       <Link to="/subir/Luminaria" className="mt-3">
-        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+        <button
+          disabled={!isAuthenticated}
+          className={`w-full py-2 rounded ${
+            isAuthenticated
+              ? "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
           Realizar análisis
         </button>
       </Link>
@@ -55,7 +77,6 @@ function TarjetaLuminaria() {
   );
 }
 
-// COMPONENTE PRINCIPAL
 export default function Home() {
   const [tourOpen, setTourOpen] = useState(false);
 
@@ -63,41 +84,39 @@ export default function Home() {
     {
       target: ".navbar",
       content:
-        "Este es el menú de navegación, donde puedes acceder a otras partes de la aplicación.",
+        "Este es el menú de navegación. Para comenzar, primero debes registrarte y luego acceder a tu cuenta.",
+    },
+    {
+      target: ".help-button",
+      content:
+        "Haz clic aquí en cualquier momento para ver esta ayuda nuevamente.",
     },
     {
       target: ".tarjeta-laptop",
-      content: "Aquí puedes realizar el análisis de normas para una Laptop.",
+      content:
+        "Aquí puedes realizar el análisis de normas para una Laptop. Este botón se habilita después de registrarte y acceder.",
     },
     {
       target: ".tarjeta-smarttv",
-      content: "Aquí puedes realizar el análisis de normas para una Smart TV.",
+      content:
+        "Aquí puedes realizar el análisis de normas para una Smart TV. Primero debes tener sesión iniciada.",
     },
     {
       target: ".tarjeta-luminaria",
       content:
-        "Aquí puedes realizar el análisis de normas para una Luminaria para exterior.",
-    },
-    {
-      target: ".help-button",
-      content: "Haz clic aquí para abrir este tutorial.",
+        "Aquí puedes realizar el análisis de normas para una Luminaria para exterior. Regístrate y accede para poder usarlo.",
     },
   ];
 
   return (
     <>
-      {/* Tour de ayuda */}
       <Joyride
         steps={steps}
         run={tourOpen}
         continuous={true}
         scrollToFirstStep={true}
         showSkipButton={true}
-        styles={{
-          options: {
-            zIndex: 10000,
-          },
-        }}
+        styles={{ options: { zIndex: 10000 } }}
         callback={(data) => {
           if (data.status === "finished" || data.status === "skipped") {
             setTourOpen(false);
@@ -124,34 +143,59 @@ export default function Home() {
           >
             AYUDA
           </li>
-          <Link
-            to="/perfil"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            PERFIL
-          </Link>
-          <Link
-            to="/historial"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            HISTORIAL PRODUCTOS
-          </Link>
-          <Link
-            to="/soporte"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CONTACTAR SOPORTE
-          </Link>
-          <Link
-            to="/"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CERRAR SESIÓN
-          </Link>
+
+          {isAuthenticated && (
+            <>
+              <Link
+                to="/perfil"
+                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                PERFIL
+              </Link>
+              <Link
+                to="/historial"
+                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                HISTORIAL PRODUCTOS
+              </Link>
+              <Link
+                to="/soporte"
+                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                CONTACTAR SOPORTE
+              </Link>
+              <li
+                onClick={() => {
+                  localStorage.removeItem("auth");
+                  window.location.reload();
+                }}
+                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                CERRAR SESIÓN
+              </li>
+            </>
+          )}
         </ul>
+
+        {!isAuthenticated && (
+          <div className="flex items-center space-x-4 mt-2 md:mt-0">
+            <Link
+              to="/login"
+              className="text-sm text-gray-700 hover:text-blue-600"
+            >
+              Acceder
+            </Link>
+            <Link
+              to="/registro"
+              className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
+            >
+              Registro
+            </Link>
+          </div>
+        )}
       </nav>
 
-      {/* HERRAMIENTAS */}
+      {/* CONTENIDO */}
       <main className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
         <header className="text-center mb-10">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">

@@ -1,7 +1,33 @@
+import { useState } from "react";
 import logo from "../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mensaje, setMensaje] = useState("");
+
+  const navigate = useNavigate();
+
+  const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
+  const esFormularioValido = () =>
+    esCorreoValido(email) && password.length >= 8;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!esFormularioValido()) {
+      setMensaje(
+        "Introduce un correo válido y una contraseña de al menos 8 caracteres."
+      );
+      return;
+    }
+
+    // Simula autenticación
+    localStorage.setItem("auth", "true");
+    navigate("/Home");
+  };
+
   return (
     <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
       <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-4xl w-full">
@@ -15,15 +41,19 @@ export default function Login() {
             Acceder a mi cuenta
           </h3>
 
-          <form>
+          <form onSubmit={handleSubmit}>
             <input
               type="email"
               placeholder="Introduce tu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
               type="password"
               placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full mb-2 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
@@ -34,14 +64,23 @@ export default function Login() {
               ¿Has olvidado tu contraseña?
             </Link>
 
-            <Link to="/registro/verificacion" className="w-full">
-              <button
-                type="submit"
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
-              >
-                Acceder
-              </button>
-            </Link>
+            <button
+              type="submit"
+              disabled={!esFormularioValido()}
+              className={`w-full font-semibold py-2 rounded ${
+                esFormularioValido()
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Acceder
+            </button>
+
+            {mensaje && (
+              <p className="text-sm text-center mt-3 text-red-600 font-medium">
+                {mensaje}
+              </p>
+            )}
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Aún no tienes cuenta?{" "}

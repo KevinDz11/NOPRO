@@ -8,12 +8,13 @@ import PerfilUsuario from "./pages/PerfilUsuario";
 import HistorialProductos from "./pages/Historial";
 import ContactoSoporte from "./pages/ContactoSoporte";
 import VerificarCuenta from "./pages/VerificarCuenta";
+import CopiaHome from "./pages/copiaHome"; // Importa el componente copiaHome si es necesario
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/Home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/nuevaContrasena" element={<NuevaContrasena />} />
@@ -22,6 +23,7 @@ function App() {
         <Route path="/subir/:producto" element={<SubirArchivos />} />
         <Route path="/soporte" element={<ContactoSoporte />} />
         <Route path="/registro/verificacion" element={<VerificarCuenta />} />
+        <Route path="/" element={<CopiaHome />} />
       </Routes>
     </BrowserRouter>
   );

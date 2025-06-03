@@ -29,7 +29,7 @@ export default function SubirArchivos() {
     },
     {
       target: ".formulario-producto",
-      content: "Aquí puedes escribir escribir la marca y modelo del producto.",
+      content: "Aquí puedes escribir la marca y modelo del producto.",
     },
     {
       target: ".tarjeta-archivos",
@@ -87,7 +87,11 @@ export default function SubirArchivos() {
   };
 
   const analizar = () => {
-    alert("Análisis iniciado");
+    if (!manual || !etiquetado || !ficha) {
+      alert("Debes subir los 3 archivos en formato PDF para poder analizar.");
+      return;
+    }
+    alert("Análisis iniciado correctamente.");
   };
 
   const tarjetas = [
@@ -98,7 +102,6 @@ export default function SubirArchivos() {
 
   return (
     <>
-      {/* Tour de Ayuda */}
       <Joyride
         steps={steps}
         run={tourOpen}
@@ -113,7 +116,6 @@ export default function SubirArchivos() {
         }}
       />
 
-      {/* NAVBAR */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
           <img src={logo} alt="NOPRO" className="h-8" />
@@ -151,28 +153,14 @@ export default function SubirArchivos() {
           >
             CONTACTAR SOPORTE
           </Link>
-          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-            CERRAR SESIÓN
-          </li>
+          <Link to="/">
+            <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
+              CERRAR SESIÓN
+            </li>
+          </Link>
         </ul>
-
-        <div className="flex items-center space-x-4 mt-2 md:mt-0">
-          <Link
-            to="/login"
-            className="text-sm text-gray-700 hover:text-blue-600"
-          >
-            Acceder
-          </Link>
-          <Link
-            to="/registro"
-            className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
-          >
-            Registro
-          </Link>
-        </div>
       </nav>
 
-      {/* Contenido Principal */}
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Subir archivos para{" "}
@@ -181,7 +169,6 @@ export default function SubirArchivos() {
           </span>
         </h2>
 
-        {/* Formulario producto */}
         <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-10 formulario-producto">
           <p className="text-center text-gray-700 mb-4 font-medium">
             Esta información se verá reflejada en tu historial. Lo que se
@@ -222,7 +209,6 @@ export default function SubirArchivos() {
           </div>
         </div>
 
-        {/* Tarjetas de archivos */}
         <div className="grid md:grid-cols-3 gap-6 tarjeta-archivos">
           {tarjetas.map(({ titulo, tipo, archivo }) => (
             <div
@@ -233,7 +219,6 @@ export default function SubirArchivos() {
                   : "border-black border-dashed"
               }`}
             >
-              {/* Efecto "vaso de agua" */}
               <div
                 className="absolute bottom-0 left-0 w-full bg-blue-300 transition-all duration-500 opacity-30"
                 style={{ height: `${progreso[tipo]}%`, zIndex: 0 }}
@@ -262,7 +247,7 @@ export default function SubirArchivos() {
                     <button
                       type="button"
                       onClick={() => quitarArchivo(tipo)}
-                      className="bg-red-500 text-white px-4 py-2 rounded cursor-pointer block text-center w-full mb-2 hover:bg-red-600"
+                      className="bg-red-500 text-white px-4 py-2 rounded block text-center w-full mb-2 hover:bg-red-600"
                     >
                       Quitar archivo
                     </button>

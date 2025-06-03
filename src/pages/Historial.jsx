@@ -33,10 +33,13 @@ export default function HistorialProductos() {
       {/* NAVBAR DIRECTAMENTE INCLUIDA */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
-        <img src={logo} alt="NOPRO" className="h-8" />
-        <Link to="/" className="text-xl font-bold text-gray-800 hover:underline">
+          <img src={logo} alt="NOPRO" className="h-8" />
+          <Link
+            to="/"
+            className="text-xl font-bold text-gray-800 hover:underline"
+          >
             NOPRO
-        </Link>
+          </Link>
         </div>
 
         <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
@@ -61,22 +64,14 @@ export default function HistorialProductos() {
           >
             CONTACTAR SOPORTE
           </Link>
-          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-            CERRAR SESIÓN
-          </li>
-        </ul>
 
-        <div className="flex items-center space-x-4 mt-2 md:mt-0">
-          <Link to="/login" className="text-sm text-gray-700 hover:text-blue-600">
-            Acceder
-          </Link>
           <Link
-            to="/registro"
-            className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
+            to="/"
+            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
           >
-            Registro
+            CERRAR SESIÓN
           </Link>
-        </div>
+        </ul>
       </nav>
 
       {/* CONTENIDO DEL HISTORIAL */}
@@ -91,7 +86,9 @@ export default function HistorialProductos() {
                 <th className="border px-4 py-2 text-left">Tipo de producto</th>
                 <th className="border px-4 py-2 text-left">Marca</th>
                 <th className="border px-4 py-2 text-left">Modelo</th>
-                <th className="border px-4 py-2 text-left">Fecha de registro</th>
+                <th className="border px-4 py-2 text-left">
+                  Fecha de registro
+                </th>
               </tr>
             </thead>
             <tbody>
