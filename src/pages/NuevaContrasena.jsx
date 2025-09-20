@@ -1,5 +1,21 @@
+import { useState } from "react";
 import logo from "../assets/logo.png";
+
 export default function NuevaContrasena() {
+  const [email, setEmail] = useState("");
+  const [mensaje, setMensaje] = useState("");
+
+  const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (esCorreoValido(email)) {
+      setMensaje("Revisa tu correo electrónico para continuar.");
+    } else {
+      setMensaje("Por favor, introduce un correo válido.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
       <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-4xl w-full">
@@ -13,23 +29,39 @@ export default function NuevaContrasena() {
             Reestablece tu contraseña
           </h3>
 
-          <form>
+          <form onSubmit={handleSubmit}>
             <input
               type="email"
               placeholder="Introduce tu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
             <button
               type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded"
+              disabled={!esCorreoValido(email)}
+              className={`w-full font-semibold py-2 rounded ${
+                esCorreoValido(email)
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Enviar
             </button>
 
+            {mensaje && (
+              <p className="text-sm text-center mt-4 text-blue-600 font-medium">
+                {mensaje}
+              </p>
+            )}
+
             <p className="text-sm text-gray-600 mt-4 text-center">
               ¿Ya estás registrado?{" "}
-              <a href="/login" className="text-blue-500 hover:underline font-medium">
+              <a
+                href="/login"
+                className="text-blue-500 hover:underline font-medium"
+              >
                 Acceder
               </a>
             </p>
