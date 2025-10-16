@@ -9,6 +9,7 @@ import HistorialProductos from "./pages/Historial";
 import ContactoSoporte from "./pages/ContactoSoporte";
 import VerificarCuenta from "./pages/VerificarCuenta";
 import CopiaHome from "./pages/copiaHome"; // Importa el componente copiaHome si es necesario
+import ListaClientes from "./pages/ListaClientes";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/soporte" element={<ContactoSoporte />} />
         <Route path="/registro/verificacion" element={<VerificarCuenta />} />
         <Route path="/" element={<CopiaHome />} />
+        <Route path="/clientes" element={<ListaClientes />} />
       </Routes>
     </BrowserRouter>
   );
