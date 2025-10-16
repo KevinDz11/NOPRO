@@ -48,3 +48,11 @@ class DocumentoOut(BaseModel):
     archivo_url: str
     class Config:
         orm_mode = True
+
+
+# --- Schema para el Token ---
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+class TokenData(BaseModel):
+    email: Optional[str] = None

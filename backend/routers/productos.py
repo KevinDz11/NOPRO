@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-from backend import crud, schemas, database  # usa import absoluto
+from backend import crud, schemas, database
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
@@ -9,8 +9,16 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Endpoint para subir documentos
-@router.post("/", response_model=schemas.DocumentoOut)
+# --- NUEVO ENDPOINT PARA LISTAR PRODUCTOS ---
+# Este es el endpoint que tu React va a consumir.
+@router.get("/", response_model=list[schemas.ProductoOut])
+def listar_productos(db: Session = Depends(database.get_db)):
+    productos = crud.get_productos(db)
+    return productos
+
+# --- ENDPOINT ANTIGUO (AHORA PARA SUBIR DOCUMENTOS) ---
+# Cambié la ruta de "/" a "/documentos/" para evitar conflictos.
+@router.post("/documentos/", response_model=schemas.DocumentoOut)
 def subir_documento(
     id_cliente: int = Form(...),
     id_producto: int = Form(...),
@@ -36,7 +44,8 @@ def subir_documento(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al subir documento: {str(e)}")
 
-# Endpoint para listar documentos
-@router.get("/", response_model=list[schemas.DocumentoOut])
+# Puedes mantener este endpoint si también necesitas listar documentos por producto,
+# pero asegúrate de que la ruta sea única. Por ejemplo: "/documentos/".
+@router.get("/documentos/", response_model=list[schemas.DocumentoOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
