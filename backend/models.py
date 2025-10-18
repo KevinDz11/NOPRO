@@ -10,7 +10,7 @@ class Cliente(Base):
     email = Column(String(150), unique=True, nullable=False)
     contrasena = Column(String(255), nullable=False)
     fecha_creacion = Column(TIMESTAMP)
-    estado = Column(Boolean, default=True)
+    estado = Column(Boolean, default=False) #Cambie a false para que el cliente comience inactivo
 
     productos = relationship("Producto", back_populates="cliente")
     documentos = relationship("Documento", back_populates="cliente")
