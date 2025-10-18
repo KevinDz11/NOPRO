@@ -15,8 +15,9 @@ class ClienteOut(BaseModel):
     nombre: str
     email: str
     estado: bool
+    
     class Config:
-        orm_mode = True
+        from_attributes = True # <-- CORRECCIÓN
 
 # Producto
 class ProductoBase(BaseModel):
@@ -30,8 +31,9 @@ class ProductoOut(BaseModel):
     id_producto: int
     nombre: str
     descripcion: Optional[str]
+    
     class Config:
-        orm_mode = True
+        from_attributes = True # <-- CORRECCIÓN
 
 # Documento
 class DocumentoBase(BaseModel):
@@ -46,8 +48,9 @@ class DocumentoOut(BaseModel):
     id_documento: int
     nombre: str
     archivo_url: str
+    
     class Config:
-        orm_mode = True
+        from_attributes = True # <-- CORRECCIÓN
 
 
 # --- Schema para el Token ---

@@ -17,6 +17,15 @@ def crear_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(database
 def listar_clientes(db: Session = Depends(database.get_db)):
     return crud.get_clientes(db)
 
+# --- INICIO DE LA CORRECCIÓN ---
+# La ruta específica "/me" DEBE estar ANTES de la ruta general "/{cliente_id}"
+# para que FastAPI no confunda "me" con un ID de cliente.
+@router.get("/me", response_model=schemas.ClienteOut)
+def read_users_me(current_user: models.Cliente = Depends(auth.get_current_user)):
+    """Devuelve la información del usuario actualmente logueado."""
+    return current_user
+# --- FIN DE LA CORRECCIÓN ---
+
 @router.get("/{cliente_id}", response_model=schemas.ClienteOut)
 def obtener_cliente(cliente_id: int, db: Session = Depends(database.get_db)):
     cliente = crud.get_cliente(db, cliente_id)
@@ -50,11 +59,6 @@ def verificar_cuenta(request: VerificationRequest, db: Session = Depends(databas
     db.commit()
     
     return {"mensaje": "Cuenta verificada correctamente."}
-
-@router.get("/me", response_model=schemas.ClienteOut)
-def read_users_me(current_user: models.Cliente = Depends(auth.get_current_user)):
-    """Devuelve la información del usuario actualmente logueado."""
-    return current_user
 
 # --- Endpoint para Cambiar Contraseña del Usuario Logueado ---
 @router.put("/me/password", status_code=status.HTTP_200_OK)

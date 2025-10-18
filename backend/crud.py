@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from . import models, schemas, auth
+from . import models, schemas
+# 1. Quitamos 'auth' de las importaciones principales
+# from . import models, schemas, auth 
 
 # --- Clientes ---
 
@@ -17,6 +19,13 @@ def get_clientes(db: Session, skip: int = 0, limit: int = 100):
 
 def create_cliente(db: Session, cliente: schemas.ClienteCreate):
     """Crea un nuevo cliente con la contraseña encriptada."""
+    
+    # 2. Importamos 'auth' AQUÍ, dentro de la función.
+    # Esto rompe el ciclo de importación, porque 'auth'
+    # solo se importa cuando esta función es llamada,
+    # no cuando el servidor arranca.
+    from . import auth 
+    
     hashed_password = auth.get_password_hash(cliente.contrasena)
     db_cliente = models.Cliente(
         email=cliente.email, 

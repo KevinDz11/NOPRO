@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.PNG"; // Ahora sí se usa el logo
+import logo from "../assets/logo.PNG";
 
 const PerfilUsuario = () => {
   // Estados para datos del usuario
@@ -37,6 +37,16 @@ const PerfilUsuario = () => {
           },
         });
 
+        // --- Manejo de Token Expirado (401) ---
+        if (response.status === 401) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("auth");
+          alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+          navigate("/login"); // Redirige al login
+          return;
+        }
+
+        // --- Manejo de otros errores (como el 500 que probablemente tienes) ---
         if (!response.ok) {
           throw new Error("No se pudo obtener la información del usuario.");
         }
@@ -163,9 +173,7 @@ const PerfilUsuario = () => {
       {/* NAVBAR */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
-          {/* ----- CORRECCIÓN AQUÍ ----- */}
           <img src={logo} alt="NOPRO" className="h-8" />
-          {/* --------------------------- */}
           <Link
             to="/" // O a /Home si prefieres
             className="text-xl font-bold text-gray-800 hover:underline"
@@ -173,7 +181,6 @@ const PerfilUsuario = () => {
             NOPRO
           </Link>
         </div>
-        {/* Aquí deberías tener la lógica para mostrar los links correctos si el usuario está logueado */}
         <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
           <Link
             to="/Home"
@@ -193,7 +200,6 @@ const PerfilUsuario = () => {
           >
             CONTACTAR SOPORTE
           </Link>
-          {/* Lógica para cerrar sesión */}
           <li
             onClick={() => {
               localStorage.removeItem("authToken");
