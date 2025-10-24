@@ -1,22 +1,32 @@
 import React, { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom"; // Importa useNavigate
 import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 
 export default function SubirArchivos() {
-  const { producto } = useParams();
+  const { producto } = useParams(); // "Laptop", "SmartTV", etc.
+  const navigate = useNavigate(); // Hook para navegar
+
+  // Estados del formulario y archivos
   const [tourOpen, setTourOpen] = useState(false);
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
   const [manual, setManual] = useState(null);
   const [etiquetado, setEtiquetado] = useState(null);
   const [ficha, setFicha] = useState(null);
+
+  // Estados de UI y lógica
   const [progreso, setProgreso] = useState({
     manual: 0,
     etiquetado: 0,
     ficha: 0,
   });
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [analisisCompleto, setAnalisisCompleto] = useState(false); // Nuevo estado
+  const [productoGuardado, setProductoGuardado] = useState(null); // Nuevo estado
 
+  // --- PASOS DEL TOUR ---
   const steps = [
     {
       target: ".navbar",
@@ -42,6 +52,15 @@ export default function SubirArchivos() {
     },
   ];
 
+  // --- VALIDACIÓN DE FORMULARIO ---
+  const esFormularioValido =
+    marca.trim() !== "" &&
+    modelo.trim() !== "" &&
+    manual !== null &&
+    etiquetado !== null &&
+    ficha !== null;
+
+  // --- OBTENER ICONO ---
   const obtenerIcono = (nombre) => {
     const iconos = {
       laptop: "💻",
@@ -51,6 +70,7 @@ export default function SubirArchivos() {
     return iconos[nombre.toLowerCase()] || "📁";
   };
 
+  // --- LÓGICA DE CARGA DE ARCHIVOS ---
   const iniciarCarga = (e, tipo) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -86,12 +106,123 @@ export default function SubirArchivos() {
     setProgreso((prev) => ({ ...prev, [tipo]: 0 }));
   };
 
-  const analizar = () => {
-    if (!manual || !etiquetado || !ficha) {
-      alert("Debes subir los 3 archivos en formato PDF para poder analizar.");
+  // --- FUNCIÓN DE ANÁLISIS (MODIFICADA) ---
+  const analizar = async () => {
+    if (!esFormularioValido) {
+      setError(
+        "Debes completar la marca, modelo y subir los 3 archivos en formato PDF."
+      );
       return;
     }
-    alert("Análisis iniciado correctamente.");
+
+    setError("");
+    setCargando(true);
+    setAnalisisCompleto(false); // Resetea en caso de re-análisis
+    setProductoGuardado(null);
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // 1. Crear el producto en la base de datos
+      const responseProducto = await fetch("http://localhost:8000/productos/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nombre: producto, // "Laptop", "SmartTV"...
+          marca: marca,
+          descripcion: modelo, // Usamos 'descripcion' para 'modelo'
+        }),
+      });
+
+      if (!responseProducto.ok) {
+        const errorData = await responseProducto.json();
+        throw new Error(errorData.detail || "Error al guardar el producto.");
+      }
+
+      const productoCreado = await responseProducto.json();
+      setProductoGuardado(productoCreado); // Guardamos datos del producto
+
+      // 2. Simular el análisis de documentos (aquí iría la subida de archivos real)
+      console.log("Producto guardado:", productoCreado);
+      console.log("Simulando análisis de archivos...");
+      // Simula una demora por el análisis
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // 3. Marcar como completo
+      alert("Análisis simulado iniciado correctamente.");
+      setAnalisisCompleto(true); // Habilita el botón de resumen
+    } catch (err) {
+      console.error("Error en el proceso:", err);
+      setError(err.message || "Ocurrió un error inesperado.");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // --- NUEVA FUNCIÓN: VISUALIZAR RESUMEN (SIMULADO) ---
+  const handleVerResumen = () => {
+    if (!productoGuardado) return;
+
+    const pdfTemplate = `
+      <html>
+        <head>
+          <title>Resumen de Análisis - NOPRO</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            .header img { height: 40px; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { margin-top: 30px; }
+            .content h2 { font-size: 20px; border-bottom: 1px solid #ccc; }
+            .info { line-height: 1.6; }
+            .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #888; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="${logo}" alt="NOPRO Logo" />
+            <h1>NOPRO - Resumen de Análisis</h1>
+          </div>
+          
+          <div class="content">
+            <h2>Datos del Producto Analizado</h2>
+            <div class="info">
+              <strong>Empresa:</strong> NOPRO S.A. de C.V.<br/>
+              <strong>Producto:</strong> ${productoGuardado.nombre}<br/>
+              <strong>Marca:</strong> ${productoGuardado.marca}<br/>
+              <strong>Modelo:</strong> ${productoGuardado.descripcion}<br/>
+              <strong>Fecha de Registro:</strong> ${new Date(
+                productoGuardado.fecha_registro
+              ).toLocaleString("es-ES")}
+            </div>
+            
+            <h2 style="margin-top: 30px;">Resultados del Análisis (Simulación)</h2>
+            <p>Este es un documento simulado. Aquí se mostrarían los resultados detallados del análisis de normas (NOMs) aplicables al producto.</p>
+            <ul>
+              <li>Norma A: Cumple</li>
+              <li>Norma B: No Cumple</li>
+              <li>Norma C: N/A</li>
+            </ul>
+          </div>
+          
+          <div class="footer">
+            Documento generado por NOPRO &copy; ${new Date().getFullYear()}
+          </div>
+        </body>
+      </html>
+    `;
+
+    const newWindow = window.open("", "_blank");
+    newWindow.document.write(pdfTemplate);
+    newWindow.document.close();
   };
 
   const tarjetas = [
@@ -169,6 +300,7 @@ export default function SubirArchivos() {
           </span>
         </h2>
 
+        {/* --- Formulario de Marca/Modelo --- */}
         <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-10 formulario-producto">
           <p className="text-center text-gray-700 mb-4 font-medium">
             Esta información se verá reflejada en tu historial. Lo que se
@@ -193,7 +325,10 @@ export default function SubirArchivos() {
                 placeholder="Ingresa tu marca"
                 value={marca}
                 onChange={(e) => setMarca(e.target.value)}
-                className="w-full border rounded px-4 py-2"
+                className={`w-full border rounded px-4 py-2 ${
+                  marca.trim() === "" ? "border-red-400" : "border-gray-300"
+                }`} // Validación visual
+                disabled={cargando}
               />
             </div>
             <div>
@@ -203,12 +338,16 @@ export default function SubirArchivos() {
                 placeholder="Ingresa tu modelo"
                 value={modelo}
                 onChange={(e) => setModelo(e.target.value)}
-                className="w-full border rounded px-4 py-2"
+                className={`w-full border rounded px-4 py-2 ${
+                  modelo.trim() === "" ? "border-red-400" : "border-gray-300"
+                }`} // Validación visual
+                disabled={cargando}
               />
             </div>
           </div>
         </div>
 
+        {/* --- Tarjetas de Archivos --- */}
         <div className="grid md:grid-cols-3 gap-6 tarjeta-archivos">
           {tarjetas.map(({ titulo, tipo, archivo }) => (
             <div
@@ -234,10 +373,13 @@ export default function SubirArchivos() {
                   id={`archivo-${tipo}`}
                   className="hidden"
                   onChange={(e) => iniciarCarga(e, tipo)}
+                  disabled={cargando}
                 />
                 <label
                   htmlFor={`archivo-${tipo}`}
-                  className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer block text-center w-full mb-2"
+                  className={`bg-blue-500 text-white px-4 py-2 rounded cursor-pointer block text-center w-full mb-2 ${
+                    cargando ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   Seleccionar archivo
                 </label>
@@ -247,7 +389,8 @@ export default function SubirArchivos() {
                     <button
                       type="button"
                       onClick={() => quitarArchivo(tipo)}
-                      className="bg-red-500 text-white px-4 py-2 rounded block text-center w-full mb-2 hover:bg-red-600"
+                      className="bg-red-500 text-white px-4 py-2 rounded block text-center w-full mb-2 hover:bg-red-600 disabled:opacity-50"
+                      disabled={cargando}
                     >
                       Quitar archivo
                     </button>
@@ -276,13 +419,32 @@ export default function SubirArchivos() {
           ))}
         </div>
 
-        <div className="flex justify-center mt-8">
+        {/* --- Mensaje de Error --- */}
+        {error && (
+          <p className="text-center text-red-600 bg-red-100 p-3 rounded-lg max-w-4xl mx-auto mt-6">
+            {error}
+          </p>
+        )}
+
+        {/* --- Botones de Acción --- */}
+        <div className="flex justify-center items-center gap-4 mt-8">
           <button
-            className="bg-blue-600 text-white px-6 py-3 rounded shadow hover:bg-blue-700 transition AnalizarDocs"
+            className="bg-blue-600 text-white px-6 py-3 rounded shadow hover:bg-blue-700 transition AnalizarDocs disabled:bg-gray-400 disabled:cursor-not-allowed"
             onClick={analizar}
+            disabled={!esFormularioValido || cargando} // Validación aplicada
           >
-            Analizar documentos
+            {cargando ? "Analizando..." : "Analizar documentos"}
           </button>
+
+          {/* Botón de Resumen (Condicional) */}
+          {analisisCompleto && (
+            <button
+              className="bg-green-600 text-white px-6 py-3 rounded shadow hover:bg-green-700 transition"
+              onClick={handleVerResumen}
+            >
+              Visualizar resumen de los resultados
+            </button>
+          )}
         </div>
       </div>
     </>

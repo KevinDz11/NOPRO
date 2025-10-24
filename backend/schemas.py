@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 # Cliente
 class ClienteBase(BaseModel):
@@ -22,15 +23,18 @@ class ClienteOut(BaseModel):
 # Producto
 class ProductoBase(BaseModel):
     nombre: str
+    marca: Optional[str] = None
     descripcion: Optional[str] = None
 
 class ProductoCreate(ProductoBase):
-    id_cliente: int
+    pass
 
 class ProductoOut(BaseModel):
     id_producto: int
     nombre: str
+    marca: Optional[str]             
     descripcion: Optional[str]
+    fecha_registro: Optional[datetime] 
     
     class Config:
         from_attributes = True # <-- CORRECCIÓN
@@ -40,9 +44,10 @@ class DocumentoBase(BaseModel):
     nombre: str
     archivo_url: str
 
-class DocumentoCreate(DocumentoBase):
+class DocumentoCreate(BaseModel): # <-- CAMBIO MODIFICADO (quitamos herencia)
     id_cliente: int
     id_producto: int
+    nombre: str
 
 class DocumentoOut(BaseModel):
     id_documento: int
@@ -50,7 +55,7 @@ class DocumentoOut(BaseModel):
     archivo_url: str
     
     class Config:
-        from_attributes = True # <-- CORRECCIÓN
+        from_attributes = True
 
 
 # --- Schema para el Token ---
