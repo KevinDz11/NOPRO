@@ -10,13 +10,23 @@ export default function HistorialProductos() {
   // Estado para mostrar un mensaje de carga
   const [cargando, setCargando] = useState(true);
 
+  // NOTA: El historial debería ser por usuario.
+  // Por ahora, listamos todos, pero dejamos la base para el futuro.
+  // const token = localStorage.getItem("authToken"); // <-- Corregido para el 'linting'
+
   useEffect(() => {
     // Función asíncrona para obtener los datos del backend
     const fetchProductos = async () => {
+      // TODO: Futura implementación - /productos/me para obtener solo los del usuario
+      // const token = localStorage.getItem("authToken");
+      // const headers = { 'Authorization': `Bearer ${token}` };
+
       try {
         // Hacemos la petición GET al endpoint /productos/ de FastAPI
-        // Asegúrate de que tu backend esté corriendo en http://localhost:8000
-        const response = await fetch("http://localhost:8000/productos/");
+        const response = await fetch(
+          "http://localhost:8000/productos/"
+          // { headers } // <-- Añadir esto cuando el endpoint /me esté listo
+        );
 
         // Si la respuesta no es exitosa (ej. error 500, 404), lanzamos un error
         if (!response.ok) {
@@ -27,13 +37,19 @@ export default function HistorialProductos() {
 
         // Mapeamos los datos recibidos del backend a la estructura que necesita la tabla
         const productosMapeados = data.map((p) => ({
-          tipo: p.nombre, // El campo 'nombre' del producto es el 'tipo' en la tabla
-          marca: "N/A", // Tu modelo de producto no tiene 'marca', puedes añadirlo si lo necesitas
-          modelo: p.descripcion, // El campo 'descripcion' es el 'modelo'
-          fecha: new Date(p.fecha_registro).toLocaleDateString("es-ES"), // Formateamos la fecha a un formato local
+          tipo: p.nombre, // "Laptop", "SmartTV"
+          marca: p.marca || "N/A",
+          modelo: p.descripcion || "N/A",
+
+          // --- INICIO DE LA MODIFICACIÓN ---
+          // Cambiamos 'toLocaleDateString' por 'toLocaleString' para incluir la hora
+          fecha: p.fecha_registro
+            ? new Date(p.fecha_registro).toLocaleString("es-ES")
+            : "N/A",
+          // --- FIN DE LA MODIFICACIÓN ---
         }));
 
-        setProductos(productosMapeados); // Actualizamos el estado con los productos
+        setProductos(productosMapeados.reverse()); // Mostramos los más nuevos primero
       } catch (e) {
         console.error("Error al obtener los productos:", e);
         setError(
