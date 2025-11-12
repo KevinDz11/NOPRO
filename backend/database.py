@@ -1,17 +1,26 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-from urllib.parse import quote_plus
+# Cargar variables de entorno
+load_dotenv()
 
-password = quote_plus("080361")  # codifica caracteres especiales
-DATABASE_URL = f"postgresql+psycopg2://postgres:{password}@localhost:5432/bd_nopro"
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+
+# Esta URL ahora usa tus variables de entorno
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Dependencia para sesión
+# Dependencia para sesión (esta función es necesaria y estaba en tu database.py original)
 def get_db():
     db = SessionLocal()
     try:

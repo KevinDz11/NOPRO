@@ -12,7 +12,7 @@ class Cliente(Base):
     contrasena = Column(String(255), nullable=False)
     fecha_creacion = Column(TIMESTAMP, server_default=func.now())
     estado = Column(Boolean, default=False) #Cambie a false para que el cliente comience inactivo
-
+    verification_code = Column(String(10), nullable=True)
     productos = relationship("Producto", back_populates="cliente")
     documentos = relationship("Documento", back_populates="cliente")
 

@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI
 from .routers import clientes, productos, documentos, auth
 from .database import Base, engine
