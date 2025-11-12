@@ -1,9 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
-# 1. Quitamos 'auth' de las importaciones principales
-# from . import models, schemas, auth 
-
-# --- Clientes ---
+import random
 
 def get_cliente(db: Session, cliente_id: int):
     """Obtiene un cliente por su ID."""
@@ -18,19 +15,18 @@ def get_clientes(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Cliente).offset(skip).limit(limit).all()
 
 def create_cliente(db: Session, cliente: schemas.ClienteCreate):
-    """Crea un nuevo cliente con la contraseña encriptada."""
-    
-    # 2. Importamos 'auth' AQUÍ, dentro de la función.
-    # Esto rompe el ciclo de importación, porque 'auth'
-    # solo se importa cuando esta función es llamada,
-    # no cuando el servidor arranca.
+    """Crea un nuevo cliente con la contraseña encriptada y un código de verificación."""
+
     from . import auth 
     
     hashed_password = auth.get_password_hash(cliente.contrasena)
+    verification_code = str(random.randint(100000, 999999))
+    
     db_cliente = models.Cliente(
         email=cliente.email, 
         nombre=cliente.nombre, 
-        contrasena=hashed_password
+        contrasena=hashed_password,
+        verification_code=verification_code # <-- Guardar el código
     )
     db.add(db_cliente)
     db.commit()

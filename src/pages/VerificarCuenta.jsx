@@ -16,7 +16,7 @@ export default function VerificarCuenta() {
     setError("");
     if (!codigo || codigo.length < 6) {
       // Asumiendo código de 6 dígitos
-      setError("Por favor, introduce el código de verificación.");
+      setError("Por favor, introduce el código de verificación de 6 dígitos.");
       return;
     }
     if (!correo) {
@@ -55,6 +55,19 @@ export default function VerificarCuenta() {
     }
   };
 
+  // Función (simulada) para reenviar el correo
+  const handleReenviar = () => {
+    // NOTA: Esta función sigue siendo simulada.
+    // Implementarla requeriría un nuevo endpoint en el backend
+    // que busque al usuario por email y reenvíe el correo
+    // con el 'verification_code' existente.
+    alert(
+      "Simulación: Se ha reenviado el correo a: " +
+        correo +
+        "\n(Esta función aún es simulada)"
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
       <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-xl w-full">
@@ -67,8 +80,7 @@ export default function VerificarCuenta() {
             Verificar cuenta
           </h3>
           <p className="text-sm text-gray-600 mb-6">
-            Introduce el código de verificación que (simulamos) te hemos enviado
-            a:
+            Introduce el código de verificación que hemos enviado a:
           </p>
           <p className="text-base font-medium text-gray-700 mb-4 text-center">
             {correo || "No se especificó correo"}
@@ -78,13 +90,7 @@ export default function VerificarCuenta() {
           <div className="flex gap-4 mb-6">
             <button
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded"
-              onClick={() =>
-                alert(
-                  "Simulación: Correo reenviado a: " +
-                    correo +
-                    "\n(Recuerda que el código es 123456)"
-                )
-              }
+              onClick={handleReenviar}
               disabled={cargando}
             >
               Reenviar correo (Simulado)
@@ -94,7 +100,7 @@ export default function VerificarCuenta() {
           {/* Campo para código */}
           <input
             type="text"
-            placeholder="Código de verificación (es 123456)"
+            placeholder="Código de verificación"
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
             maxLength={6} // Ajusta si el código es diferente
