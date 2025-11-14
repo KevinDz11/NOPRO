@@ -23,15 +23,26 @@ def crear_producto(
     db: Session = Depends(database.get_db),
     current_user: models.Cliente = Depends(auth.get_current_user) # Requiere autenticación
 ):
-    """
-    Crea un nuevo registro de producto (Tipo, Marca, Modelo)
-    asociado al usuario autenticado.
-    """
     try:
-        # Pasamos el schema y el id_cliente (del token) al crud
         return crud.create_producto(db=db, producto=producto, cliente_id=current_user.id_cliente)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear el producto: {str(e)}")
+    
+# --- NUEVO ENDPOINT DE HISTORIAL POR USUARIO ---
+@router.get("/me", response_model=list[schemas.ProductoOut])
+def listar_productos_del_usuario(
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    productos = crud.get_productos_by_cliente(db, cliente_id=current_user.id_cliente)
+    return productos
+
+# --- ENDPOINT PARA LISTAR PRODUCTOS (Existente) ---
+# Este endpoint ahora solo debería ser para Administradores, pero por ahora lo dejamos como está.
+@router.get("/", response_model=list[schemas.ProductoOut])
+def listar_productos(db: Session = Depends(database.get_db)):
+    productos = crud.get_productos(db)
+    return productos
 
 
 # --- ENDPOINT ANTIGUO (AHORA PARA SUBIR DOCUMENTOS) ---

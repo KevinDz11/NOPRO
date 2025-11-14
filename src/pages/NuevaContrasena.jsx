@@ -1,18 +1,49 @@
 import { useState } from "react";
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 
 export default function NuevaContrasena() {
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (esCorreoValido(email)) {
-      setMensaje("Revisa tu correo electrónico para continuar.");
-    } else {
-      setMensaje("Por favor, introduce un correo válido.");
+    setMensaje("");
+    setError("");
+
+    if (!esCorreoValido(email)) {
+      setError("Por favor, introduce un correo válido.");
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const response = await fetch(
+        "http://localhost:8000/clientes/solicitar-reset-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Error al enviar la solicitud.");
+      }
+      setMensaje(data.mensaje + " Ya puedes cerrar esta ventana.");
+    } catch (err) {
+      console.error("Error solicitando reseteo:", err);
+      setError(err.message || "Ocurrió un error. Inténtalo de nuevo.");
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -36,34 +67,43 @@ export default function NuevaContrasena() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={cargando}
             />
 
             <button
               type="submit"
-              disabled={!esCorreoValido(email)}
+              disabled={!esCorreoValido(email) || cargando}
               className={`w-full font-semibold py-2 rounded ${
-                esCorreoValido(email)
+                esCorreoValido(email) && !cargando
                   ? "bg-red-500 hover:bg-red-600 text-white"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              Enviar
+              {cargando ? "Enviando..." : "Enviar"}
             </button>
 
+            {/* Mensaje de éxito */}
             {mensaje && (
-              <p className="text-sm text-center mt-4 text-blue-600 font-medium">
+              <p className="text-sm text-center mt-4 text-green-600 font-medium">
                 {mensaje}
               </p>
             )}
 
+            {/* Mensaje de error */}
+            {error && (
+              <p className="text-sm text-center mt-4 text-red-600 font-medium">
+                {error}
+              </p>
+            )}
+
             <p className="text-sm text-gray-600 mt-4 text-center">
-              ¿Ya estás registrado?{" "}
-              <a
-                href="/login"
+              ¿Ya estás registrado? {/* Usa Link en lugar de <a> */}
+              <Link
+                to="/login"
                 className="text-blue-500 hover:underline font-medium"
               >
                 Acceder
-              </a>
+              </Link>
             </p>
           </form>
         </div>

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 import random
+from datetime import datetime
 
 def get_cliente(db: Session, cliente_id: int):
     """Obtiene un cliente por su ID."""
@@ -41,11 +42,40 @@ def delete_cliente(db: Session, cliente_id: int):
         db.commit()
     return cliente
 
+def set_reset_token(db: Session, user: models.Cliente, token: str, expires: datetime):
+    """Guarda el token de reseteo y su expiración en la BD."""
+    user.reset_token = token
+    user.reset_token_expires = expires
+    db.commit()
+    db.refresh(user)
+    return user
+
+def get_user_by_reset_token(db: Session, token: str):
+    """Busca un usuario por su token de reseteo."""
+    return db.query(models.Cliente).filter(models.Cliente.reset_token == token).first()
+
+def update_password_and_clear_token(db: Session, user: models.Cliente, new_hashed_password: str):
+    """Actualiza la contraseña y limpia los campos de reseteo."""
+    user.contrasena = new_hashed_password
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    return user
+
+
 # --- Productos ---
 
 def get_productos(db: Session, skip: int = 0, limit: int = 100):
     """Obtiene una lista de todos los productos."""
     return db.query(models.Producto).offset(skip).limit(limit).all()
+
+def get_productos_by_cliente(db: Session, cliente_id: int, skip: int = 0, limit: int = 100):
+    """Obtiene una lista de productos para un cliente específico."""
+    return db.query(models.Producto)\
+             .filter(models.Producto.id_cliente == cliente_id)\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
 
 def create_producto(db: Session, producto: schemas.ProductoCreate, cliente_id: int):
     """Crea un nuevo producto asociado a un cliente."""

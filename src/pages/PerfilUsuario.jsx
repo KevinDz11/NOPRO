@@ -1,26 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
+import { useAuthListener } from "../useAuthListener"; // Importamos el hook
 
 const PerfilUsuario = () => {
+  useAuthListener(); // Usamos el hook
+
   // Estados para datos del usuario
   const [nombre, setNombre] = useState("Cargando...");
   const [correo, setCorreo] = useState("Cargando...");
 
-  // Estados para el cambio de contraseña
-  const [nuevaContrasena, setNuevaContrasena] = useState("");
-  const [repiteContrasena, setRepiteContrasena] = useState("");
-  const [mostrarNueva, setMostrarNueva] = useState(false);
-  const [mostrarRepite, setMostrarRepite] = useState(false);
-
-  // Estados para validación y UI
+  // Estados para UI
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   const navigate = useNavigate();
 
-  // --- OBTENER DATOS DEL USUARIO AL CARGAR ---
+  // OBTENER DATOS DEL USUARIO (Sin cambios)
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("authToken");
@@ -29,28 +27,20 @@ const PerfilUsuario = () => {
         navigate("/login");
         return;
       }
-
       try {
         const response = await fetch("http://localhost:8000/clientes/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        // --- Manejo de Token Expirado (401) ---
         if (response.status === 401) {
           localStorage.removeItem("authToken");
           localStorage.removeItem("auth");
           alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-          navigate("/login"); // Redirige al login
+          navigate("/login");
           return;
         }
-
-        // --- Manejo de otros errores (como el 500 que probablemente tienes) ---
         if (!response.ok) {
           throw new Error("No se pudo obtener la información del usuario.");
         }
-
         const data = await response.json();
         setNombre(data.nombre);
         setCorreo(data.email);
@@ -59,82 +49,14 @@ const PerfilUsuario = () => {
         setError(err.message || "Error al cargar datos.");
       }
     };
-
     fetchUserData();
   }, [navigate]);
 
-  // --- VALIDACIONES DE CONTRASEÑA ---
-  const longitudValida = nuevaContrasena.length >= 8;
-  const tieneMayuscula = /[A-Z]/.test(nuevaContrasena);
-  const tieneNumero = /\d/.test(nuevaContrasena);
-  const coinciden =
-    nuevaContrasena === repiteContrasena && repiteContrasena.length > 0;
-  const contrasenaValida =
-    longitudValida && tieneMayuscula && tieneNumero && coinciden;
-
-  // --- MANEJADOR PARA CAMBIAR CONTRASEÑA ---
-  const handleCambiarContrasena = async () => {
+  // Lógica de eliminación (Sin cambios)
+  const ejecutarEliminacion = async () => {
     setError("");
     setMensajeExito("");
-
-    if (!contrasenaValida) {
-      setError(
-        "La nueva contraseña no cumple con los requisitos o no coincide."
-      );
-      return;
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setError("Sesión expirada. Por favor, inicia sesión de nuevo.");
-      return;
-    }
-
-    setCargando(true);
-    try {
-      const response = await fetch(
-        "http://localhost:8000/clientes/me/password",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ nueva_contrasena: nuevaContrasena }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Error al cambiar la contraseña.");
-      }
-
-      alert("Contraseña cambiada con éxito. Debes iniciar sesión nuevamente.");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("auth");
-      navigate("/");
-    } catch (err) {
-      console.error("Error cambiando contraseña:", err);
-      setError(err.message || "Ocurrió un error inesperado.");
-    } finally {
-      setCargando(false);
-      setNuevaContrasena("");
-      setRepiteContrasena("");
-    }
-  };
-
-  // --- MANEJADOR PARA ELIMINAR CUENTA ---
-  const handleEliminarCuenta = async () => {
-    setError("");
-    setMensajeExito("");
-
-    const confirmar = window.confirm(
-      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer."
-    );
-
-    if (!confirmar) {
-      return;
-    }
+    setMostrarModal(false);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -146,9 +68,7 @@ const PerfilUsuario = () => {
     try {
       const response = await fetch("http://localhost:8000/clientes/me", {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -168,10 +88,15 @@ const PerfilUsuario = () => {
     }
   };
 
+  const handleEliminarCuenta = () => {
+    setMostrarModal(true);
+  };
+
   return (
     <>
-      {/* NAVBAR */}
+      {/* NAVBAR (Sin cambios) */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
+        {/* ... (Tu código de Navbar) ... */}
         <div className="flex items-center space-x-2">
           <img src={logo} alt="NOPRO" className="h-8" />
           <Link
@@ -213,7 +138,7 @@ const PerfilUsuario = () => {
         </ul>
       </nav>
 
-      {/* PERFIL */}
+      {/* PERFIL (Sin cambios en esta parte) */}
       <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md">
         <h2 className="text-2xl font-bold text-center mb-6">
           Perfil de Usuario
@@ -241,110 +166,38 @@ const PerfilUsuario = () => {
           />
         </div>
 
+        {/* Botón Cambiar Contraseña (Sin cambios) */}
         <hr className="my-6" />
-
-        {/* Cambio de contraseña */}
-        <h3 className="text-lg font-semibold mb-4">Cambiar contraseña</h3>
-        <div className="relative mb-2">
-          <label className="block text-gray-700 font-medium mb-1">
-            Nueva contraseña
-          </label>
-          <input
-            type={mostrarNueva ? "text" : "password"}
-            value={nuevaContrasena}
-            onChange={(e) => setNuevaContrasena(e.target.value)}
-            placeholder="Escribe una nueva contraseña"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            disabled={cargando}
-          />
-          <button
-            type="button"
-            onClick={() => setMostrarNueva(!mostrarNueva)}
-            className="absolute top-9 right-3 transform text-sm text-blue-500 hover:underline"
-          >
-            {mostrarNueva ? "Ocultar" : "Ver"}
-          </button>
-        </div>
-        <div className="relative mb-2">
-          <label className="block text-gray-700 font-medium mb-1">
-            Repite contraseña
-          </label>
-          <input
-            type={mostrarRepite ? "text" : "password"}
-            value={repiteContrasena}
-            onChange={(e) => setRepiteContrasena(e.target.value)}
-            placeholder="Confirma la nueva contraseña"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            disabled={cargando}
-          />
-          <button
-            type="button"
-            onClick={() => setMostrarRepite(!mostrarRepite)}
-            className="absolute top-9 right-3 transform text-sm text-blue-500 hover:underline"
-          >
-            {mostrarRepite ? "Ocultar" : "Ver"}
-          </button>
-        </div>
-
-        {/* Lista de condiciones */}
-        {(nuevaContrasena || repiteContrasena) && (
-          <ul className="text-sm mb-4 pl-5 space-y-1 mt-2">
-            <li
-              className={`${
-                longitudValida ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              • Al menos 8 caracteres
-            </li>
-            <li
-              className={`${
-                tieneMayuscula ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              • Contiene al menos una letra mayúscula
-            </li>
-            <li
-              className={`${tieneNumero ? "text-green-600" : "text-red-600"}`}
-            >
-              • Contiene al menos un número
-            </li>
-            <li className={`${coinciden ? "text-green-600" : "text-red-600"}`}>
-              • Las contraseñas coinciden
-            </li>
-          </ul>
-        )}
-
-        {/* Mensajes */}
-        {error && (
-          <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
-            {error}
-          </div>
-        )}
-        {mensajeExito && (
-          <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
-            {mensajeExito}
-          </div>
-        )}
-
-        {/* Botón Cambiar Contraseña */}
         <div className="mb-6">
-          <button
-            onClick={handleCambiarContrasena}
-            disabled={!contrasenaValida || cargando}
-            className={`font-semibold py-2 px-4 rounded ${
-              contrasenaValida && !cargando
-                ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
+          <h3 className="text-lg font-semibold mb-4">Cambiar contraseña</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Serás redirigido al proceso de recuperación de contraseña, donde te
+            enviaremos un enlace a tu correo.
+          </p>
+          <Link
+            to="/nuevaContrasena"
+            className="font-semibold py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white cursor-pointer no-underline"
           >
-            {cargando ? "Guardando..." : "Cambiar contraseña"}
-          </button>
+            Cambiar contraseña
+          </Link>
         </div>
-
         <hr className="my-6" />
 
         {/* Eliminar cuenta */}
         <div className="text-center">
+          {/* Mensajes */}
+          {error && (
+            <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
+              {error}
+            </div>
+          )}
+          {mensajeExito && (
+            <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
+              {mensajeExito}
+            </div>
+          )}
+
+          {/* Botón Eliminar Cuenta */}
           <button
             onClick={handleEliminarCuenta}
             disabled={cargando}
@@ -358,6 +211,39 @@ const PerfilUsuario = () => {
           </button>
         </div>
       </div>
+
+      {/* --- INICIO DE LA MODIFICACIÓN --- */}
+      {/* El Modal (Clases actualizadas) */}
+      {mostrarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-lg">
+          {/* --- FIN DE LA MODIFICACIÓN --- */}
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-bold text-center mb-4">
+              ¿Estás seguro?
+            </h3>
+            <p className="text-sm text-gray-700 text-center mb-6">
+              Esta acción eliminará permanentemente tu cuenta y todos tus datos.
+              No se puede deshacer.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setMostrarModal(false)} // Botón "No"
+                className="font-semibold py-2 px-6 rounded bg-gray-300 hover:bg-gray-400 text-gray-800"
+                disabled={cargando}
+              >
+                No
+              </button>
+              <button
+                onClick={ejecutarEliminacion} // Botón "Sí"
+                className="font-semibold py-2 px-6 rounded bg-red-600 hover:bg-red-700 text-white"
+                disabled={cargando}
+              >
+                {cargando ? "Eliminando..." : "Sí"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

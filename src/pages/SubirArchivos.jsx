@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom"; // Importa useNavigate
 import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
+import { useAuthListener } from "../useAuthListener";
 
 export default function SubirArchivos() {
+  useAuthListener();
   const { producto } = useParams(); // "Laptop", "SmartTV", etc.
   const navigate = useNavigate(); // Hook para navegar
 

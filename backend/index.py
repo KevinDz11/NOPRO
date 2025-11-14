@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 from fastapi import FastAPI
-from .routers import clientes, productos, documentos, auth
+from .routers import clientes, productos, documentos, auth, soporte
 from .database import Base, engine
 from . import models
 from backend.routers import clientes, productos, documentos
@@ -34,6 +34,7 @@ app.include_router(auth.router)
 app.include_router(clientes.router)
 app.include_router(productos.router)
 app.include_router(documentos.router)
+app.include_router(soporte.router)
 
 @app.get("/")
 def root():

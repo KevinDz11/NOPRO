@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png"; // Asegúrate que la ruta al logo sea correcta
+import logo from "../assets/logo.png";
 
 export default function VerificarCuenta() {
   const location = useLocation();
   const navigate = useNavigate();
-  const correo = location.state?.correo || ""; // Obtenemos el correo del state
+  const correo = location.state?.correo || "";
 
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
+  const [mensajeExito, setMensajeExito] = useState("");
+  const [cargandoReenvio, setCargandoReenvio] = useState(false);
+
   // --- FUNCIÓN PARA VERIFICAR ---
   const handleVerificar = async () => {
     setError("");
+    setMensajeExito(""); // Limpia el mensaje de reenvío
     if (!codigo || codigo.length < 6) {
-      // Asumiendo código de 6 dígitos
       setError("Por favor, introduce el código de verificación de 6 dígitos.");
       return;
     }
@@ -44,7 +47,6 @@ export default function VerificarCuenta() {
         throw new Error(errorData.detail || "Error al verificar la cuenta.");
       }
 
-      // Si la verificación fue exitosa, redirige al Login
       alert("¡Cuenta verificada con éxito! Ahora puedes iniciar sesión.");
       navigate("/login");
     } catch (err) {
@@ -55,17 +57,44 @@ export default function VerificarCuenta() {
     }
   };
 
-  // Función (simulada) para reenviar el correo
-  const handleReenviar = () => {
-    // NOTA: Esta función sigue siendo simulada.
-    // Implementarla requeriría un nuevo endpoint en el backend
-    // que busque al usuario por email y reenvíe el correo
-    // con el 'verification_code' existente.
-    alert(
-      "Simulación: Se ha reenviado el correo a: " +
-        correo +
-        "\n(Esta función aún es simulada)"
-    );
+  // Función para reenviar el correo
+  const handleReenviar = async () => {
+    setError("");
+    setMensajeExito("");
+
+    if (!correo) {
+      setError("No se encontró el correo electrónico para reenviar.");
+      return;
+    }
+
+    setCargandoReenvio(true);
+    try {
+      const response = await fetch(
+        "http://localhost:8000/clientes/reenviar-verificacion",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: correo }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Error al reenviar el correo.");
+      }
+
+      setMensajeExito(
+        data.mensaje || "Correo reenviado. Revisa tu bandeja de entrada."
+      );
+    } catch (err) {
+      console.error("Error en el reenvío:", err);
+      setError(err.message || "Ocurrió un error inesperado.");
+    } finally {
+      setCargandoReenvio(false);
+    }
   };
 
   return (
@@ -86,14 +115,18 @@ export default function VerificarCuenta() {
             {correo || "No se especificó correo"}
           </p>
 
-          {/* Botón para reenviar (simulado) */}
+          {/* Botón para reenviar (Ahora funcional) */}
           <div className="flex gap-4 mb-6">
             <button
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded"
+              className={`w-full font-medium py-2 rounded ${
+                cargando || cargandoReenvio
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+              }`}
               onClick={handleReenviar}
-              disabled={cargando}
+              disabled={cargando || cargandoReenvio || !correo}
             >
-              Reenviar correo (Simulado)
+              {cargandoReenvio ? "Reenviando..." : "Reenviar correo"}
             </button>
           </div>
 
@@ -103,9 +136,9 @@ export default function VerificarCuenta() {
             placeholder="Código de verificación"
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
-            maxLength={6} // Ajusta si el código es diferente
+            maxLength={6}
             className="w-full mb-6 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            disabled={cargando}
+            disabled={cargando || cargandoReenvio}
           />
 
           {/* Mensaje de error */}
@@ -115,12 +148,19 @@ export default function VerificarCuenta() {
             </div>
           )}
 
+          {/* Mensaje de éxito de reenvío */}
+          {mensajeExito && (
+            <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
+              {mensajeExito}
+            </div>
+          )}
+
           {/* Botón para confirmar */}
           <button
-            onClick={handleVerificar} // Llama a la nueva función
-            disabled={cargando || !codigo}
+            onClick={handleVerificar}
+            disabled={cargando || cargandoReenvio || !codigo}
             className={`w-full font-semibold py-2 rounded ${
-              !cargando && codigo
+              !cargando && !cargandoReenvio && codigo
                 ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}

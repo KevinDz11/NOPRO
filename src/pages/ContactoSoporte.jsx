@@ -1,14 +1,22 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
+import { useAuthListener } from "../useAuthListener"; // 1. Importar el hook
 
 export default function ContactoSoporte() {
+  useAuthListener(); // 2. Usar el hook (ya que esta es una ruta protegida)
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   });
+
+  // 3. Añadir estados para la UI
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [mensajeExito, setMensajeExito] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,16 +26,56 @@ export default function ContactoSoporte() {
     });
   };
 
-  const handleSubmit = (e) => {
+  // 4. Convertir handleSubmit a async y llamar al backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Datos del formulario enviados:", formData);
-    setFormData({ name: "", email: "", subject: "", message: "" });
-    alert("Mensaje enviado correctamente.");
+    setError("");
+    setMensajeExito("");
+
+    // Validación simple
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const response = await fetch("http://localhost:8000/soporte/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Nota: El endpoint de backend no requiere token,
+          // pero la página en sí está protegida por ProtectedRoute.
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Error al enviar el mensaje.");
+      }
+
+      // Éxito
+      setMensajeExito(data.mensaje || "Mensaje enviado correctamente.");
+      // Limpia el formulario solo si tuvo éxito
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (err) {
+      console.error("Error enviando soporte:", err);
+      setError(err.message || "Ocurrió un error inesperado.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
     <>
-      {/* NAVBAR DIRECTAMENTE INCLUIDA */}
+      {/* NAVBAR (Sin cambios) */}
       <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
         <div className="flex items-center space-x-2">
           <img src={logo} alt="NOPRO" className="h-8" />
@@ -38,7 +86,6 @@ export default function ContactoSoporte() {
             NOPRO
           </Link>
         </div>
-
         <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
           <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
             AYUDA
@@ -77,6 +124,7 @@ export default function ContactoSoporte() {
             Contacto Soporte
           </h2>
           <form onSubmit={handleSubmit}>
+            {/* Campo Nombre */}
             <div className="mb-4">
               <label
                 htmlFor="name"
@@ -92,9 +140,11 @@ export default function ContactoSoporte() {
                 onChange={handleChange}
                 required
                 className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={cargando}
               />
             </div>
 
+            {/* Campo Email */}
             <div className="mb-4">
               <label
                 htmlFor="email"
@@ -110,9 +160,11 @@ export default function ContactoSoporte() {
                 onChange={handleChange}
                 required
                 className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={cargando}
               />
             </div>
 
+            {/* Campo Asunto */}
             <div className="mb-4">
               <label
                 htmlFor="subject"
@@ -128,9 +180,11 @@ export default function ContactoSoporte() {
                 onChange={handleChange}
                 required
                 className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={cargando}
               />
             </div>
 
+            {/* Campo Mensaje */}
             <div className="mb-4">
               <label
                 htmlFor="message"
@@ -146,14 +200,33 @@ export default function ContactoSoporte() {
                 required
                 rows="4"
                 className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={cargando}
               />
             </div>
 
+            {/* 5. Mensajes de estado */}
+            {error && (
+              <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
+                {error}
+              </div>
+            )}
+            {mensajeExito && (
+              <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
+                {mensajeExito}
+              </div>
+            )}
+
+            {/* 6. Botón con estado de carga */}
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                cargando
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+              disabled={cargando}
             >
-              Enviar
+              {cargando ? "Enviando..." : "Enviar"}
             </button>
           </form>
         </div>
