@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from backend import crud, schemas, database
@@ -22,6 +23,63 @@ conf = ConnectionConfig(
 
 class PasswordUpdateRequest(BaseModel):
     nueva_contrasena: str = Field(..., min_length=8)
+    
+class EmailRequest(BaseModel):
+    email: str
+
+class PasswordResetRequest(BaseModel):
+    token: str
+    nueva_contrasena: str = Field(..., min_length=8)
+    
+@router.post("/solicitar-reset-password", status_code=status.HTTP_200_OK)
+async def solicitar_reset_password(
+    request: EmailRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(database.get_db)
+):
+    user = crud.get_cliente_by_email(db, email=request.email)
+    
+    if user:
+        token = auth.create_reset_token()
+        # El token expira en 1 hora
+        expires = datetime.now(timezone.utc) + timedelta(hours=1) 
+        crud.set_reset_token(db, user, token, expires)
+
+        reset_link = f"http://localhost:5173/reset-password?token={token}"
+
+        message = MessageSchema(
+            subject="Restablece tu contraseña en NOPRO",
+            recipients=[user.email],
+            body=f"Hola {user.nombre},\n\n"
+                 f"Recibimos una solicitud para restablecer tu contraseña. "
+                 f"Haz clic en el siguiente enlace para continuar:\n\n{reset_link}\n\n"
+                 f"Si no solicitaste esto, puedes ignorar este correo.\n"
+                 f"El enlace expirará en 1 hora.",
+            subtype="plain"
+        )
+        fm = FastMail(conf)
+        background_tasks.add_task(fm.send_message, message)
+
+    return {"mensaje": "Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña."}
+
+
+@router.post("/ejecutar-reset-password", status_code=status.HTTP_200_OK)
+def ejecutar_reset_password(
+    request: PasswordResetRequest, 
+    db: Session = Depends(database.get_db)
+):
+    user = crud.get_user_by_reset_token(db, token=request.token)
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Token inválido.")
+
+    if not user.reset_token_expires or user.reset_token_expires < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Token expirado. Por favor, solicita uno nuevo.")
+    
+    hashed_password = auth.get_password_hash(request.nueva_contrasena)
+    crud.update_password_and_clear_token(db, user, hashed_password)
+    
+    return {"mensaje": "Contraseña actualizada correctamente."}    
 
 @router.post("/", response_model=schemas.ClienteOut)
 async def crear_cliente( 
@@ -43,7 +101,6 @@ async def crear_cliente(
     )
 
     fm = FastMail(conf)
-    # Usar background_tasks para no bloquear la respuesta
     background_tasks.add_task(fm.send_message, message) 
     
     return db_cliente
@@ -90,6 +147,36 @@ def verificar_cuenta(request: VerificationRequest, db: Session = Depends(databas
     db.commit()
     
     return {"mensaje": "Cuenta verificada correctamente."}
+
+
+@router.post("/reenviar-verificacion", status_code=status.HTTP_200_OK)
+async def reenviar_correo_verificacion(
+    request: EmailRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(database.get_db)
+):
+    cliente = crud.get_cliente_by_email(db, email=request.email)
+
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    
+    if cliente.estado:
+        raise HTTPException(status_code=400, detail="Esta cuenta ya ha sido verificada.")
+
+    if not cliente.verification_code:
+        raise HTTPException(status_code=500, detail="Error: No se encontró un código para este usuario.")
+
+    message = MessageSchema(
+        subject="Verifica tu cuenta en NOPRO (Reenvío)",
+        recipients=[cliente.email],
+        body=f"Hola {cliente.nombre},\n\nTu código de verificación es: {cliente.verification_code}\n\nGracias por registrarte.",
+        subtype="plain"
+    )
+
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message) 
+    
+    return {"mensaje": "Correo de verificación reenviado con éxito."}
 
 
 @router.put("/me/password", status_code=status.HTTP_200_OK)

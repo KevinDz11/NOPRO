@@ -11,8 +11,10 @@ class Cliente(Base):
     email = Column(String(150), unique=True, nullable=False)
     contrasena = Column(String(255), nullable=False)
     fecha_creacion = Column(TIMESTAMP, server_default=func.now())
-    estado = Column(Boolean, default=False) #Cambie a false para que el cliente comience inactivo
+    estado = Column(Boolean, default=False)
     verification_code = Column(String(10), nullable=True)
+    reset_token = Column(String(255), unique=True, nullable=True, index=True)
+    reset_token_expires = Column(TIMESTAMP(timezone=True), nullable=True)
     productos = relationship("Producto", back_populates="cliente")
     documentos = relationship("Documento", back_populates="cliente")
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
+import { useAuthListener } from "../useAuthListener";
 
 // COMPONENTES INDIVIDUALES
 function TarjetaLaptop() {
@@ -57,6 +58,7 @@ function TarjetaLuminaria() {
 
 // COMPONENTE PRINCIPAL
 export default function Home() {
+  useAuthListener();
   const [tourOpen, setTourOpen] = useState(false);
 
   const steps = [

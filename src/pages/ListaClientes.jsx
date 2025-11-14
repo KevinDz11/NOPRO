@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
+import { useAuthListener } from "../useAuthListener";
 
 export default function ListaClientes() {
+  useAuthListener();
   const [clientes, setClientes] = useState([]);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(true);

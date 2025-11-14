@@ -1,68 +1,69 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
+import { useAuthListener } from "../useAuthListener";
 
 export default function HistorialProductos() {
-  // Estado para guardar los productos que vienen del backend
+  useAuthListener();
   const [productos, setProductos] = useState([]);
-  // Estado para manejar cualquier error durante la petición
   const [error, setError] = useState(null);
-  // Estado para mostrar un mensaje de carga
   const [cargando, setCargando] = useState(true);
-
-  // NOTA: El historial debería ser por usuario.
-  // Por ahora, listamos todos, pero dejamos la base para el futuro.
-  // const token = localStorage.getItem("authToken"); // <-- Corregido para el 'linting'
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Función asíncrona para obtener los datos del backend
     const fetchProductos = async () => {
-      // TODO: Futura implementación - /productos/me para obtener solo los del usuario
-      // const token = localStorage.getItem("authToken");
-      // const headers = { 'Authorization': `Bearer ${token}` };
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        setError("Debes iniciar sesión para ver tu historial.");
+        setCargando(false);
+        navigate("/login");
+        return;
+      }
 
       try {
-        // Hacemos la petición GET al endpoint /productos/ de FastAPI
-        const response = await fetch(
-          "http://localhost:8000/productos/"
-          // { headers } // <-- Añadir esto cuando el endpoint /me esté listo
-        );
+        const response = await fetch("http://localhost:8000/productos/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        // Si la respuesta no es exitosa (ej. error 500, 404), lanzamos un error
+        if (response.status === 401) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("auth");
+          alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+          navigate("/login");
+          return;
+        }
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
 
-        // Mapeamos los datos recibidos del backend a la estructura que necesita la tabla
         const productosMapeados = data.map((p) => ({
-          tipo: p.nombre, // "Laptop", "SmartTV"
+          tipo: p.nombre,
           marca: p.marca || "N/A",
           modelo: p.descripcion || "N/A",
-
-          // --- INICIO DE LA MODIFICACIÓN ---
-          // Cambiamos 'toLocaleDateString' por 'toLocaleString' para incluir la hora
           fecha: p.fecha_registro
             ? new Date(p.fecha_registro).toLocaleString("es-ES")
             : "N/A",
-          // --- FIN DE LA MODIFICACIÓN ---
         }));
 
-        setProductos(productosMapeados.reverse()); // Mostramos los más nuevos primero
+        setProductos(productosMapeados.reverse()); // Mostrar los más nuevos primero
       } catch (e) {
         console.error("Error al obtener los productos:", e);
         setError(
           "No se pudieron cargar los productos. Por favor, asegúrate de que el backend esté funcionando e inténtalo de nuevo."
         );
       } finally {
-        // Ocultamos el mensaje de carga, ya sea que la petición tuvo éxito o falló
         setCargando(false);
       }
     };
 
-    fetchProductos(); // Ejecutamos la función al cargar el componente
-  }, []); // El array vacío [] asegura que este efecto se ejecute solo una vez
+    fetchProductos();
+  }, [navigate]);
 
   return (
     <>
