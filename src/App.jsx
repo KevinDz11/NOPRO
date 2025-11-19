@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-// 1. Importa el nuevo componente guardián
 import ProtectedRoute from "./ProtectedRoute";
+import ResultadosAnalisis from "./pages/ResultadosAnalisis";
 
 // Importa tus páginas
 import Home from "./pages/Home";
@@ -78,6 +77,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ListaClientes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resultados-analisis"
+          element={
+            <ProtectedRoute>
+              <ResultadosAnalisis />
             </ProtectedRoute>
           }
         />

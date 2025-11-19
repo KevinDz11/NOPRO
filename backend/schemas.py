@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from typing import List, Optional
 
 # Cliente
 class ClienteBase(BaseModel):
@@ -64,3 +65,15 @@ class Token(BaseModel):
     token_type: str
 class TokenData(BaseModel):
     email: Optional[str] = None
+    
+
+class ResultadoIA(BaseModel):
+    Norma: str
+    Categoria: str
+    Hallazgo: Optional[str] = None
+    Pagina: int
+    Contexto: Optional[str] = None
+
+# Schema de respuesta extendido
+class DocumentoAnalisisOut(DocumentoOut):
+    analisis_ia: List[ResultadoIA] = []
