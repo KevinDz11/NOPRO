@@ -1,78 +1,60 @@
 import React, { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom"; // Importa useNavigate
-import Joyride from "react-joyride";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-export default function SubirArchivos() {
-  useAuthListener();
-  const { producto } = useParams(); // "Laptop", "SmartTV", etc.
-  const navigate = useNavigate(); // Hook para navegar
+// --- COMPONENTE VISUAL: MODAL DE CARGA ---
+const ModalCarga = ({ tipo, mensaje }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50">
+    <div className="bg-white p-8 rounded-lg shadow-2xl text-center max-w-md animate-fade-in">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto mb-4"></div>
+      <h3 className="text-xl font-bold text-gray-800 mb-2">
+        Analizando {tipo}...
+      </h3>
+      <p className="text-gray-600 text-sm">{mensaje}</p>
 
-  // Estados del formulario y archivos
-  const [tourOpen, setTourOpen] = useState(false);
+      {tipo === "Manual" && (
+        <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700 font-semibold">
+          ⚠️ Este proceso es exhaustivo y toma entre 3 a 5 minutos.
+          <br />
+          Por favor, no cierres esta pestaña.
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+export default function SubirArchivos() {
+  // Verificar sesión
+  useAuthListener();
+
+  // "producto" viene de la URL (ej: /subir-archivos/Laptop) y sirve como la CATEGORÍA
+  const { producto } = useParams();
+  const navigate = useNavigate();
+
+  // --- ESTADOS DEL FORMULARIO ---
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
+
+  // --- ESTADOS DE LOS ARCHIVOS ---
   const [manual, setManual] = useState(null);
-  const [etiquetado, setEtiquetado] = useState(null);
   const [ficha, setFicha] = useState(null);
 
-  // Estados de UI y lógica
-  const [progreso, setProgreso] = useState({
-    manual: 0,
-    etiquetado: 0,
-    ficha: 0,
-  });
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState("");
-  const [analisisCompleto, setAnalisisCompleto] = useState(false); // Nuevo estado
-  const [productoGuardado, setProductoGuardado] = useState(null); // Nuevo estado
+  // --- ESTADOS DE UI (Carga y Progreso) ---
+  const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState(""); // "Ficha Técnica" o "Manual"
+  const [progreso, setProgreso] = useState({ manual: 0, ficha: 0 });
 
-  // --- PASOS DEL TOUR ---
-  const steps = [
-    {
-      target: ".navbar",
-      content:
-        "Este es el menú de navegación, donde puedes acceder a otras partes de la aplicación.",
-    },
-    {
-      target: ".help-button",
-      content: "Haz clic aquí para abrir este tutorial.",
-    },
-    {
-      target: ".formulario-producto",
-      content: "Aquí puedes escribir la marca y modelo del producto.",
-    },
-    {
-      target: ".tarjeta-archivos",
-      content: "Estas son las secciones para subir los documentos requeridos.",
-    },
-    {
-      target: ".AnalizarDocs",
-      content:
-        "Una vez cargados los documentos, presiona este botón para analizarlos.",
-    },
-  ];
+  // --- ESTADOS DE RESULTADOS (Para activar los botones de PDF) ---
+  const [resultadoFicha, setResultadoFicha] = useState(null);
+  const [resultadoManual, setResultadoManual] = useState(null);
 
-  // --- VALIDACIÓN DE FORMULARIO ---
-  const esFormularioValido =
-    marca.trim() !== "" &&
-    modelo.trim() !== "" &&
-    manual !== null &&
-    etiquetado !== null &&
-    ficha !== null;
+  // ---------------------------------------------------------
+  //  FUNCIONES AUXILIARES
+  // ---------------------------------------------------------
 
-  // --- OBTENER ICONO ---
-  const obtenerIcono = (nombre) => {
-    const iconos = {
-      laptop: "💻",
-      smarttv: "📺",
-      luminaria: "💡",
-    };
-    return iconos[nombre.toLowerCase()] || "📁";
-  };
-
-  // --- LÓGICA DE CARGA DE ARCHIVOS ---
+  // Simula la barra de carga al seleccionar archivo
   const iniciarCarga = (e, tipo) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -82,373 +64,361 @@ export default function SubirArchivos() {
       return;
     }
 
-    const setArchivo = {
-      manual: setManual,
-      etiquetado: setEtiquetado,
-      ficha: setFicha,
-    }[tipo];
+    if (tipo === "manual") setManual(archivo);
+    if (tipo === "ficha") setFicha(archivo);
 
-    setArchivo(archivo);
-
-    let prog = 0;
+    // Animación visual de la barra (0 a 100%)
+    let p = 0;
     const interval = setInterval(() => {
-      prog += 10;
-      setProgreso((prev) => ({ ...prev, [tipo]: prog }));
-      if (prog >= 100) clearInterval(interval);
-    }, 100);
+      p += 15;
+      setProgreso((prev) => ({ ...prev, [tipo]: p > 100 ? 100 : p }));
+      if (p >= 100) clearInterval(interval);
+    }, 80);
   };
 
-  const quitarArchivo = (tipo) => {
-    const reset = {
-      manual: () => setManual(null),
-      etiquetado: () => setEtiquetado(null),
-      ficha: () => setFicha(null),
-    };
-    reset[tipo]?.();
-    setProgreso((prev) => ({ ...prev, [tipo]: 0 }));
-  };
-
-  // --- FUNCIÓN DE ANÁLISIS (MODIFICADA) ---
-  const analizar = async () => {
-    if (!esFormularioValido) {
-      setError(
-        "Debes completar la marca, modelo y subir los 3 archivos en formato PDF."
+  // Asegura que el producto exista en BD antes de subir documentos
+  const asegurarProducto = async (token) => {
+    try {
+      // Intentamos crear el producto. Si ya existe, el backend idealmente debería manejarlo
+      // o devolver el ID del existente. Aquí asumimos creación simple.
+      const res = await axios.post(
+        "http://localhost:8000/productos/",
+        {
+          nombre: producto, // Ej: "Laptop"
+          marca: marca,
+          descripcion: modelo,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      return;
+      return res.data.id_producto;
+    } catch (error) {
+      console.error("Error creando producto:", error);
+      throw new Error("No se pudo registrar el producto en la base de datos.");
+    }
+  };
+
+  // ---------------------------------------------------------
+  //  LÓGICA PRINCIPAL DE ANÁLISIS
+  // ---------------------------------------------------------
+  const procesarArchivo = async (tipoArchivo) => {
+    // Validaciones básicas
+    if (!marca.trim() || !modelo.trim()) {
+      return alert(
+        "Por favor, completa los campos de Marca y Modelo antes de iniciar."
+      );
     }
 
-    setError("");
-    setCargando(true);
-    setAnalisisCompleto(false); // Resetea en caso de re-análisis
-    setProductoGuardado(null);
+    const archivo = tipoArchivo === "manual" ? manual : ficha;
+    if (!archivo) {
+      return alert(
+        `Debes seleccionar el archivo PDF del ${tipoArchivo} primero.`
+      );
+    }
 
     const token = localStorage.getItem("authToken");
     if (!token) {
-      setError("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-      navigate("/login");
-      return;
+      alert("Tu sesión expiró.");
+      return navigate("/login");
     }
 
     try {
-      // 1. Crear el producto en la base de datos
-      const responseProducto = await fetch("http://localhost:8000/productos/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          nombre: producto, // "Laptop", "SmartTV"...
-          marca: marca,
-          descripcion: modelo, // Usamos 'descripcion' para 'modelo'
-        }),
-      });
+      // 1. Activar Pantalla de Carga
+      setLoadingType(tipoArchivo === "manual" ? "Manual" : "Ficha Técnica");
+      setLoading(true);
 
-      if (!responseProducto.ok) {
-        const errorData = await responseProducto.json();
-        throw new Error(errorData.detail || "Error al guardar el producto.");
+      // 2. Obtener ID del Producto
+      const idProducto = await asegurarProducto(token);
+
+      // 3. Preparar datos para el Backend
+      const formData = new FormData();
+      formData.append("id_producto", idProducto);
+      formData.append("nombre", `${tipoArchivo} - ${modelo}`);
+
+      // DATOS CLAVE PARA LA IA:
+      formData.append("tipo", tipoArchivo); // "ficha" o "manual"
+      formData.append("categoria", producto); // "Laptop", "SmartTV", "Luminaria"
+
+      formData.append("archivo", archivo);
+      formData.append("analizar", "true"); // Interruptor para activar IA
+
+      // 4. Enviar petición (Aumentamos timeout para el manual)
+      const response = await axios.post(
+        "http://localhost:8000/documentos/subir-analizar",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          timeout: 600000, // 10 minutos máximo de espera
+        }
+      );
+
+      // 5. Guardar el resultado en el estado correspondiente
+      if (tipoArchivo === "manual") {
+        setResultadoManual(response.data);
+        alert("¡Manual analizado correctamente!");
+      } else {
+        setResultadoFicha(response.data);
+        alert("¡Ficha Técnica analizada correctamente!");
       }
-
-      const productoCreado = await responseProducto.json();
-      setProductoGuardado(productoCreado); // Guardamos datos del producto
-
-      // 2. Simular el análisis de documentos (aquí iría la subida de archivos real)
-      console.log("Producto guardado:", productoCreado);
-      console.log("Simulando análisis de archivos...");
-      // Simula una demora por el análisis
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // 3. Marcar como completo
-      alert("Análisis simulado iniciado correctamente.");
-      setAnalisisCompleto(true); // Habilita el botón de resumen
-    } catch (err) {
-      console.error("Error en el proceso:", err);
-      setError(err.message || "Ocurrió un error inesperado.");
+    } catch (error) {
+      console.error(error);
+      const msg =
+        error.response?.data?.detail ||
+        "Ocurrió un error de conexión o tiempo de espera.";
+      alert(`Error: ${msg}`);
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   };
 
-  // --- NUEVA FUNCIÓN: VISUALIZAR RESUMEN (SIMULADO) ---
-  const handleVerResumen = () => {
-    if (!productoGuardado) return;
+  // ---------------------------------------------------------
+  //  VISUALIZACIÓN DE REPORTE
+  // ---------------------------------------------------------
+  const verReportePDF = (dataResultados, tituloReporte) => {
+    // Guardamos los datos en LocalStorage para que la nueva pestaña los lea
+    const datosParaReporte = {
+      ...dataResultados,
+      titulo_reporte: tituloReporte,
+      categoria_producto: producto,
+      marca_producto: marca,
+      modelo_producto: modelo,
+    };
 
-    const pdfTemplate = `
-      <html>
-        <head>
-          <title>Resumen de Análisis - NOPRO</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .header img { height: 40px; }
-            .header h1 { margin: 0; font-size: 24px; }
-            .content { margin-top: 30px; }
-            .content h2 { font-size: 20px; border-bottom: 1px solid #ccc; }
-            .info { line-height: 1.6; }
-            .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #888; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <img src="${logo}" alt="NOPRO Logo" />
-            <h1>NOPRO - Resumen de Análisis</h1>
-          </div>
-          
-          <div class="content">
-            <h2>Datos del Producto Analizado</h2>
-            <div class="info">
-              <strong>Empresa:</strong> NOPRO S.A. de C.V.<br/>
-              <strong>Producto:</strong> ${productoGuardado.nombre}<br/>
-              <strong>Marca:</strong> ${productoGuardado.marca}<br/>
-              <strong>Modelo:</strong> ${productoGuardado.descripcion}<br/>
-              <strong>Fecha de Registro:</strong> ${new Date(
-                productoGuardado.fecha_registro
-              ).toLocaleString("es-ES")}
-            </div>
-            
-            <h2 style="margin-top: 30px;">Resultados del Análisis (Simulación)</h2>
-            <p>Este es un documento simulado. Aquí se mostrarían los resultados detallados del análisis de normas (NOMs) aplicables al producto.</p>
-            <ul>
-              <li>Norma A: Cumple</li>
-              <li>Norma B: No Cumple</li>
-              <li>Norma C: N/A</li>
-            </ul>
-          </div>
-          
-          <div class="footer">
-            Documento generado por NOPRO &copy; ${new Date().getFullYear()}
-          </div>
-        </body>
-      </html>
-    `;
+    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
 
-    const newWindow = window.open("", "_blank");
-    newWindow.document.write(pdfTemplate);
-    newWindow.document.close();
+    // Abrimos la pestaña del reporte
+    window.open("/resultados-analisis", "_blank");
   };
 
-  const tarjetas = [
-    { titulo: "Manual", tipo: "manual", archivo: manual },
-    { titulo: "Etiquetado", tipo: "etiquetado", archivo: etiquetado },
-    { titulo: "Ficha Técnica", tipo: "ficha", archivo: ficha },
-  ];
-
+  // ---------------------------------------------------------
+  //  RENDERIZADO (JSX)
+  // ---------------------------------------------------------
   return (
-    <>
-      <Joyride
-        steps={steps}
-        run={tourOpen}
-        continuous
-        scrollToFirstStep
-        showSkipButton
-        styles={{ options: { zIndex: 10000 } }}
-        callback={(data) => {
-          if (["finished", "skipped"].includes(data.status)) {
-            setTourOpen(false);
+    <div className="min-h-screen bg-gray-50">
+      {/* Modal de Carga (Bloquea la pantalla si loading es true) */}
+      {loading && (
+        <ModalCarga
+          tipo={loadingType}
+          mensaje={
+            loadingType === "Manual"
+              ? "Leyendo documentos extensos, aplicando NLP y verificando normas de seguridad..."
+              : "Extrayendo especificaciones técnicas y validando etiquetado..."
           }
-        }}
-      />
+        />
+      )}
 
-      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
-        <div className="flex items-center space-x-2">
-          <img src={logo} alt="NOPRO" className="h-8" />
-          <Link
-            to="/"
-            className="text-xl font-bold text-gray-800 hover:underline"
-          >
-            NOPRO
-          </Link>
+      {/* Barra de Navegación */}
+      <nav className="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="NOPRO" className="h-8 w-auto" />
+          <span className="font-bold text-gray-700 text-lg tracking-tight">
+            Gestión de Archivos
+          </span>
         </div>
-
-        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
-          <li
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300 help-button"
-            onClick={() => setTourOpen(true)}
-          >
-            AYUDA
-          </li>
-
-          <Link
-            to="/perfil"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            PERFIL
-          </Link>
-          <Link
-            to="/historial"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            HISTORIAL PRODUCTOS
-          </Link>
-          <Link
-            to="/soporte"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CONTACTAR SOPORTE
-          </Link>
-          <Link to="/">
-            <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-              CERRAR SESIÓN
-            </li>
-          </Link>
-        </ul>
+        <Link
+          to="/"
+          className="text-sm font-medium text-gray-500 hover:text-blue-600 transition"
+        >
+          ← Volver al Inicio
+        </Link>
       </nav>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-          Subir archivos para{" "}
-          <span className="text-orange-600 capitalize">
-            {producto} {obtenerIcono(producto)}
-          </span>
-        </h2>
-
-        {/* --- Formulario de Marca/Modelo --- */}
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-10 formulario-producto">
-          <p className="text-center text-gray-700 mb-4 font-medium">
-            Esta información se verá reflejada en tu historial. Lo que se
-            escriba queda bajo su consideración.
+      <main className="max-w-5xl mx-auto p-6 md:p-10">
+        {/* Encabezado */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-extrabold text-gray-900">
+            Subir Documentos para{" "}
+            <span className="text-blue-600">{producto}</span>
+          </h1>
+          <p className="text-gray-500 mt-2">
+            Completa la información del producto y carga los archivos PDF
+            requeridos.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        </div>
+
+        {/* Formulario de Marca y Modelo */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+            1. Información del Producto
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-1">
-                Tipo de producto
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Marca
               </label>
               <input
                 type="text"
-                value={producto}
-                readOnly
-                className="w-full border rounded px-4 py-2 bg-gray-100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">Marca</label>
-              <input
-                type="text"
-                placeholder="Ingresa tu marca"
+                placeholder="Ej. Samsung, Dell, Philips..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition"
                 value={marca}
                 onChange={(e) => setMarca(e.target.value)}
-                className={`w-full border rounded px-4 py-2 ${
-                  marca.trim() === "" ? "border-red-400" : "border-gray-300"
-                }`} // Validación visual
-                disabled={cargando}
+                disabled={loading}
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-1">Modelo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Modelo
+              </label>
               <input
                 type="text"
-                placeholder="Ingresa tu modelo"
+                placeholder="Ej. X500-Pro, UN55AU7000..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition"
                 value={modelo}
                 onChange={(e) => setModelo(e.target.value)}
-                className={`w-full border rounded px-4 py-2 ${
-                  modelo.trim() === "" ? "border-red-400" : "border-gray-300"
-                }`} // Validación visual
-                disabled={cargando}
+                disabled={loading}
               />
             </div>
           </div>
         </div>
 
-        {/* --- Tarjetas de Archivos --- */}
-        <div className="grid md:grid-cols-3 gap-6 tarjeta-archivos">
-          {tarjetas.map(({ titulo, tipo, archivo }) => (
-            <div
-              key={tipo}
-              className={`relative border-2 rounded-xl p-6 bg-white shadow-md transition-all duration-300 overflow-hidden ${
-                archivo
-                  ? "border-blue-600 border-solid"
-                  : "border-black border-dashed"
-              }`}
-            >
-              <div
-                className="absolute bottom-0 left-0 w-full bg-blue-300 transition-all duration-500 opacity-30"
-                style={{ height: `${progreso[tipo]}%`, zIndex: 0 }}
-              ></div>
+        {/* Sección de Tarjetas de Carga */}
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          2. Carga y Análisis de Documentos
+        </h2>
 
-              <div className="relative z-10">
-                <h2 className="text-xl font-semibold text-center mb-4">
-                  {titulo}
-                </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* --- TARJETA 1: FICHA TÉCNICA --- */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-blue-600 px-6 py-3">
+              <h3 className="text-white font-bold text-lg">Ficha Técnica</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4 min-h-[40px]">
+                Sube el PDF de especificaciones para verificar voltajes,
+                potencias y conectividad.
+              </p>
 
+              {/* Input de Archivo */}
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Archivo PDF
+                </label>
                 <input
                   type="file"
-                  id={`archivo-${tipo}`}
-                  className="hidden"
-                  onChange={(e) => iniciarCarga(e, tipo)}
-                  disabled={cargando}
+                  accept=".pdf"
+                  onChange={(e) => iniciarCarga(e, "ficha")}
+                  disabled={loading}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                <label
-                  htmlFor={`archivo-${tipo}`}
-                  className={`bg-blue-500 text-white px-4 py-2 rounded cursor-pointer block text-center w-full mb-2 ${
-                    cargando ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Seleccionar archivo
-                </label>
+              </div>
 
-                {archivo && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => quitarArchivo(tipo)}
-                      className="bg-red-500 text-white px-4 py-2 rounded block text-center w-full mb-2 hover:bg-red-600 disabled:opacity-50"
-                      disabled={cargando}
-                    >
-                      Quitar archivo
-                    </button>
-                    <p className="text-center text-sm text-green-700 mt-1">
-                      {archivo.name}
-                    </p>
-                  </>
-                )}
-
-                <div
-                  className={`h-2 rounded mt-3 overflow-hidden transition-all duration-300 ${
-                    progreso[tipo] > 0 && progreso[tipo] < 100
-                      ? "bg-blue-200"
-                      : "bg-gray-200"
-                  }`}
-                >
+              {/* Barra de Progreso Visual */}
+              {progreso.ficha > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-4">
                   <div
-                    className={`h-full transition-all duration-300 ${
-                      progreso[tipo] < 100 ? "bg-blue-500" : "bg-green-500"
-                    }`}
-                    style={{ width: `${progreso[tipo]}%` }}
+                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${progreso.ficha}%` }}
                   ></div>
                 </div>
+              )}
+
+              {/* Botones de Acción */}
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => procesarArchivo("ficha")}
+                  disabled={!ficha || loading}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold text-white transition shadow-md 
+                                ${
+                                  !ficha || loading
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                >
+                  {loading && loadingType === "Ficha Técnica"
+                    ? "Analizando..."
+                    : "Analizar"}
+                </button>
+
+                {resultadoFicha && (
+                  <button
+                    onClick={() =>
+                      verReportePDF(resultadoFicha, "Reporte Ficha Técnica")
+                    }
+                    className="flex-1 py-2 px-4 rounded-lg font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 transition border border-blue-200"
+                  >
+                    📄 Ver PDF
+                  </button>
+                )}
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* --- TARJETA 2: MANUAL DE USUARIO --- */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-orange-500 px-6 py-3">
+              <h3 className="text-white font-bold text-lg">
+                Manual de Usuario
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4 min-h-[40px]">
+                Análisis profundo de instrucciones de seguridad, mantenimiento y
+                advertencias normativas.
+              </p>
+
+              {/* Input de Archivo */}
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Archivo PDF
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => iniciarCarga(e, "manual")}
+                  disabled={loading}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                />
+              </div>
+
+              {/* Barra de Progreso Visual */}
+              {progreso.manual > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-4">
+                  <div
+                    className="bg-orange-500 h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${progreso.manual}%` }}
+                  ></div>
+                </div>
+              )}
+
+              {/* Botones de Acción */}
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => procesarArchivo("manual")}
+                  disabled={!manual || loading}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold text-white transition shadow-md 
+                                ${
+                                  !manual || loading
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-orange-500 hover:bg-orange-600"
+                                }`}
+                >
+                  {loading && loadingType === "Manual"
+                    ? "Procesando..."
+                    : "Analizar"}
+                </button>
+
+                {resultadoManual && (
+                  <button
+                    onClick={() =>
+                      verReportePDF(
+                        resultadoManual,
+                        "Reporte Manual de Usuario"
+                      )
+                    }
+                    className="flex-1 py-2 px-4 rounded-lg font-bold text-orange-700 bg-orange-100 hover:bg-orange-200 transition border border-orange-200"
+                  >
+                    📄 Ver PDF
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* --- Mensaje de Error --- */}
-        {error && (
-          <p className="text-center text-red-600 bg-red-100 p-3 rounded-lg max-w-4xl mx-auto mt-6">
-            {error}
-          </p>
-        )}
-
-        {/* --- Botones de Acción --- */}
-        <div className="flex justify-center items-center gap-4 mt-8">
-          <button
-            className="bg-blue-600 text-white px-6 py-3 rounded shadow hover:bg-blue-700 transition AnalizarDocs disabled:bg-gray-400 disabled:cursor-not-allowed"
-            onClick={analizar}
-            disabled={!esFormularioValido || cargando} // Validación aplicada
-          >
-            {cargando ? "Analizando..." : "Analizar documentos"}
-          </button>
-
-          {/* Botón de Resumen (Condicional) */}
-          {analisisCompleto && (
-            <button
-              className="bg-green-600 text-white px-6 py-3 rounded shadow hover:bg-green-700 transition"
-              onClick={handleVerResumen}
-            >
-              Visualizar resumen de los resultados
-            </button>
-          )}
-        </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
