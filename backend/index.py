@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # ⚠️ ADVERTENCIA: Esto borrará todos tus datos (usuarios, productos)
 # 1. Esta línea BORRARÁ las tablas 'clientes', 'productos', 'documentos'
-Base.metadata.drop_all(bind=engine) 
+#Base.metadata.drop_all(bind=engine) 
 
 # 2. Esta línea CREARÁ las tablas de nuevo (con la columna 'marca')
 Base.metadata.create_all(bind=engine)
