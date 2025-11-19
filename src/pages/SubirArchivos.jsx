@@ -6,19 +6,33 @@ import { useAuthListener } from "../useAuthListener";
 
 // --- COMPONENTE VISUAL: MODAL DE CARGA ---
 const ModalCarga = ({ tipo, mensaje }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50">
-    <div className="bg-white p-8 rounded-lg shadow-2xl text-center max-w-md animate-fade-in">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto mb-4"></div>
-      <h3 className="text-xl font-bold text-gray-800 mb-2">
-        Analizando {tipo}...
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
+    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full animate-fade-in-up border border-white/50">
+      <div className="relative w-20 h-20 mx-auto mb-6">
+        <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+        <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+        {/* Icono central decorativo */}
+        <div className="absolute inset-0 flex items-center justify-center text-2xl">
+          {tipo === "Manual" ? "📖" : "📄"}
+        </div>
+      </div>
+      <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
+        Analizando {tipo}
       </h3>
-      <p className="text-gray-600 text-sm">{mensaje}</p>
+      <p className="text-slate-500 text-sm font-medium">{mensaje}</p>
 
       {tipo === "Manual" && (
-        <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700 font-semibold">
-          ⚠️ Este proceso es exhaustivo y toma entre 3 a 5 minutos.
-          <br />
-          Por favor, no cierres esta pestaña.
+        <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left">
+          <span className="text-xl">⏳</span>
+          <div>
+            <p className="text-orange-800 font-bold text-xs uppercase tracking-wider mb-1">
+              Proceso Extenso
+            </p>
+            <p className="text-orange-600 text-xs leading-relaxed">
+              Esto puede tardar de 3 a 5 minutos. Por favor,{" "}
+              <strong>no cierres esta pestaña</strong>.
+            </p>
+          </div>
         </div>
       )}
     </div>
@@ -79,8 +93,6 @@ export default function SubirArchivos() {
   // Asegura que el producto exista en BD antes de subir documentos
   const asegurarProducto = async (token) => {
     try {
-      // Intentamos crear el producto. Si ya existe, el backend idealmente debería manejarlo
-      // o devolver el ID del existente. Aquí asumimos creación simple.
       const res = await axios.post(
         "http://localhost:8000/productos/",
         {
@@ -198,8 +210,11 @@ export default function SubirArchivos() {
   //  RENDERIZADO (JSX)
   // ---------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modal de Carga (Bloquea la pantalla si loading es true) */}
+    <div className="min-h-screen bg-slate-50 pb-12 relative overflow-hidden">
+      {/* Fondo Decorativo Sutil */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
+
+      {/* Modal de Carga */}
       {loading && (
         <ModalCarga
           tipo={loadingType}
@@ -211,62 +226,110 @@ export default function SubirArchivos() {
         />
       )}
 
-      {/* Barra de Navegación */}
-      <nav className="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="NOPRO" className="h-8 w-auto" />
-          <span className="font-bold text-gray-700 text-lg tracking-tight">
-            Gestión de Archivos
-          </span>
+      {/* NAVBAR MODERNO (Igual al de Home) */}
+      <nav className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm navbar px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
+          {/* Logo con Link a Home */}
+          <Link
+            to="/Home"
+            className="flex items-center space-x-3 group cursor-pointer"
+          >
+            <img
+              src={logo}
+              alt="NOPRO"
+              className="h-9 w-auto transition-transform group-hover:scale-105"
+            />
+            <span className="text-2xl font-extrabold text-slate-800 tracking-tighter">
+              NOPRO
+            </span>
+          </Link>
+
+          <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
+            <Link
+              to="/perfil"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              PERFIL
+            </Link>
+            <Link
+              to="/historial"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              HISTORIAL
+            </Link>
+            <Link
+              to="/soporte"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              SOPORTE
+            </Link>
+
+            {/* Botón Cerrar Sesión CORREGIDO */}
+            <li
+              onClick={() => {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("auth");
+                navigate("/"); // Redirige a la landing page
+              }}
+              className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
+            >
+              CERRAR SESIÓN
+            </li>
+          </ul>
         </div>
-        <Link
-          to="/"
-          className="text-sm font-medium text-gray-500 hover:text-blue-600 transition"
-        >
-          ← Volver al Inicio
-        </Link>
       </nav>
 
-      <main className="max-w-5xl mx-auto p-6 md:p-10">
+      <main className="max-w-6xl mx-auto p-6 md:p-10 animate-fade-in-up">
         {/* Encabezado */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-gray-900">
+        <div className="text-center mb-12">
+          <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wide mb-3">
+            Nueva Solicitud
+          </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
             Subir Documentos para{" "}
-            <span className="text-blue-600">{producto}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              {producto}
+            </span>
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
             Completa la información del producto y carga los archivos PDF
-            requeridos.
+            requeridos para iniciar el análisis normativo inteligente.
           </p>
         </div>
 
         {/* Formulario de Marca y Modelo */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-            1. Información del Producto
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+
+          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm font-extrabold">
+              1
+            </span>
+            Información del Producto
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="group">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
                 Marca
               </label>
               <input
                 type="text"
                 placeholder="Ej. Samsung, Dell, Philips..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-slate-200 bg-slate-50 rounded-xl px-5 py-3.5 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
                 value={marca}
                 onChange={(e) => setMarca(e.target.value)}
                 disabled={loading}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="group">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
                 Modelo
               </label>
               <input
                 type="text"
                 placeholder="Ej. X500-Pro, UN55AU7000..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-slate-200 bg-slate-50 rounded-xl px-5 py-3.5 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
                 value={modelo}
                 onChange={(e) => setModelo(e.target.value)}
                 disabled={loading}
@@ -276,61 +339,69 @@ export default function SubirArchivos() {
         </div>
 
         {/* Sección de Tarjetas de Carga */}
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          2. Carga y Análisis de Documentos
+        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3 px-2">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-extrabold">
+            2
+          </span>
+          Carga y Análisis de Documentos
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* --- TARJETA 1: FICHA TÉCNICA --- */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-            <div className="bg-blue-600 px-6 py-3">
-              <h3 className="text-white font-bold text-lg">Ficha Técnica</h3>
+          <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-5 relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl transform translate-x-10 -translate-y-10"></div>
+              <h3 className="text-white font-bold text-xl flex items-center gap-2 relative z-10">
+                📄 Ficha Técnica
+              </h3>
             </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-600 mb-4 min-h-[40px]">
+
+            <div className="p-8 flex-grow flex flex-col">
+              <p className="text-slate-500 mb-6 leading-relaxed text-sm flex-grow">
                 Sube el PDF de especificaciones para verificar voltajes,
                 potencias y conectividad.
               </p>
 
               {/* Input de Archivo */}
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                  Archivo PDF
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                  Seleccionar Archivo
                 </label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => iniciarCarga(e, "ficha")}
                   disabled={loading}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1 transition-colors"
                 />
               </div>
 
               {/* Barra de Progreso Visual */}
-              {progreso.ficha > 0 && (
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-4">
-                  <div
-                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${progreso.ficha}%` }}
-                  ></div>
-                </div>
-              )}
+              <div className="h-1.5 w-full bg-slate-100 rounded-full mb-6 overflow-hidden">
+                <div
+                  className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
+                  style={{
+                    width: `${progreso.ficha}%`,
+                    opacity: progreso.ficha > 0 ? 1 : 0,
+                  }}
+                ></div>
+              </div>
 
               {/* Botones de Acción */}
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-3 mt-auto">
                 <button
                   onClick={() => procesarArchivo("ficha")}
                   disabled={!ficha || loading}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold text-white transition shadow-md 
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg transform hover:-translate-y-0.5
                                 ${
                                   !ficha || loading
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700"
+                                    ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                                    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-blue-500/30"
                                 }`}
                 >
                   {loading && loadingType === "Ficha Técnica"
                     ? "Analizando..."
-                    : "Analizar"}
+                    : "ANALIZAR"}
                 </button>
 
                 {resultadoFicha && (
@@ -338,9 +409,9 @@ export default function SubirArchivos() {
                     onClick={() =>
                       verReportePDF(resultadoFicha, "Reporte Ficha Técnica")
                     }
-                    className="flex-1 py-2 px-4 rounded-lg font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 transition border border-blue-200"
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm tracking-wide text-blue-700 bg-blue-50 hover:bg-blue-100 transition border border-blue-100 shadow-sm"
                   >
-                    📄 Ver PDF
+                    📄 VER PDF
                   </button>
                 )}
               </div>
@@ -348,57 +419,60 @@ export default function SubirArchivos() {
           </div>
 
           {/* --- TARJETA 2: MANUAL DE USUARIO --- */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-            <div className="bg-orange-500 px-6 py-3">
-              <h3 className="text-white font-bold text-lg">
-                Manual de Usuario
+          <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-8 py-5 relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl transform translate-x-10 -translate-y-10"></div>
+              <h3 className="text-white font-bold text-xl flex items-center gap-2 relative z-10">
+                📖 Manual de Usuario
               </h3>
             </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-600 mb-4 min-h-[40px]">
+
+            <div className="p-8 flex-grow flex flex-col">
+              <p className="text-slate-500 mb-6 leading-relaxed text-sm flex-grow">
                 Análisis profundo de instrucciones de seguridad, mantenimiento y
                 advertencias normativas.
               </p>
 
               {/* Input de Archivo */}
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                  Archivo PDF
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                  Seleccionar Archivo
                 </label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => iniciarCarga(e, "manual")}
                   disabled={loading}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer border border-slate-200 rounded-lg p-1 transition-colors"
                 />
               </div>
 
               {/* Barra de Progreso Visual */}
-              {progreso.manual > 0 && (
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-4">
-                  <div
-                    className="bg-orange-500 h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${progreso.manual}%` }}
-                  ></div>
-                </div>
-              )}
+              <div className="h-1.5 w-full bg-slate-100 rounded-full mb-6 overflow-hidden">
+                <div
+                  className="bg-orange-500 h-full rounded-full transition-all duration-300 ease-out"
+                  style={{
+                    width: `${progreso.manual}%`,
+                    opacity: progreso.manual > 0 ? 1 : 0,
+                  }}
+                ></div>
+              </div>
 
               {/* Botones de Acción */}
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-3 mt-auto">
                 <button
                   onClick={() => procesarArchivo("manual")}
                   disabled={!manual || loading}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold text-white transition shadow-md 
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg transform hover:-translate-y-0.5
                                 ${
                                   !manual || loading
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-orange-500 hover:bg-orange-600"
+                                    ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                                    : "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-orange-500/30"
                                 }`}
                 >
                   {loading && loadingType === "Manual"
-                    ? "Procesando..."
-                    : "Analizar"}
+                    ? "PROCESANDO..."
+                    : "ANALIZAR"}
                 </button>
 
                 {resultadoManual && (
@@ -409,9 +483,9 @@ export default function SubirArchivos() {
                         "Reporte Manual de Usuario"
                       )
                     }
-                    className="flex-1 py-2 px-4 rounded-lg font-bold text-orange-700 bg-orange-100 hover:bg-orange-200 transition border border-orange-200"
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm tracking-wide text-orange-700 bg-orange-50 hover:bg-orange-100 transition border border-orange-100 shadow-sm"
                   >
-                    📄 Ver PDF
+                    📄 VER PDF
                   </button>
                 )}
               </div>

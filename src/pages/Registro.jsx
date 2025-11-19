@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.PNG";
 
 export default function Registro() {
   const [nombre, setNombre] = useState("");
@@ -10,18 +10,16 @@ export default function Registro() {
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarVerifica, setMostrarVerifica] = useState(false);
   const [error, setError] = useState("");
-  const [cargando, setCargando] = useState(false); // Para indicar que se está procesando
+  const [cargando, setCargando] = useState(false);
 
   const navigate = useNavigate();
 
-  // Validaciones (igual que antes)
   const longitudValida = contrasena.length >= 8;
   const tieneMayuscula = /[A-Z]/.test(contrasena);
   const tieneNumero = /\d/.test(contrasena);
   const coinciden =
     contrasena === verificaContrasena && verificaContrasena.length > 0;
   const esCorreoValido = /\S+@\S+\.\S+/.test(correo);
-
   const formularioValido =
     nombre.trim() &&
     esCorreoValido &&
@@ -30,188 +28,187 @@ export default function Registro() {
     tieneNumero &&
     coinciden;
 
-  // --- FUNCIÓN MODIFICADA ---
   const handleRegistro = async (e) => {
     e.preventDefault();
-    setError(""); // Limpia errores previos
-
+    setError("");
     if (!formularioValido) {
       setError("Por favor, completa todos los campos correctamente.");
       return;
     }
-
-    setCargando(true); // Muestra indicador de carga
-
+    setCargando(true);
     try {
       const response = await fetch("http://localhost:8000/clientes/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre: nombre,
-          email: correo,
-          contrasena: contrasena,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, email: correo, contrasena }),
       });
-
       if (!response.ok) {
-        // Si el backend devuelve un error (ej. email ya existe)
         const errorData = await response.json();
         throw new Error(errorData.detail || "Error al registrar la cuenta.");
       }
-
-      // Si el registro fue exitoso, navega a la página de verificación
       navigate("/registro/verificacion", { state: { correo } });
     } catch (err) {
-      console.error("Error en el registro:", err);
-      setError(
-        err.message || "Ocurrió un error inesperado. Inténtalo de nuevo."
-      );
+      setError(err.message || "Ocurrió un error inesperado.");
     } finally {
-      setCargando(false); // Oculta indicador de carga
+      setCargando(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
-      <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-4xl w-full">
-        {/* IZQUIERDA (Formulario) */}
-        <div className="w-full md:w-1/2 p-10">
-          <div className="flex items-center mb-6">
-            <img src={logo} alt="NOPRO" className="h-8 mr-2" />
-            <h2 className="text-xl font-bold text-gray-800">NOPRO</h2>
-          </div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-            Crear una nueva cuenta
-          </h3>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+      {/* Fondo Decorativo Animado */}
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+      <div
+        className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
+        style={{ animationDelay: "2s" }}
+      ></div>
 
-          <form onSubmit={handleRegistro}>
-            {/* Input Nombre */}
+      <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden max-w-5xl w-full flex flex-col md:flex-row border border-white/50 animate-fade-in-up">
+        {/* SECCIÓN IZQUIERDA (Formulario) */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 order-2 md:order-1">
+          <div className="flex items-center gap-3 mb-6">
+            <img src={logo} alt="NOPRO" className="h-8 w-auto" />
+            <span className="text-xl font-bold text-slate-800">NOPRO</span>
+          </div>
+
+          <h3 className="text-2xl md:text-3xl font-extrabold text-slate-800 mb-2">
+            Crea tu cuenta
+          </h3>
+          <p className="text-slate-500 mb-6 text-sm">
+            Únete para gestionar tus análisis de normas.
+          </p>
+
+          <form onSubmit={handleRegistro} className="space-y-4">
             <input
               type="text"
-              placeholder="Nombre"
+              placeholder="Nombre completo"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
               disabled={cargando}
             />
-            {/* Input Correo */}
+
             <input
               type="email"
-              placeholder="Introduce tu correo electrónico"
+              placeholder="Correo electrónico"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
-              className="w-full mb-4 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
               disabled={cargando}
             />
-            {/* Input Contraseña */}
-            <div className="relative mb-2">
+
+            <div className="relative">
               <input
                 type={mostrarContrasena ? "text" : "password"}
                 placeholder="Contraseña"
                 value={contrasena}
                 onChange={(e) => setContrasena(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                 disabled={cargando}
               />
               <button
                 type="button"
                 onClick={() => setMostrarContrasena(!mostrarContrasena)}
-                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-sm text-blue-500 hover:underline"
+                className="absolute right-3 top-3.5 text-xs font-bold text-slate-400 hover:text-blue-600 uppercase"
               >
                 {mostrarContrasena ? "Ocultar" : "Ver"}
               </button>
             </div>
-            {/* Input Verifica Contraseña */}
-            <div className="relative mb-2">
+
+            <div className="relative">
               <input
                 type={mostrarVerifica ? "text" : "password"}
-                placeholder="Verifica contraseña"
+                placeholder="Confirmar contraseña"
                 value={verificaContrasena}
                 onChange={(e) => setVerificaContrasena(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                 disabled={cargando}
               />
               <button
                 type="button"
                 onClick={() => setMostrarVerifica(!mostrarVerifica)}
-                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-sm text-blue-500 hover:underline"
+                className="absolute right-3 top-3.5 text-xs font-bold text-slate-400 hover:text-blue-600 uppercase"
               >
                 {mostrarVerifica ? "Ocultar" : "Ver"}
               </button>
             </div>
 
-            {/* Lista de condiciones (igual que antes) */}
-            <ul className="text-sm mb-4 pl-5 space-y-1">
-              <li
-                className={`${
-                  longitudValida ? "text-green-600" : "text-red-600"
-                }`}
+            {/* Indicadores de requisitos */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <span
+                className={
+                  longitudValida
+                    ? "text-green-600 font-semibold"
+                    : "text-slate-400"
+                }
               >
-                • Al menos 8 caracteres
-              </li>
-              <li
-                className={`${
-                  tieneMayuscula ? "text-green-600" : "text-red-600"
-                }`}
+                • 8+ Caracteres
+              </span>
+              <span
+                className={
+                  tieneMayuscula
+                    ? "text-green-600 font-semibold"
+                    : "text-slate-400"
+                }
               >
-                • Contiene al menos una letra mayúscula
-              </li>
-              <li
-                className={`${tieneNumero ? "text-green-600" : "text-red-600"}`}
+                • 1 Mayúscula
+              </span>
+              <span
+                className={
+                  tieneNumero
+                    ? "text-green-600 font-semibold"
+                    : "text-slate-400"
+                }
               >
-                • Contiene al menos un número
-              </li>
-              <li
-                className={`${coinciden ? "text-green-600" : "text-red-600"}`}
+                • 1 Número
+              </span>
+              <span
+                className={
+                  coinciden ? "text-green-600 font-semibold" : "text-slate-400"
+                }
               >
-                • Las contraseñas coinciden
-              </li>
-            </ul>
+                • Coinciden
+              </span>
+            </div>
 
-            {/* Mensaje de error */}
             {error && (
-              <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
                 {error}
               </div>
             )}
 
-            {/* Botón de Registro */}
             <button
               type="submit"
-              disabled={!formularioValido || cargando} // Deshabilitado si no es válido o está cargando
-              className={`w-full font-semibold py-2 rounded ${
+              disabled={!formularioValido || cargando}
+              className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1
+              ${
                 formularioValido && !cargando
-                  ? "bg-red-500 hover:bg-red-600 text-white cursor-pointer"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30"
+                  : "bg-slate-300 cursor-not-allowed shadow-none"
               }`}
             >
-              {cargando ? "Registrando..." : "Registro"}
+              {cargando ? "Creando cuenta..." : "Registrarme"}
             </button>
 
-            {/* Link a Login */}
-            <p className="text-sm text-gray-600 mt-4 text-center">
-              ¿Ya estás registrado?{" "}
+            <p className="text-center text-sm text-slate-500 mt-4">
+              ¿Ya tienes cuenta?{" "}
               <Link
                 to="/login"
-                className="text-blue-500 hover:underline font-medium"
+                className="text-blue-600 font-bold hover:underline"
               >
-                Acceder
+                Inicia sesión
               </Link>
             </p>
           </form>
         </div>
 
-        {/* DERECHA (Panel informativo) */}
-        <div className="hidden md:flex w-1/2 bg-[#d2e8f9] items-center justify-center p-6">
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-gray-700 mb-2">
-              Crea tu nueva cuenta
-            </h3>
-            <p className="text-sm text-gray-600">
-              Crea tu nueva cuenta ingresando tu nombre, correo electrónico y
-              contraseña para acceder a NOPRO.
+        {/* SECCIÓN DERECHA (Decorativa) - Oculta en móvil para ahorrar espacio vertical */}
+        <div className="hidden md:flex w-1/2 bg-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black opacity-90"></div>
+          <div className="relative z-10 text-center">
+            <h2 className="text-3xl font-bold mb-4">Únete a la comunidad</h2>
+            <p className="text-slate-300">
+              Accede a herramientas avanzadas de análisis normativo en segundos.
             </p>
           </div>
         </div>

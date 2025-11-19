@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.PNG";
 
 export default function VerificarCuenta() {
   const location = useLocation();
@@ -98,75 +98,113 @@ export default function VerificarCuenta() {
   };
 
   return (
-    <div className="min-h-screen bg-[#eaf3fa] flex items-center justify-center">
-      <div className="bg-white flex shadow-lg rounded-xl overflow-hidden max-w-xl w-full">
-        <div className="w-full p-10">
-          <div className="flex items-center mb-6">
-            <img src={logo} alt="NOPRO" className="h-8 mr-2" />
-            <h2 className="text-xl font-bold text-gray-800">NOPRO</h2>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+      {/* Fondos Decorativos Animados */}
+      <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+      <div
+        className="absolute top-40 -right-20 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
+        style={{ animationDelay: "2s" }}
+      ></div>
+
+      <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row border border-white/50 animate-fade-in-up">
+        {/* IZQUIERDA (Formulario) */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 order-2 md:order-1 flex flex-col justify-center">
+          <div className="flex items-center gap-3 mb-8">
+            <img src={logo} alt="NOPRO" className="h-9 w-auto drop-shadow-sm" />
+            <span className="text-2xl font-bold text-slate-800 tracking-tight">
+              NOPRO
+            </span>
           </div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-            Verificar cuenta
+
+          <h3 className="text-2xl font-extrabold text-slate-900 mb-2">
+            Verificar Cuenta
           </h3>
-          <p className="text-sm text-gray-600 mb-6">
-            Introduce el código de verificación que hemos enviado a:
-          </p>
-          <p className="text-base font-medium text-gray-700 mb-4 text-center">
-            {correo || "No se especificó correo"}
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+            Hemos enviado un código de verificación a tu correo electrónico.
           </p>
 
-          {/* Botón para reenviar (Ahora funcional) */}
-          <div className="flex gap-4 mb-6">
-            <button
-              className={`w-full font-medium py-2 rounded ${
-                cargando || cargandoReenvio
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-              onClick={handleReenviar}
-              disabled={cargando || cargandoReenvio || !correo}
-            >
-              {cargandoReenvio ? "Reenviando..." : "Reenviar correo"}
-            </button>
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
+            <p className="text-xs text-blue-500 uppercase font-bold mb-1">
+              Enviado a:
+            </p>
+            <p className="text-slate-700 font-medium break-all">
+              {correo || "No especificado"}
+            </p>
           </div>
 
-          {/* Campo para código */}
-          <input
-            type="text"
-            placeholder="Código de verificación"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            maxLength={6}
-            className="w-full mb-6 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            disabled={cargando || cargandoReenvio}
-          />
-
-          {/* Mensaje de error */}
-          {error && (
-            <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
-              {error}
+          <div className="space-y-5">
+            {/* Input Código */}
+            <div className="group">
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                Código de 6 dígitos
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. 123456"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+                maxLength={6}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium text-center tracking-widest text-lg focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                disabled={cargando || cargandoReenvio}
+              />
             </div>
-          )}
 
-          {/* Mensaje de éxito de reenvío */}
-          {mensajeExito && (
-            <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
-              {mensajeExito}
+            {/* Botones de Acción */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleVerificar}
+                disabled={cargando || cargandoReenvio || !codigo}
+                className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
+                    ${
+                      !cargando && !cargandoReenvio && codigo
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                        : "bg-slate-300 cursor-not-allowed shadow-none"
+                    }`}
+              >
+                {cargando ? "Verificando..." : "Verificar Código"}
+              </button>
+
+              <button
+                onClick={handleReenviar}
+                disabled={cargando || cargandoReenvio || !correo}
+                className="w-full py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                {cargandoReenvio
+                  ? "Reenviando..."
+                  : "¿No recibiste el código? Reenviar"}
+              </button>
             </div>
-          )}
 
-          {/* Botón para confirmar */}
-          <button
-            onClick={handleVerificar}
-            disabled={cargando || cargandoReenvio || !codigo}
-            className={`w-full font-semibold py-2 rounded ${
-              !cargando && !cargandoReenvio && codigo
-                ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            {cargando ? "Verificando..." : "Verificar"}
-          </button>
+            {/* Mensajes de Estado */}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {mensajeExito && (
+              <div className="p-3 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in">
+                ✅ {mensajeExito}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* DERECHA (Panel informativo - Oculto en móvil) */}
+        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-500 opacity-20 rounded-full blur-3xl transform -translate-x-10 translate-y-10"></div>
+
+          <div className="relative z-10 text-center max-w-sm">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
+              <span className="text-4xl">📩</span>
+            </div>
+            <h3 className="text-2xl font-bold mb-3">Revisa tu bandeja</h3>
+            <p className="text-slate-300 text-lg leading-relaxed">
+              Busca un correo de NOPRO con el asunto "Verifica tu cuenta". Si no
+              lo ves, revisa la carpeta de Spam.
+            </p>
+          </div>
         </div>
       </div>
     </div>

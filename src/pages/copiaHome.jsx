@@ -3,120 +3,86 @@ import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
+// Verificar autenticación
 const isAuthenticated = localStorage.getItem("auth") === "true";
 
-function TarjetaLaptop() {
+// Componente de Tarjeta (Estilo Landing Page)
+function TarjetaLanding({ titulo, icono, descripcion, ruta }) {
   return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
-      <div className="text-4xl mb-2">💻</div>
-      <h2 className="font-semibold text-lg">Laptop</h2>
-      <p className="text-sm text-gray-500 flex-grow">
-        Realizar el análisis de normas para una Laptop.
-      </p>
-      <Link to="/subir/Laptop" className="mt-3">
-        <button
-          disabled={!isAuthenticated}
-          className={`w-full py-2 rounded ${
-            isAuthenticated
-              ? "bg-blue-500 text-white hover:bg-blue-600"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
-          Realizar análisis
-        </button>
-      </Link>
+    <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 flex flex-col h-full transition-transform hover:-translate-y-1">
+      <div className="flex-grow flex flex-col items-center text-center">
+        <div className="text-5xl mb-6 filter drop-shadow-sm">{icono}</div>
+        <h2 className="font-bold text-2xl text-slate-800 mb-3">{titulo}</h2>
+        <p className="text-slate-500 text-sm leading-relaxed mb-8">
+          {descripcion}
+        </p>
+      </div>
+
+      <div className="mt-auto">
+        {isAuthenticated ? (
+          <Link to={ruta}>
+            <button className="w-full py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">
+              Realizar análisis
+            </button>
+          </Link>
+        ) : (
+          /* BOTÓN BLOQUEADO (Estilo de tu imagen pero moderno) */
+          <button
+            disabled
+            className="w-full py-3.5 rounded-xl font-bold text-slate-400 bg-slate-200 border border-slate-300 cursor-not-allowed flex items-center justify-center gap-2 select-none"
+          >
+            <span>Realizar análisis</span>
+            <svg
+              className="w-4 h-4 opacity-70"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              ></path>
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
-function TarjetaSmartTV() {
-  return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
-      <div className="text-4xl mb-2">📺</div>
-      <h2 className="font-semibold text-lg">Smart TV</h2>
-      <p className="text-sm text-gray-500 flex-grow">
-        Realizar el análisis de normas para una Smart TV.
-      </p>
-      <Link to="/subir/SmartTV" className="mt-3">
-        <button
-          disabled={!isAuthenticated}
-          className={`w-full py-2 rounded ${
-            isAuthenticated
-              ? "bg-blue-500 text-white hover:bg-blue-600"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
-          Realizar análisis
-        </button>
-      </Link>
-    </div>
-  );
-}
-
-function TarjetaLuminaria() {
-  return (
-    <div className="bg-white p-4 shadow rounded-xl text-center hover:shadow-lg transition-shadow w-full h-full flex flex-col">
-      <div className="text-4xl mb-2">💡</div>
-      <h2 className="font-semibold text-lg">Luminaria para Exterior</h2>
-      <p className="text-sm text-gray-500 flex-grow">
-        Realizar el análisis de normas para una Luminaria para exterior.
-      </p>
-      <Link to="/subir/Luminaria" className="mt-3">
-        <button
-          disabled={!isAuthenticated}
-          className={`w-full py-2 rounded ${
-            isAuthenticated
-              ? "bg-blue-500 text-white hover:bg-blue-600"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
-          Realizar análisis
-        </button>
-      </Link>
-    </div>
-  );
-}
-
-export default function Home() {
+export default function CopiaHome() {
   const [tourOpen, setTourOpen] = useState(false);
 
   const steps = [
     {
       target: ".navbar",
-      content:
-        "Este es el menú de navegación. Para comenzar, primero debes registrarte y luego acceder a tu cuenta.",
+      content: "Navegación principal. Inicia sesión o regístrate desde aquí.",
     },
     {
-      target: ".help-button",
+      target: ".tarjeta-landing",
       content:
-        "Haz clic aquí en cualquier momento para ver esta ayuda nuevamente.",
-    },
-    {
-      target: ".tarjeta-laptop",
-      content:
-        "Aquí puedes realizar el análisis de normas para una Laptop. Este botón se habilita después de registrarte y acceder.",
-    },
-    {
-      target: ".tarjeta-smarttv",
-      content:
-        "Aquí puedes realizar el análisis de normas para una Smart TV. Primero debes tener sesión iniciada.",
-    },
-    {
-      target: ".tarjeta-luminaria",
-      content:
-        "Aquí puedes realizar el análisis de normas para una Luminaria para exterior. Regístrate y accede para poder usarlo.",
+        "Las herramientas de análisis están bloqueadas hasta que inicies sesión.",
     },
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-50 font-sans relative overflow-hidden">
+      {/* Fondo sutil */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white to-slate-100 -z-10"></div>
+
       <Joyride
         steps={steps}
         run={tourOpen}
         continuous={true}
-        scrollToFirstStep={true}
         showSkipButton={true}
-        styles={{ options: { zIndex: 10000 } }}
+        styles={{
+          options: {
+            zIndex: 10000,
+            primaryColor: "#2563EB",
+          },
+        }}
         callback={(data) => {
           if (data.status === "finished" || data.status === "skipped") {
             setTourOpen(false);
@@ -124,104 +90,107 @@ export default function Home() {
         }}
       />
 
-      {/* NAVBAR */}
-      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
-        <div className="flex items-center space-x-2">
-          <img src={logo} alt="NOPRO" className="h-8" />
-          <Link
-            to="/"
-            className="text-xl font-bold text-gray-800 hover:underline"
-          >
-            NOPRO
-          </Link>
-        </div>
-
-        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
-          <li
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300 help-button"
-            onClick={() => setTourOpen(true)}
-          >
-            AYUDA
-          </li>
-
-          {isAuthenticated && (
-            <>
-              <Link
-                to="/perfil"
-                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-              >
-                PERFIL
-              </Link>
-              <Link
-                to="/historial"
-                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-              >
-                HISTORIAL PRODUCTOS
-              </Link>
-              <Link
-                to="/soporte"
-                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-              >
-                CONTACTAR SOPORTE
-              </Link>
-              <li
-                onClick={() => {
-                  localStorage.removeItem("auth");
-                  window.location.reload();
-                }}
-                className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-              >
-                CERRAR SESIÓN
-              </li>
-            </>
-          )}
-        </ul>
-
-        {!isAuthenticated && (
-          <div className="flex items-center space-x-4 mt-2 md:mt-0">
-            <Link
-              to="/login"
-              className="text-sm text-gray-700 hover:text-blue-600"
-            >
-              Acceder
-            </Link>
-            <Link
-              to="/registro"
-              className="bg-red-500 text-white text-sm font-semibold px-4 py-1 rounded hover:bg-red-600"
-            >
-              Registro
-            </Link>
+      {/* NAVBAR (Diseño basado en tu imagen: Logo Izq | Ayuda Centro | Auth Der) */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4 navbar">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Izquierda: Logo */}
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="NOPRO" className="h-8 w-auto" />
+            <span className="text-xl font-extrabold text-slate-800 tracking-tight">
+              NOPRO
+            </span>
           </div>
-        )}
+
+          {/* Centro: Ayuda (Visible en pantallas medianas+) */}
+          <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
+            <button
+              onClick={() => setTourOpen(true)}
+              className="text-blue-600 font-bold text-sm hover:text-blue-800 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors uppercase tracking-wide"
+            >
+              AYUDA
+            </button>
+          </div>
+
+          {/* Derecha: Botones Auth */}
+          <div className="flex items-center gap-4">
+            {isAuthenticated ? (
+              <Link
+                to="/Home"
+                className="text-sm font-bold text-blue-600 hover:underline"
+              >
+                Ir al Panel Principal
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+                >
+                  Acceder
+                </Link>
+                <Link
+                  to="/registro"
+                  className="px-5 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600 shadow-md shadow-red-500/30 transition-all transform hover:-translate-y-0.5"
+                >
+                  Registro
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
       </nav>
 
-      {/* CONTENIDO */}
-      <main className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
-        <header className="text-center mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Header (Texto exacto de tu imagen) */}
+        <header className="text-center mb-16 max-w-4xl mx-auto animate-fade-in-up">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-6">
             Aplicación web para identificar normas aplicables a productos
           </h1>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base md:text-lg">
+          <p className="text-slate-500 text-lg leading-relaxed max-w-3xl mx-auto">
             Esta herramienta online permite identificar las normas mexicanas
             aplicables a productos: Smart TV, laptops y luminarias para
             exterior.
             <br />
-            No se necesita instalación.
+            <span className="font-medium text-slate-600">
+              No se necesita instalación.
+            </span>
           </p>
         </header>
 
-        <section className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 max-w-6xl mx-auto justify-items-center px-4">
-          <div className="tarjeta-laptop w-full sm:w-64 h-64">
-            <TarjetaLaptop />
+        {/* Grid de Tarjetas */}
+        <section
+          className="grid gap-8 grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto animate-fade-in-up"
+          style={{ animationDelay: "0.2s" }}
+        >
+          <div className="tarjeta-landing h-full">
+            <TarjetaLanding
+              titulo="Laptop"
+              icono="💻"
+              descripcion="Realizar el análisis de normas para una Laptop."
+              ruta="/subir/Laptop"
+            />
           </div>
-          <div className="tarjeta-smarttv w-full sm:w-64 h-64">
-            <TarjetaSmartTV />
+
+          <div className="tarjeta-landing h-full">
+            <TarjetaLanding
+              titulo="Smart TV"
+              icono="📺"
+              descripcion="Realizar el análisis de normas para una Smart TV."
+              ruta="/subir/SmartTV"
+            />
           </div>
-          <div className="tarjeta-luminaria w-full sm:w-64 h-64">
-            <TarjetaLuminaria />
+
+          <div className="tarjeta-landing h-full">
+            <TarjetaLanding
+              titulo="Luminaria para Exterior"
+              icono="💡"
+              descripcion="Realizar el análisis de normas para una Luminaria para exterior."
+              ruta="/subir/Luminaria"
+            />
           </div>
         </section>
       </main>
-    </>
+    </div>
   );
 }

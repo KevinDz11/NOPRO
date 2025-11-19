@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
-import { useAuthListener } from "../useAuthListener"; // 1. Importar el hook
+import { useAuthListener } from "../useAuthListener";
 
 export default function ContactoSoporte() {
-  useAuthListener(); // 2. Usar el hook (ya que esta es una ruta protegida)
+  useAuthListener();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -13,7 +13,6 @@ export default function ContactoSoporte() {
     message: "",
   });
 
-  // 3. Añadir estados para la UI
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
@@ -26,13 +25,11 @@ export default function ContactoSoporte() {
     });
   };
 
-  // 4. Convertir handleSubmit a async y llamar al backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setMensajeExito("");
 
-    // Validación simple
     if (
       !formData.name ||
       !formData.email ||
@@ -49,8 +46,6 @@ export default function ContactoSoporte() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Nota: El endpoint de backend no requiere token,
-          // pero la página en sí está protegida por ProtectedRoute.
         },
         body: JSON.stringify(formData),
       });
@@ -61,9 +56,7 @@ export default function ContactoSoporte() {
         throw new Error(data.detail || "Error al enviar el mensaje.");
       }
 
-      // Éxito
       setMensajeExito(data.mensaje || "Mensaje enviado correctamente.");
-      // Limpia el formulario solo si tuvo éxito
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (err) {
       console.error("Error enviando soporte:", err);
@@ -74,163 +67,218 @@ export default function ContactoSoporte() {
   };
 
   return (
-    <>
-      {/* NAVBAR (Sin cambios) */}
-      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
-        <div className="flex items-center space-x-2">
-          <img src={logo} alt="NOPRO" className="h-8" />
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans flex flex-col">
+      {/* Fondo Decorativo */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+      <div
+        className="absolute bottom-20 left-0 w-72 h-72 bg-indigo-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
+        style={{ animationDelay: "2s" }}
+      ></div>
+
+      {/* NAVBAR MODERNO */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
+          {/* Logo redirige a Home */}
           <Link
             to="/Home"
-            className="text-xl font-bold text-gray-800 hover:underline"
+            className="flex items-center space-x-3 group cursor-pointer"
           >
-            NOPRO
+            <img
+              src={logo}
+              alt="NOPRO"
+              className="h-9 w-auto transition-transform group-hover:scale-105"
+            />
+            <span className="text-2xl font-extrabold text-slate-800 tracking-tighter">
+              NOPRO
+            </span>
           </Link>
+
+          <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
+            <Link
+              to="/perfil"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              PERFIL
+            </Link>
+            <Link
+              to="/historial"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              HISTORIAL PRODUCTOS
+            </Link>
+
+            {/* Botón Cerrar Sesión */}
+            <li
+              onClick={() => {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("auth");
+                // Redirige al usuario (puedes usar useNavigate o recargar)
+                window.location.href = "/";
+              }}
+              className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
+            >
+              CERRAR SESIÓN
+            </li>
+          </ul>
         </div>
-        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
-          <li className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300">
-            AYUDA
-          </li>
-          <Link
-            to="/perfil"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            PERFIL
-          </Link>
-          <Link
-            to="/historial"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            HISTORIAL PRODUCTOS
-          </Link>
-          <Link
-            to="/soporte"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CONTACTAR SOPORTE
-          </Link>
-          <Link
-            to="/"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CERRAR SESIÓN
-          </Link>
-        </ul>
       </nav>
 
-      {/* FORMULARIO DE CONTACTO */}
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-6">
-        <div className="bg-white p-6 rounded-lg shadow-md w-full sm:w-96">
-          <h2 className="text-2xl font-semibold text-center mb-4">
-            Contacto Soporte
-          </h2>
-          <form onSubmit={handleSubmit}>
-            {/* Campo Nombre */}
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Nombre
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={cargando}
-              />
-            </div>
+      {/* CONTENIDO PRINCIPAL - FORMULARIO */}
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+        <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden relative">
+          {/* Header de la tarjeta */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <h2 className="text-3xl font-extrabold text-white relative z-10 mb-2">
+              ¿Necesitas ayuda?
+            </h2>
+            <p className="text-blue-100 text-sm relative z-10">
+              Envíanos un mensaje y te responderemos lo antes posible.
+            </p>
+          </div>
 
-            {/* Campo Email */}
-            <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={cargando}
-              />
-            </div>
-
-            {/* Campo Asunto */}
-            <div className="mb-4">
-              <label
-                htmlFor="subject"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Asunto
-              </label>
-              <input
-                type="text"
-                id="subject"
-                name="subject"
-                value={formData.subject}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={cargando}
-              />
-            </div>
-
-            {/* Campo Mensaje */}
-            <div className="mb-4">
-              <label
-                htmlFor="message"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Mensaje
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                required
-                rows="4"
-                className="mt-1 w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={cargando}
-              />
-            </div>
-
-            {/* 5. Mensajes de estado */}
-            {error && (
-              <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
-                {error}
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Nombre */}
+              <div className="group">
+                <label
+                  htmlFor="name"
+                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                >
+                  Nombre Completo
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  disabled={cargando}
+                  placeholder="Ej. Juan Pérez"
+                />
               </div>
-            )}
-            {mensajeExito && (
-              <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
-                {mensajeExito}
-              </div>
-            )}
 
-            {/* 6. Botón con estado de carga */}
-            <button
-              type="submit"
-              className={`w-full py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                cargando
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-              disabled={cargando}
-            >
-              {cargando ? "Enviando..." : "Enviar"}
-            </button>
-          </form>
+              {/* Email */}
+              <div className="group">
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                >
+                  Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  disabled={cargando}
+                  placeholder="tucorreo@ejemplo.com"
+                />
+              </div>
+
+              {/* Asunto */}
+              <div className="group">
+                <label
+                  htmlFor="subject"
+                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                >
+                  Asunto
+                </label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  disabled={cargando}
+                  placeholder="Resumen de tu consulta"
+                />
+              </div>
+
+              {/* Mensaje */}
+              <div className="group">
+                <label
+                  htmlFor="message"
+                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                >
+                  Mensaje
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows="4"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
+                  disabled={cargando}
+                  placeholder="Describe tu problema o duda aquí..."
+                />
+              </div>
+
+              {/* Mensajes de Estado */}
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
+                  ⚠️ {error}
+                </div>
+              )}
+              {mensajeExito && (
+                <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in flex items-center justify-center gap-2">
+                  ✅ {mensajeExito}
+                </div>
+              )}
+
+              {/* Botón de Envío */}
+              <button
+                type="submit"
+                className={`w-full py-3.5 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform hover:-translate-y-0.5
+                  ${
+                    cargando
+                      ? "bg-slate-300 cursor-not-allowed shadow-none"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
+                  }`}
+                disabled={cargando}
+              >
+                {cargando ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Enviando...
+                  </span>
+                ) : (
+                  "Enviar Mensaje"
+                )}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }

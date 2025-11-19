@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
-import { useAuthListener } from "../useAuthListener"; // Importamos el hook
+import { useAuthListener } from "../useAuthListener";
 
 const PerfilUsuario = () => {
-  useAuthListener(); // Usamos el hook
+  useAuthListener();
 
   // Estados para datos del usuario
   const [nombre, setNombre] = useState("Cargando...");
@@ -93,158 +93,185 @@ const PerfilUsuario = () => {
   };
 
   return (
-    <>
-      {/* NAVBAR (Sin cambios) */}
-      <nav className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 bg-white shadow navbar">
-        {/* ... (Tu código de Navbar) ... */}
-        <div className="flex items-center space-x-2">
-          <img src={logo} alt="NOPRO" className="h-8" />
-          <Link
-            to="/" // O a /Home si prefieres
-            className="text-xl font-bold text-gray-800 hover:underline"
-          >
-            NOPRO
-          </Link>
-        </div>
-        <ul className="hidden md:flex items-center space-x-4 font-medium text-sm text-gray-700">
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      {/* Fondo Decorativo */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+
+      {/* NAVBAR MODERNO */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
+          {/* Logo redirige a Home */}
           <Link
             to="/Home"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
+            className="flex items-center space-x-3 group cursor-pointer"
           >
-            HOME
+            <img
+              src={logo}
+              alt="NOPRO"
+              className="h-9 w-auto transition-transform group-hover:scale-105"
+            />
+            <span className="text-2xl font-extrabold text-slate-800 tracking-tighter">
+              NOPRO
+            </span>
           </Link>
-          <Link
-            to="/historial"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            HISTORIAL PRODUCTOS
-          </Link>
-          <Link
-            to="/soporte"
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CONTACTAR SOPORTE
-          </Link>
-          <li
-            onClick={() => {
-              localStorage.removeItem("authToken");
-              localStorage.removeItem("auth");
-              navigate("/");
-            }}
-            className="cursor-pointer text-blue-600 hover:bg-blue-100 hover:text-blue-800 py-2 px-4 rounded-lg transition-all duration-300"
-          >
-            CERRAR SESIÓN
-          </li>
-        </ul>
+
+          <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
+            {/* Enlace Home eliminado, ahora se usa el Logo */}
+            <Link
+              to="/historial"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              HISTORIAL PRODUCTOS
+            </Link>
+            <Link
+              to="/soporte"
+              className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              CONTACTAR SOPORTE
+            </Link>
+
+            {/* Botón Cerrar Sesión */}
+            <li
+              onClick={() => {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("auth");
+                navigate("/");
+              }}
+              className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
+            >
+              CERRAR SESIÓN
+            </li>
+          </ul>
+        </div>
       </nav>
 
-      {/* PERFIL (Sin cambios en esta parte) */}
-      <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6">
-          Perfil de Usuario
-        </h2>
-
-        {/* Datos del usuario */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Nombre</label>
-          <input
-            type="text"
-            value={nombre}
-            readOnly
-            className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">
-            Correo electrónico
-          </label>
-          <input
-            type="email"
-            value={correo}
-            readOnly
-            className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-          />
-        </div>
-
-        {/* Botón Cambiar Contraseña (Sin cambios) */}
-        <hr className="my-6" />
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Cambiar contraseña</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Serás redirigido al proceso de recuperación de contraseña, donde te
-            enviaremos un enlace a tu correo.
-          </p>
-          <Link
-            to="/nuevaContrasena"
-            className="font-semibold py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white cursor-pointer no-underline"
-          >
-            Cambiar contraseña
-          </Link>
-        </div>
-        <hr className="my-6" />
-
-        {/* Eliminar cuenta */}
-        <div className="text-center">
-          {/* Mensajes */}
-          {error && (
-            <div className="bg-red-100 text-red-700 border border-red-300 px-4 py-2 rounded mb-4 text-sm">
-              {error}
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="p-4 md:p-10 max-w-3xl mx-auto animate-fade-in-up">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          {/* Cabecera de Perfil Visual */}
+          <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-10 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl shadow-lg ring-4 ring-white/20">
+                👤
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-1">{nombre}</h2>
+              <p className="text-blue-200 font-medium">{correo}</p>
             </div>
-          )}
-          {mensajeExito && (
-            <div className="bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded mb-4 text-sm">
-              {mensajeExito}
+          </div>
+
+          <div className="p-8 md:p-10 space-y-8">
+            {/* Sección Datos */}
+            <div className="space-y-5">
+              <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">
+                Información Personal
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                    Nombre
+                  </label>
+                  <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium select-all">
+                    {nombre}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                    Correo electrónico
+                  </label>
+                  <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium select-all">
+                    {correo}
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
 
-          {/* Botón Eliminar Cuenta */}
-          <button
-            onClick={handleEliminarCuenta}
-            disabled={cargando}
-            className={`font-semibold py-2 px-4 rounded ${
-              !cargando
-                ? "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            {cargando ? "Procesando..." : "Eliminar cuenta"}
-          </button>
+            {/* Mensajes de Estado */}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center">
+                {error}
+              </div>
+            )}
+            {mensajeExito && (
+              <div className="p-4 bg-green-50 border border-green-100 text-green-600 rounded-xl text-sm font-medium text-center">
+                {mensajeExito}
+              </div>
+            )}
+
+            {/* Acciones */}
+            <div className="pt-4">
+              <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">
+                Gestión de Cuenta
+              </h3>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to="/nuevaContrasena"
+                  className="flex-1 text-center py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
+                >
+                  Cambiar contraseña
+                </Link>
+                <button
+                  onClick={handleEliminarCuenta}
+                  disabled={cargando}
+                  className={`flex-1 py-3.5 rounded-xl border-2 font-bold transition-all transform hover:-translate-y-0.5 ${
+                    cargando
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                      : "border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 hover:shadow-md"
+                  }`}
+                >
+                  {cargando ? "Procesando..." : "Eliminar cuenta"}
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-4 text-center">
+                Nota: Al cambiar la contraseña serás redirigido al proceso de
+                recuperación segura.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
 
-      {/* --- INICIO DE LA MODIFICACIÓN --- */}
-      {/* El Modal (Clases actualizadas) */}
+      {/* MODAL MODERNO */}
       {mostrarModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-lg">
-          {/* --- FIN DE LA MODIFICACIÓN --- */}
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h3 className="text-lg font-bold text-center mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full animate-fade-in-up border border-white/50 text-center">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">⚠️</span>
+            </div>
+
+            <h3 className="text-xl font-extrabold text-slate-900 mb-3">
               ¿Estás seguro?
             </h3>
-            <p className="text-sm text-gray-700 text-center mb-6">
-              Esta acción eliminará permanentemente tu cuenta y todos tus datos.
-              No se puede deshacer.
+            <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+              Esta acción eliminará permanentemente tu cuenta y todos tus
+              historiales.{" "}
+              <span className="text-red-500 font-semibold">
+                No se puede deshacer.
+              </span>
             </p>
-            <div className="flex justify-center gap-4">
+
+            <div className="flex gap-3">
               <button
-                onClick={() => setMostrarModal(false)} // Botón "No"
-                className="font-semibold py-2 px-6 rounded bg-gray-300 hover:bg-gray-400 text-gray-800"
+                onClick={() => setMostrarModal(false)}
+                className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
                 disabled={cargando}
               >
-                No
+                Cancelar
               </button>
               <button
-                onClick={ejecutarEliminacion} // Botón "Sí"
-                className="font-semibold py-2 px-6 rounded bg-red-600 hover:bg-red-700 text-white"
+                onClick={ejecutarEliminacion}
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all"
                 disabled={cargando}
               >
-                {cargando ? "Eliminando..." : "Sí"}
+                {cargando ? "Eliminando..." : "Sí, Eliminar"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

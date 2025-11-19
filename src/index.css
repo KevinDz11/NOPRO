@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+/* --- Animaciones Personalizadas --- */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* --- Clases de Utilidad Personalizadas --- */
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* --- Estilos Base Modernos --- */
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+  background-image: radial-gradient(
+      circle at 50% 0%,
+      #e0f2fe 0%,
+      transparent 50%
+    ),
+    radial-gradient(circle at 100% 0%, #f0f9ff 0%, transparent 30%);
+  min-height: 100vh;
+}
+
+/* Scrollbar moderna */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition;
+}
