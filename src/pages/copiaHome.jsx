@@ -3,11 +3,11 @@ import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
-// Verificar autenticación
-const isAuthenticated = localStorage.getItem("auth") === "true";
+// Eliminamos la verificación global que estaba aquí arriba
 
 // Componente de Tarjeta (Estilo Landing Page)
-function TarjetaLanding({ titulo, icono, descripcion, ruta }) {
+function TarjetaLanding({ titulo, icono, descripcion, ruta, isAuthenticated }) {
+  // Recibimos isAuthenticated como prop
   return (
     <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 flex flex-col h-full transition-transform hover:-translate-y-1">
       <div className="flex-grow flex flex-col items-center text-center">
@@ -26,7 +26,7 @@ function TarjetaLanding({ titulo, icono, descripcion, ruta }) {
             </button>
           </Link>
         ) : (
-          /* BOTÓN BLOQUEADO (Estilo de tu imagen pero moderno) */
+          /* BOTÓN BLOQUEADO (Este es el que quieres ver al salir) */
           <button
             disabled
             className="w-full py-3.5 rounded-xl font-bold text-slate-400 bg-slate-200 border border-slate-300 cursor-not-allowed flex items-center justify-center gap-2 select-none"
@@ -54,6 +54,10 @@ function TarjetaLanding({ titulo, icono, descripcion, ruta }) {
 
 export default function CopiaHome() {
   const [tourOpen, setTourOpen] = useState(false);
+
+  // --- CORRECCIÓN: Mover la verificación DENTRO del componente ---
+  // Esto asegura que se vuelva a calcular cada vez que entras a la página
+  const isAuthenticated = localStorage.getItem("auth") === "true";
 
   const steps = [
     {
@@ -90,7 +94,7 @@ export default function CopiaHome() {
         }}
       />
 
-      {/* NAVBAR (Diseño basado en tu imagen: Logo Izq | Ayuda Centro | Auth Der) */}
+      {/* NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4 navbar">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Izquierda: Logo */}
@@ -101,7 +105,7 @@ export default function CopiaHome() {
             </span>
           </div>
 
-          {/* Centro: Ayuda (Visible en pantallas medianas+) */}
+          {/* Centro: Ayuda */}
           <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
             <button
               onClick={() => setTourOpen(true)}
@@ -121,6 +125,7 @@ export default function CopiaHome() {
                 Ir al Panel Principal
               </Link>
             ) : (
+              /* ESTO es lo que verás ahora al cerrar sesión (Imagen 2) */
               <>
                 <Link
                   to="/login"
@@ -142,7 +147,6 @@ export default function CopiaHome() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Header (Texto exacto de tu imagen) */}
         <header className="text-center mb-16 max-w-4xl mx-auto animate-fade-in-up">
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-6">
             Aplicación web para identificar normas aplicables a productos
@@ -169,6 +173,7 @@ export default function CopiaHome() {
               icono="💻"
               descripcion="Realizar el análisis de normas para una Laptop."
               ruta="/subir/Laptop"
+              isAuthenticated={isAuthenticated} // Pasamos el estado actualizado
             />
           </div>
 
@@ -178,6 +183,7 @@ export default function CopiaHome() {
               icono="📺"
               descripcion="Realizar el análisis de normas para una Smart TV."
               ruta="/subir/SmartTV"
+              isAuthenticated={isAuthenticated}
             />
           </div>
 
@@ -187,6 +193,7 @@ export default function CopiaHome() {
               icono="💡"
               descripcion="Realizar el análisis de normas para una Luminaria para exterior."
               ruta="/subir/Luminaria"
+              isAuthenticated={isAuthenticated}
             />
           </div>
         </section>
