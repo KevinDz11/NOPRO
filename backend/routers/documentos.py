@@ -13,8 +13,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def subir_y_analizar(
     id_producto: int = Form(...),
     nombre: str = Form(...),
-    tipo: str = Form(...),      # Recibe "ficha" o "manual"
+    tipo: str = Form(...),      # Recibe "ficha", "manual" o "etiqueta"
     categoria: str = Form(...), # Recibe "Laptop", "SmartTV", "Luminaria"
+    
+    # --- NUEVO: Recibimos la marca (Opcional, por defecto vacía) ---
+    marca: str = Form(""), 
+    # ---------------------------------------------------------------
+
     archivo: UploadFile = File(...),
     analizar: bool = Form(True),
     db: Session = Depends(database.get_db),
@@ -43,8 +48,6 @@ def subir_y_analizar(
         if analizar and archivo.filename.lower().endswith(".pdf"):
             
             # --- A. Normalizar Categoría ---
-            # El frontend puede mandar "smarttv", "SmartTV", "Smart Tv", etc.
-            # Lo estandarizamos a las llaves exactas de tu diccionario en ia_analisis.py
             cat_map = {
                 "laptop": "Laptop",
                 "smarttv": "SmartTV",
@@ -56,13 +59,28 @@ def subir_y_analizar(
             # Si no encuentra la categoría, usa "Laptop" por defecto para no fallar
             categoria_clean = cat_map.get(categoria.lower(), "Laptop")
 
-            # --- B. Normalizar Tipo ---
-            # El frontend manda "ficha" o "manual", el backend espera "Ficha" o "Manual"
-            tipo_clean = "Ficha" if tipo.lower() == "ficha" else "Manual"
+            # --- B. Normalizar Tipo (MODIFICADO) ---
+            # Ahora soportamos Ficha, Manual y Etiqueta
+            tipo_lower = tipo.lower()
+            if "ficha" in tipo_lower:
+                tipo_clean = "Ficha"
+            elif "manual" in tipo_lower:
+                tipo_clean = "Manual"
+            elif "etiqueta" in tipo_lower:
+                tipo_clean = "Etiqueta"
+            else:
+                tipo_clean = "Ficha" # Default
 
             # --- C. Llamar al Cerebro Maestro ---
-            print(f"🧠 Iniciando análisis IA: {categoria_clean} - {tipo_clean}")
-            resultados_ia = ia_analisis.analizar_documento(file_path, tipo_clean, categoria_clean)
+            print(f"🧠 Iniciando análisis IA: {categoria_clean} - {tipo_clean} (Marca: {marca})")
+            
+            # Pasamos la marca como argumento extra para validación visual
+            resultados_ia = ia_analisis.analizar_documento(
+                file_path, 
+                tipo_clean, 
+                categoria_clean, 
+                marca_esperada=marca
+            )
 
         # 5. Retornar la respuesta combinada (Datos BD + Resultados IA)
         return {

@@ -7,10 +7,9 @@ import { useAuthListener } from "../useAuthListener";
 function ResultadosAnalisis() {
   useAuthListener();
   const [datos, setDatos] = useState(null);
-  const contentRef = useRef(null); // Referencia al área imprimible
+  const contentRef = useRef(null);
 
   useEffect(() => {
-    // Leemos los datos que guardaremos en localStorage desde la página de subida
     const data = localStorage.getItem("ultimoAnalisis");
     if (data) {
       setDatos(JSON.parse(data));
@@ -37,17 +36,15 @@ function ResultadosAnalisis() {
           <h2 className="text-xl font-bold text-slate-700">
             Generando reporte...
           </h2>
-          <p className="text-slate-500">Por favor espera un momento.</p>
         </div>
       </div>
     );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative pb-20">
-      {/* Fondo Decorativo */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-200 to-slate-50 -z-10"></div>
 
-      {/* NAVBAR MODERNO (Solo para navegación, no sale en PDF) */}
+      {/* NAVBAR (No se imprime) */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -61,30 +58,25 @@ function ResultadosAnalisis() {
               to="/Home"
               className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition"
             >
-              Volver al Inicio
+              Volver
             </Link>
             <button
               onClick={descargarPDF}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-blue-500/30 font-bold text-sm flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-lg hover:bg-blue-700 font-bold text-sm flex items-center gap-2"
             >
-              <span className="text-lg">⬇</span> Descargar PDF
+              <span>⬇</span> Descargar PDF
             </button>
           </div>
         </div>
       </nav>
 
-      {/* CONTENEDOR PRINCIPAL */}
       <main className="max-w-4xl mx-auto px-4 mt-8 animate-fade-in-up">
-        {/* Área del Reporte (Esto se convierte a PDF) */}
+        {/* ÁREA IMPRIMIBLE */}
         <div
           ref={contentRef}
           className="bg-white p-10 md:p-16 rounded-none md:rounded-xl shadow-2xl text-slate-800 border border-slate-100 relative overflow-hidden"
         >
-          {/* Marca de agua sutil */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -z-0 opacity-50"></div>
-
-          {/* Encabezado del Documento */}
-          <header className="border-b-2 border-slate-800 pb-6 mb-8 flex justify-between items-end relative z-10">
+          <header className="border-b-2 border-slate-800 pb-6 mb-8 flex justify-between items-end">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <img src={logo} alt="NOPRO" className="h-6 opacity-80" />
@@ -104,16 +96,11 @@ function ResultadosAnalisis() {
                 {datos.marca_producto} {datos.modelo_producto}
               </p>
               <p className="text-xs uppercase tracking-wide mt-1">
-                {new Date().toLocaleDateString("es-ES", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {new Date().toLocaleDateString()}
               </p>
             </div>
           </header>
 
-          {/* Resumen Ejecutivo */}
           <section className="mb-10 bg-slate-50 p-6 rounded-xl border border-slate-200">
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
               Resumen del Análisis
@@ -146,14 +133,12 @@ function ResultadosAnalisis() {
             </div>
           </section>
 
-          {/* Tabla de Hallazgos */}
           {datos.analisis_ia && datos.analisis_ia.length > 0 ? (
             <div className="mt-8">
               <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <span className="w-2 h-6 bg-blue-600 rounded-full"></span>
                 Detalle de Cumplimiento Normativo
               </h3>
-
               <div className="overflow-hidden rounded-xl border border-slate-200">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -164,52 +149,70 @@ function ResultadosAnalisis() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
-                    {datos.analisis_ia.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-blue-50/30 transition-colors"
-                      >
-                        <td className="p-4 align-top">
-                          <div className="font-bold text-blue-700 text-sm mb-1">
-                            {item.Norma}
-                          </div>
-                          <div className="text-xs text-slate-500 font-medium bg-slate-100 inline-block px-2 py-1 rounded">
-                            {item.Categoria}
-                          </div>
-                        </td>
-                        <td className="p-4 align-top">
-                          <div className="text-sm text-slate-800 italic bg-yellow-50 p-2 rounded border-l-2 border-yellow-400 mb-1">
-                            "{item.Contexto}"
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                            <span className="font-bold">Patrón detectado:</span>{" "}
-                            {item.Hallazgo}
-                          </div>
-                        </td>
-                        <td className="p-4 align-top text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-sm border border-slate-200">
-                            {item.Pagina}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {datos.analisis_ia.map((item, index) => {
+                      // Detectamos si es un hallazgo visual para colorearlo diferente
+                      const esVisual =
+                        item.Norma.includes("Visual") ||
+                        item.Norma.includes("Inspección Visual");
+
+                      return (
+                        <tr
+                          key={index}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="p-4 align-top">
+                            <div
+                              className={`font-bold text-sm mb-1 ${
+                                esVisual ? "text-purple-600" : "text-blue-700"
+                              }`}
+                            >
+                              {item.Norma}
+                            </div>
+                            <div className="text-xs text-slate-500 font-medium bg-slate-100 inline-block px-2 py-1 rounded">
+                              {item.Categoria}
+                            </div>
+                            {esVisual && (
+                              <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-1 rounded border border-purple-200 font-bold">
+                                📷 IA
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 align-top">
+                            <div
+                              className={`text-sm text-slate-800 italic p-2 rounded border-l-2 mb-1 ${
+                                esVisual
+                                  ? "bg-purple-50 border-purple-400"
+                                  : "bg-yellow-50 border-yellow-400"
+                              }`}
+                            >
+                              "{item.Contexto}"
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                              <span className="font-bold">
+                                Patrón detectado:
+                              </span>{" "}
+                              {item.Hallazgo}
+                            </div>
+                          </td>
+                          <td className="p-4 align-top text-center">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-sm border border-slate-200">
+                              {item.Pagina}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           ) : (
             <div className="p-8 bg-orange-50 border border-orange-100 rounded-2xl text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                ⚠️
-              </div>
               <h3 className="text-lg font-bold text-orange-800 mb-2">
                 Sin coincidencias normativas claras
               </h3>
               <p className="text-sm text-orange-700 max-w-md mx-auto">
-                Nuestro sistema no detectó frases clave que coincidan
-                exactamente con las normas NMX/NOM en este documento. Te
-                recomendamos revisar manualmente o subir un documento más
-                completo.
+                No se detectaron frases clave en el documento.
               </p>
             </div>
           )}
