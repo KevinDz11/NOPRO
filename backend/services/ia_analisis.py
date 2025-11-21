@@ -2,6 +2,8 @@ import pdfplumber
 import re
 import spacy
 from unidecode import unidecode
+from backend.services import ia_vision
+import os
 
 # Intentamos cargar el modelo de lenguaje (necesario para análisis semántico avanzado)
 try:
@@ -657,71 +659,142 @@ def extraer_texto_pdf(ruta_pdf):
         print(f"Error leyendo PDF: {e}")
     return texto_paginas
 
-def analizar_documento(ruta_pdf, tipo_doc, categoria_producto):
+def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
     """
-    Analiza el documento buscando las normas correspondientes al producto y tipo de doc.
-    tipo_doc: 'Ficha' o 'Manual'
-    categoria_producto: 'Laptop', 'SmartTV', 'Luminaria'
+    Analiza el documento.
+    - Si es 'Ficha' o 'Manual': Busca normas en el texto Y hace análisis visual.
+    - Si es 'Etiqueta': SALTA el texto y analiza SOLO imágenes (YOLO + Google).
     """
-    
-    # 1. Obtener criterios específicos
-    prod_criterios = CRITERIOS_POR_PRODUCTO.get(categoria_producto, CRITERIOS_POR_PRODUCTO.get("Laptop"))
-    normas_a_buscar = prod_criterios.get(tipo_doc, {})
-
-    if not normas_a_buscar:
-        return []
-
-    texto_paginas = extraer_texto_pdf(ruta_pdf)
     resultados = []
 
-    print(f"Analizando {categoria_producto} ({tipo_doc}) - {len(texto_paginas)} páginas...")
+    # =================================================================
+    # 1. ANÁLISIS DE TEXTO (Solo si NO es Etiqueta)
+    # =================================================================
+    if tipo_doc != "Etiqueta":
+        print(f"📄 Analizando TEXTO para {tipo_doc} de {categoria_producto}...")
+        
+        # Obtener criterios del diccionario global CRITERIOS_POR_PRODUCTO
+        prod_criterios = CRITERIOS_POR_PRODUCTO.get(categoria_producto, {})
+        normas_a_buscar = prod_criterios.get(tipo_doc, {})
 
-    # 2. Recorrer todas las normas y sus categorías
-    for norma, categorias in normas_a_buscar.items():
-        for categoria, lista_patrones in categorias.items():
-            for patron_str in lista_patrones:
+        if normas_a_buscar:
+            texto_paginas = extraer_texto_pdf(ruta_pdf)
+            
+            for norma, categorias in normas_a_buscar.items():
+                for categoria, lista_patrones in categorias.items():
+                    for patron_str in lista_patrones:
+                        # Compilación segura de Regex
+                        try:
+                            regex = re.compile(patron_str, re.IGNORECASE)
+                        except re.error:
+                            regex = None
+                        
+                        for pagina in texto_paginas:
+                            encontrado = False
+                            contexto = ""
+
+                            # A. Búsqueda Regex (Texto Original)
+                            if regex:
+                                match = regex.search(pagina["original"])
+                                if match:
+                                    encontrado = True
+                                    start = max(0, match.start() - 60)
+                                    end = min(len(pagina["original"]), match.end() + 60)
+                                    contexto = pagina["original"][start:end].strip().replace("\n", " ")
+                            
+                            # B. Búsqueda Simple (Texto Limpio)
+                            if not encontrado:
+                                patron_limpio = unidecode(patron_str.lower())
+                                if patron_limpio in pagina["texto"]:
+                                    encontrado = True
+                                    contexto = f"Mención encontrada: '{patron_str}'"
+
+                            if encontrado:
+                                resultados.append({
+                                    "Norma": norma,
+                                    "Categoria": categoria,
+                                    "Hallazgo": patron_str[:50] + "..." if len(patron_str)>50 else patron_str,
+                                    "Pagina": pagina["pagina"],
+                                    "Contexto": contexto
+                                })
+                                break # Encontrado, pasamos al siguiente patrón
+    else:
+        print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
+
+    # =================================================================
+    # 2. ANÁLISIS VISUAL (Siempre en PDFs, Crítico para Etiqueta)
+    # =================================================================
+    if ruta_pdf.lower().endswith(".pdf"):
+        print(f"\n--- 🔍 DEBUG VISUAL ---")
+        print(f"Archivo: {os.path.basename(ruta_pdf)}")
+        print(f"Marca esperada: '{marca_esperada}'")
+
+        try:
+            # Llamada al servicio de visión (ia_vision.py)
+            hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
+            
+            yolo_list = hallazgos.get("yolo_detections", [])
+            google_list = hallazgos.get("google_detections", [])
+
+            print(f"DEBUG -> Lista YOLO recibida: {yolo_list}")
+            
+            # A. PROCESAR YOLO (Modelo best.pt)
+            if yolo_list:
+                detecciones_str = ", ".join(yolo_list)
+                val_msg = ""
                 
-                # Compilamos siempre como Regex para soportar tanto textos simples como patrones complejos
-                # Para los textos simples del manual, esto también funciona (ej: "riesgo" encaja en regex "riesgo")
-                try:
-                    regex = re.compile(patron_str, re.IGNORECASE)
-                except re.error:
-                    # Si hay un error en el patrón (raro), lo buscamos como texto literal
-                    regex = None
-                
-                for pagina in texto_paginas:
-                    # Buscamos en el texto ORIGINAL para regex complejos (con mayúsculas, signos)
-                    # y en el texto LIMPIO para búsquedas de palabras clave simples si el regex falla o es simple
+                # Validación de marca
+                if marca_esperada:
+                    marca_clean = marca_esperada.strip().lower()
+                    match = False
+                    for det in yolo_list:
+                        # Comparación flexible: "samsung" in "logo_samsung"
+                        if marca_clean in det.lower() or det.lower() in marca_clean:
+                            match = True
+                            break
                     
-                    encontrado = False
-                    contexto = ""
+                    if match:
+                        val_msg = f" ✅ Coincide con '{marca_esperada}'"
+                        print(f"DEBUG -> ¡HAY COINCIDENCIA CON MARCA!")
+                    else:
+                        val_msg = f" ⚠️ No coincide con '{marca_esperada}'"
+                        print(f"DEBUG -> No hubo coincidencia de marca.")
 
-                    # Intento 1: Búsqueda Regex en texto original (Mejor para Smart TV / Fichas)
-                    if regex:
-                        match = regex.search(pagina["original"])
-                        if match:
-                            encontrado = True
-                            # Extraer un poco de contexto alrededor
-                            start = max(0, match.start() - 60)
-                            end = min(len(pagina["original"]), match.end() + 60)
-                            contexto = pagina["original"][start:end].strip().replace("\n", " ")
-                    
-                    # Intento 2: Si no encontró y es un patrón simple, buscar en texto limpio (Mejor para Manuales)
-                    if not encontrado:
-                        patron_limpio = unidecode(patron_str.lower())
-                        if patron_limpio in pagina["texto"]:
-                            encontrado = True
-                            contexto = f"Mención encontrada: '{patron_str}'"
+                resultados.append({
+                    "Norma": "Inspección Visual (IA Interna)",
+                    "Categoria": "Logos Detectados",
+                    "Hallazgo": detecciones_str,
+                    "Pagina": 1,
+                    "Contexto": f"YOLO detectó: {detecciones_str}.{val_msg}"
+                })
+            else:
+                print("DEBUG -> YOLO devolvió lista vacía.")
 
-                    if encontrado:
-                        resultados.append({
-                            "Norma": norma,
-                            "Categoria": categoria,
-                            "Hallazgo": patron_str[:50] + "..." if len(patron_str)>50 else patron_str,
-                            "Pagina": pagina["pagina"],
-                            "Contexto": contexto
-                        })
-                        # Rompemos el ciclo de páginas para este patrón específico (para no repetir el mismo hallazgo 100 veces)
-                        break 
+            # B. PROCESAR GOOGLE VISION (Marcas y Texto en imagen)
+            if google_list:
+                google_str = ", ".join(google_list)
+                resultados.append({
+                    "Norma": "Inspección Visual (Google Cloud)",
+                    "Categoria": "Marcas/Logos Oficiales",
+                    "Hallazgo": google_str,
+                    "Pagina": 1,
+                    "Contexto": f"Google Vision identificó: {google_str}"
+                })
+            
+            # C. MANEJO DE "SIN HALLAZGOS"
+            if not yolo_list and not google_list:
+                print("DEBUG -> ¡Ninguna IA detectó nada!")
+                # Si es etiqueta, avisamos que está vacía visualmente
+                if tipo_doc == "Etiqueta":
+                    resultados.append({
+                        "Norma": "Inspección Visual",
+                        "Categoria": "Sin Hallazgos",
+                        "Hallazgo": "N/A",
+                        "Pagina": 1,
+                        "Contexto": "Se analizó la imagen pero no se detectaron logos normativos ni marcas conocidas."
+                    })
+
+        except Exception as e:
+            print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
 
     return resultados
