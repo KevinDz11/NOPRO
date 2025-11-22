@@ -143,7 +143,7 @@ function ResultadosAnalisis() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-100 text-slate-600 text-xs uppercase font-bold tracking-wider">
-                      <th className="p-4 w-1/3">Norma & Categoría</th>
+                      <th className="p-4 w-1/3">Norma Y Categoría</th>
                       <th className="p-4 w-1/2">Evidencia en Documento</th>
                       <th className="p-4 text-center w-20">Pág.</th>
                     </tr>
@@ -218,7 +218,7 @@ function ResultadosAnalisis() {
           )}
 
           <div className="mt-16 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
-            <p>Generado por NOPRO Systems v1.0</p>
+            <p>Generado por NOPRO</p>
             <p>Este documento es de carácter informativo.</p>
           </div>
         </div>
