@@ -4,14 +4,13 @@ import axios from "axios";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- COMPONENTE VISUAL: MODAL DE CARGA ---
+// --- COMPONENTE VISUAL: MODAL DE CARGA (ORIGINAL) ---
 const ModalCarga = ({ tipo, mensaje }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
-    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full animate-fade-in-up border border-white/50">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300 animate-fade-in">
+    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border border-white/50">
       <div className="relative w-20 h-20 mx-auto mb-6">
         <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-        {/* Icono central decorativo */}
         <div className="absolute inset-0 flex items-center justify-center text-2xl">
           {tipo === "Manual" ? "📖" : tipo === "Etiqueta" ? "🏷️" : "📄"}
         </div>
@@ -39,41 +38,251 @@ const ModalCarga = ({ tipo, mensaje }) => (
   </div>
 );
 
-export default function SubirArchivos() {
-  // Verificar sesión
-  useAuthListener();
+// --- NUEVO: MODAL DE ÉXITO (VISUAL) ---
+const ModalExito = ({ mensaje, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-all animate-fade-in">
+    <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full transform scale-100 animate-bounce-slow border-4 border-green-50 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
+      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+        <svg
+          className="w-10 h-10 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="3"
+            d="M5 13l4 4L19 7"
+          ></path>
+        </svg>
+      </div>
+      <h3 className="text-2xl font-extrabold text-slate-800 mb-2">
+        ¡Excelente!
+      </h3>
+      <p className="text-slate-500 mb-6 font-medium">{mensaje}</p>
+      <button
+        onClick={onClose}
+        className="w-full py-3 rounded-xl bg-green-600 text-white font-bold shadow-lg shadow-green-500/30 hover:bg-green-700 transition-all transform hover:-translate-y-1"
+      >
+        Continuar
+      </button>
+    </div>
+  </div>
+);
 
-  // "producto" viene de la URL (ej: /subir-archivos/Laptop)
+// --- COMPONENTE AUXILIAR: TARJETA DOCUMENTO ---
+const CardDocumento = ({
+  tipo, // "ficha", "manual", "etiqueta"
+  titulo,
+  descripcion,
+  icono,
+  archivo,
+  progreso,
+  resultado,
+  loading,
+  onCargar,
+  onProcesar,
+  onEliminar,
+  onVerReporte,
+}) => {
+  // Definir colores según el tipo
+  const isBlue = tipo === "ficha";
+  const isOrange = tipo === "manual";
+  // Eliminamos const isPurple = ... porque no se usa explícitamente (es el default)
+
+  const gradientClass = isBlue
+    ? "from-blue-600 to-indigo-600"
+    : isOrange
+    ? "from-orange-500 to-red-500"
+    : "from-purple-600 to-pink-600";
+
+  const lightBgClass = isBlue
+    ? "bg-blue-50 text-blue-700"
+    : isOrange
+    ? "bg-orange-50 text-orange-700"
+    : "bg-purple-50 text-purple-700";
+
+  const barColorClass = isBlue
+    ? "bg-blue-600"
+    : isOrange
+    ? "bg-orange-500"
+    : "bg-purple-600";
+
+  return (
+    <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col h-full">
+      <div
+        className={`bg-gradient-to-r ${gradientClass} px-6 py-4 relative overflow-hidden`}
+      >
+        <div className="absolute right-0 top-0 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform translate-x-6 -translate-y-6"></div>
+        <h3 className="text-white font-bold text-lg flex items-center gap-2 relative z-10">
+          {icono} {titulo}
+        </h3>
+      </div>
+
+      <div className="p-6 flex-grow flex flex-col justify-between">
+        {/* Si ya hay resultado, mostrar estado de completado */}
+        {resultado ? (
+          <div className="text-center py-4 animate-fade-in">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+            </div>
+            <p className="text-slate-800 font-bold text-sm mb-1">
+              Análisis Completado
+            </p>
+
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                onClick={onVerReporte}
+                className={`py-2 px-3 rounded-lg font-bold text-xs border ${lightBgClass} border-opacity-20`}
+              >
+                VER PDF
+              </button>
+              <button
+                onClick={onEliminar}
+                className="text-xs text-slate-400 hover:text-red-500 underline decoration-dotted transition-colors"
+              >
+                Analizar otro archivo
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Sección de carga o visualización de archivo */}
+            <div className="mb-4">
+              <p className="text-slate-500 mb-4 text-xs">{descripcion}</p>
+
+              {!archivo ? (
+                // INPUT ORIGINAL (Estilizado igual)
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={onCargar}
+                  disabled={loading}
+                  className={`block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:cursor-pointer hover:file:bg-opacity-80 cursor-pointer border border-slate-200 rounded-lg p-1 ${lightBgClass}`}
+                />
+              ) : (
+                // NUEVA VISTA: Archivo Seleccionado + Botón Eliminar
+                <div
+                  className={`flex items-center justify-between p-3 rounded-xl border border-slate-200 ${lightBgClass} animate-fade-in`}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <svg
+                      className="w-5 h-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    <span className="text-xs font-bold truncate max-w-[120px]">
+                      {archivo.name}
+                    </span>
+                  </div>
+                  {!loading && (
+                    <button
+                      onClick={onEliminar}
+                      className="p-1 bg-white rounded-full shadow-sm hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+                      title="Eliminar archivo"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Barra de Progreso */}
+            <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
+              <div
+                className={`${barColorClass} h-full rounded-full transition-all duration-300`}
+                style={{
+                  width: `${progreso}%`,
+                  opacity: progreso > 0 ? 1 : 0,
+                }}
+              ></div>
+            </div>
+
+            {/* Botón Analizar */}
+            <button
+              onClick={onProcesar}
+              disabled={!archivo || loading}
+              className={`w-full py-3 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
+                !archivo || loading
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : `bg-gradient-to-r ${gradientClass} text-white transform hover:-translate-y-0.5`
+              }`}
+            >
+              {loading && progreso > 0 ? "..." : "ANALIZAR"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default function SubirArchivos() {
+  useAuthListener();
   const { producto } = useParams();
   const navigate = useNavigate();
 
-  // --- ESTADOS DEL FORMULARIO ---
+  // --- ESTADOS ---
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
 
-  // --- ESTADOS DE LOS ARCHIVOS ---
   const [manual, setManual] = useState(null);
   const [ficha, setFicha] = useState(null);
   const [etiqueta, setEtiqueta] = useState(null);
 
-  // --- ESTADOS DE UI (Carga y Progreso) ---
   const [loading, setLoading] = useState(false);
   const [loadingType, setLoadingType] = useState("");
-  const [loadingMessage, setLoadingMessage] = useState(""); // <--- NUEVO: Estado para el mensaje
+  const [loadingMessage, setLoadingMessage] = useState("");
+
+  // Nuevo estado para el modal de éxito
+  const [exito, setExito] = useState(null);
+
   const [progreso, setProgreso] = useState({
     manual: 0,
     ficha: 0,
     etiqueta: 0,
   });
 
-  // --- ESTADOS DE RESULTADOS ---
   const [resultadoFicha, setResultadoFicha] = useState(null);
   const [resultadoManual, setResultadoManual] = useState(null);
   const [resultadoEtiqueta, setResultadoEtiqueta] = useState(null);
 
-  // ---------------------------------------------------------
-  //  FUNCIONES AUXILIARES
-  // ---------------------------------------------------------
+  // --- FUNCIONES ---
 
   const iniciarCarga = (e, tipo) => {
     const archivo = e.target.files[0];
@@ -84,12 +293,10 @@ export default function SubirArchivos() {
       return;
     }
 
-    // Asignación según tipo
     if (tipo === "manual") setManual(archivo);
     if (tipo === "ficha") setFicha(archivo);
     if (tipo === "etiqueta") setEtiqueta(archivo);
 
-    // Animación visual de la barra (0 a 100%)
     let p = 0;
     const interval = setInterval(() => {
       p += 15;
@@ -98,18 +305,27 @@ export default function SubirArchivos() {
     }, 80);
   };
 
+  // NUEVA FUNCIÓN: Eliminar archivo y resetear estado parcial
+  const eliminarArchivo = (tipo) => {
+    setProgreso((prev) => ({ ...prev, [tipo]: 0 }));
+    if (tipo === "manual") {
+      setManual(null);
+      setResultadoManual(null);
+    } else if (tipo === "ficha") {
+      setFicha(null);
+      setResultadoFicha(null);
+    } else if (tipo === "etiqueta") {
+      setEtiqueta(null);
+      setResultadoEtiqueta(null);
+    }
+  };
+
   const asegurarProducto = async (token) => {
     try {
       const res = await axios.post(
         "http://localhost:8000/productos/",
-        {
-          nombre: producto,
-          marca: marca,
-          descripcion: modelo,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { nombre: producto, marca: marca, descripcion: modelo },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data.id_producto;
     } catch (error) {
@@ -118,26 +334,20 @@ export default function SubirArchivos() {
     }
   };
 
-  // ---------------------------------------------------------
-  //  LÓGICA PRINCIPAL DE ANÁLISIS
-  // ---------------------------------------------------------
   const procesarArchivo = async (tipoArchivo) => {
-    // Validaciones básicas
     if (!marca.trim() || !modelo.trim()) {
       return alert("Por favor, completa Marca y Modelo antes de iniciar.");
     }
 
-    // Selección del archivo correcto
     let archivo;
     if (tipoArchivo === "manual") archivo = manual;
     else if (tipoArchivo === "ficha") archivo = ficha;
     else if (tipoArchivo === "etiqueta") archivo = etiqueta;
 
-    if (!archivo) {
+    if (!archivo)
       return alert(
         `Debes seleccionar el archivo PDF del ${tipoArchivo} primero.`
       );
-    }
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -146,7 +356,6 @@ export default function SubirArchivos() {
     }
 
     try {
-      // 1. Configurar UI de Carga
       let nombreUI = "Ficha Técnica";
       let mensajeUI =
         "Extrayendo especificaciones técnicas y validando datos...";
@@ -162,26 +371,20 @@ export default function SubirArchivos() {
       }
 
       setLoadingType(nombreUI);
-      setLoadingMessage(mensajeUI); // <--- CORRECCIÓN: Guardamos el mensaje en el estado
+      setLoadingMessage(mensajeUI);
       setLoading(true);
 
-      // 2. Obtener ID del Producto
       const idProducto = await asegurarProducto(token);
 
-      // 3. Preparar datos para el Backend
       const formData = new FormData();
       formData.append("id_producto", idProducto);
       formData.append("nombre", `${tipoArchivo} - ${modelo}`);
-
-      // DATOS CLAVE PARA LA IA:
       formData.append("tipo", tipoArchivo);
       formData.append("categoria", producto);
-      formData.append("marca", marca); // Enviamos la marca para validación
-
+      formData.append("marca", marca);
       formData.append("archivo", archivo);
       formData.append("analizar", "true");
 
-      // 4. Enviar petición
       const response = await axios.post(
         "http://localhost:8000/documentos/subir-analizar",
         formData,
@@ -190,20 +393,20 @@ export default function SubirArchivos() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-          timeout: 600000, // 10 minutos máximo
+          timeout: 600000,
         }
       );
 
-      // 5. Guardar el resultado
+      // Guardar resultado y MOSTRAR MODAL DE ÉXITO en vez de alert
       if (tipoArchivo === "manual") {
         setResultadoManual(response.data);
-        alert("¡Manual analizado correctamente!");
+        setExito({ mensaje: "¡Manual analizado correctamente!" });
       } else if (tipoArchivo === "etiqueta") {
         setResultadoEtiqueta(response.data);
-        alert("¡Etiqueta analizada con IA Visual!");
+        setExito({ mensaje: "¡Etiqueta analizada con IA Visual!" });
       } else {
         setResultadoFicha(response.data);
-        alert("¡Ficha Técnica analizada correctamente!");
+        setExito({ mensaje: "¡Ficha Técnica analizada correctamente!" });
       }
     } catch (error) {
       console.error(error);
@@ -215,9 +418,6 @@ export default function SubirArchivos() {
     }
   };
 
-  // ---------------------------------------------------------
-  //  VISUALIZACIÓN DE REPORTE
-  // ---------------------------------------------------------
   const verReportePDF = (dataResultados, tituloReporte) => {
     const datosParaReporte = {
       ...dataResultados,
@@ -226,21 +426,20 @@ export default function SubirArchivos() {
       marca_producto: marca,
       modelo_producto: modelo,
     };
-
     localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
     window.open("/resultados-analisis", "_blank");
   };
 
-  // ---------------------------------------------------------
-  //  RENDERIZADO (JSX)
-  // ---------------------------------------------------------
+  // --- RENDER ---
   return (
     <div className="min-h-screen bg-slate-50 pb-12 relative overflow-hidden">
-      {/* Fondo Decorativo */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
 
-      {/* Modal de Carga CORREGIDO: Ahora usa loadingMessage */}
+      {/* Modales Globales */}
       {loading && <ModalCarga tipo={loadingType} mensaje={loadingMessage} />}
+      {exito && (
+        <ModalExito mensaje={exito.mensaje} onClose={() => setExito(null)} />
+      )}
 
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm navbar px-6 py-4">
@@ -292,7 +491,6 @@ export default function SubirArchivos() {
       </nav>
 
       <main className="max-w-7xl mx-auto p-6 md:p-10 animate-fade-in-up">
-        {/* Encabezado */}
         <div className="text-center mb-12">
           <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wide mb-3">
             Nueva Solicitud
@@ -309,7 +507,6 @@ export default function SubirArchivos() {
           </p>
         </div>
 
-        {/* Formulario de Marca y Modelo */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-10 relative overflow-hidden max-w-4xl mx-auto">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
@@ -348,7 +545,6 @@ export default function SubirArchivos() {
           </div>
         </div>
 
-        {/* Sección de Tarjetas de Carga (GRID DE 3 COLUMNAS) */}
         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3 px-2 max-w-4xl mx-auto">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-extrabold">
             2
@@ -357,175 +553,59 @@ export default function SubirArchivos() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {/* --- TARJETA 1: FICHA TÉCNICA --- */}
-          <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform translate-x-6 -translate-y-6"></div>
-              <h3 className="text-white font-bold text-lg flex items-center gap-2 relative z-10">
-                📄 Ficha Técnica
-              </h3>
-            </div>
-            <div className="p-6 flex-grow flex flex-col">
-              <p className="text-slate-500 mb-4 text-xs flex-grow">
-                Especificaciones de voltaje y potencia.
-              </p>
-              <div className="mb-4">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => iniciarCarga(e, "ficha")}
-                  disabled={loading}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1"
-                />
-              </div>
-              <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
-                <div
-                  className="bg-blue-600 h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${progreso.ficha}%`,
-                    opacity: progreso.ficha > 0 ? 1 : 0,
-                  }}
-                ></div>
-              </div>
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => procesarArchivo("ficha")}
-                  disabled={!ficha || loading}
-                  className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
-                    !ficha || loading
-                      ? "bg-slate-200 text-slate-400"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                  }`}
-                >
-                  {loading && loadingType === "Ficha Técnica"
-                    ? "..."
-                    : "ANALIZAR"}
-                </button>
-                {resultadoFicha && (
-                  <button
-                    onClick={() =>
-                      verReportePDF(resultadoFicha, "Reporte Ficha Técnica")
-                    }
-                    className="py-2 px-3 rounded-lg font-bold text-xs text-blue-700 bg-blue-50 border border-blue-100"
-                  >
-                    VER PDF
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* FICHA TÉCNICA */}
+          <CardDocumento
+            tipo="ficha"
+            titulo="Ficha Técnica"
+            descripcion="Especificaciones de voltaje y potencia."
+            icono="📄"
+            archivo={ficha}
+            progreso={progreso.ficha}
+            resultado={resultadoFicha}
+            loading={loading}
+            onCargar={(e) => iniciarCarga(e, "ficha")}
+            onProcesar={() => procesarArchivo("ficha")}
+            onEliminar={() => eliminarArchivo("ficha")}
+            onVerReporte={() =>
+              verReportePDF(resultadoFicha, "Reporte Ficha Técnica")
+            }
+          />
 
-          {/* --- TARJETA 2: MANUAL DE USUARIO --- */}
-          <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col">
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4 relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform translate-x-6 -translate-y-6"></div>
-              <h3 className="text-white font-bold text-lg flex items-center gap-2 relative z-10">
-                📖 Manual
-              </h3>
-            </div>
-            <div className="p-6 flex-grow flex flex-col">
-              <p className="text-slate-500 mb-4 text-xs flex-grow">
-                Instrucciones de seguridad y mantenimiento.
-              </p>
-              <div className="mb-4">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => iniciarCarga(e, "manual")}
-                  disabled={loading}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer border border-slate-200 rounded-lg p-1"
-                />
-              </div>
-              <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
-                <div
-                  className="bg-orange-500 h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${progreso.manual}%`,
-                    opacity: progreso.manual > 0 ? 1 : 0,
-                  }}
-                ></div>
-              </div>
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => procesarArchivo("manual")}
-                  disabled={!manual || loading}
-                  className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
-                    !manual || loading
-                      ? "bg-slate-200 text-slate-400"
-                      : "bg-gradient-to-r from-orange-500 to-red-500 text-white"
-                  }`}
-                >
-                  {loading && loadingType === "Manual" ? "..." : "ANALIZAR"}
-                </button>
-                {resultadoManual && (
-                  <button
-                    onClick={() =>
-                      verReportePDF(resultadoManual, "Reporte Manual")
-                    }
-                    className="py-2 px-3 rounded-lg font-bold text-xs text-orange-700 bg-orange-50 border border-orange-100"
-                  >
-                    VER PDF
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* MANUAL */}
+          <CardDocumento
+            tipo="manual"
+            titulo="Manual"
+            descripcion="Instrucciones de seguridad y uso."
+            icono="📖"
+            archivo={manual}
+            progreso={progreso.manual}
+            resultado={resultadoManual}
+            loading={loading}
+            onCargar={(e) => iniciarCarga(e, "manual")}
+            onProcesar={() => procesarArchivo("manual")}
+            onEliminar={() => eliminarArchivo("manual")}
+            onVerReporte={() =>
+              verReportePDF(resultadoManual, "Reporte Manual")
+            }
+          />
 
-          {/* --- TARJETA 3: ETIQUETA (NUEVA) --- */}
-          <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform translate-x-6 -translate-y-6"></div>
-              <h3 className="text-white font-bold text-lg flex items-center gap-2 relative z-10">
-                🏷️ Etiqueta
-              </h3>
-            </div>
-            <div className="p-6 flex-grow flex flex-col">
-              <p className="text-slate-500 mb-4 text-xs flex-grow">
-                Detección de logos normativos y advertencias.
-              </p>
-              <div className="mb-4">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => iniciarCarga(e, "etiqueta")}
-                  disabled={loading}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer border border-slate-200 rounded-lg p-1"
-                />
-              </div>
-              <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
-                <div
-                  className="bg-purple-600 h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${progreso.etiqueta}%`,
-                    opacity: progreso.etiqueta > 0 ? 1 : 0,
-                  }}
-                ></div>
-              </div>
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => procesarArchivo("etiqueta")}
-                  disabled={!etiqueta || loading}
-                  className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
-                    !etiqueta || loading
-                      ? "bg-slate-200 text-slate-400"
-                      : "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                  }`}
-                >
-                  {loading && loadingType === "Etiqueta" ? "..." : "ANALIZAR"}
-                </button>
-                {resultadoEtiqueta && (
-                  <button
-                    onClick={() =>
-                      verReportePDF(resultadoEtiqueta, "Reporte Etiqueta")
-                    }
-                    className="py-2 px-3 rounded-lg font-bold text-xs text-purple-700 bg-purple-50 border border-purple-100"
-                  >
-                    VER PDF
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* ETIQUETA */}
+          <CardDocumento
+            tipo="etiqueta"
+            titulo="Etiqueta"
+            descripcion="Detección de logos y advertencias."
+            icono="🏷️"
+            archivo={etiqueta}
+            progreso={progreso.etiqueta}
+            resultado={resultadoEtiqueta}
+            loading={loading}
+            onCargar={(e) => iniciarCarga(e, "etiqueta")}
+            onProcesar={() => procesarArchivo("etiqueta")}
+            onEliminar={() => eliminarArchivo("etiqueta")}
+            onVerReporte={() =>
+              verReportePDF(resultadoEtiqueta, "Reporte Etiqueta")
+            }
+          />
         </div>
       </main>
     </div>

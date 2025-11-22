@@ -57,6 +57,30 @@ export default function ContactoSoporte() {
     fetchUserData();
   }, [navigate]);
 
+  // --- NUEVA FUNCIÓN DE VALIDACIÓN ---
+  const validarMensaje = (texto) => {
+    const textoLimpio = texto.trim();
+
+    // 1. Validar que no esté vacío (espacios en blanco)
+    if (!textoLimpio) return "El mensaje no puede estar vacío.";
+
+    // 2. Validar longitud mínima (evita "hola" o "ayuda")
+    if (textoLimpio.length < 20)
+      return "Por favor, detalla más tu consulta (mínimo 20 caracteres).";
+
+    // 3. Validar caracteres repetidos excesivos (ej. "aaaaaaa", ".......")
+    const repeticiones = /(.)\1{4,}/;
+    if (repeticiones.test(textoLimpio))
+      return "El mensaje parece contener caracteres repetidos sin sentido.";
+
+    // 4. Validar que tenga al menos algunas letras (evita puros números o símbolos)
+    const tieneLetras = /[a-zA-Z]/;
+    if (!tieneLetras.test(textoLimpio))
+      return "El mensaje debe contener texto descriptivo válido.";
+
+    return null; // Pasó todas las pruebas
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -70,6 +94,7 @@ export default function ContactoSoporte() {
     setError("");
     setMensajeExito("");
 
+    // Validación básica de campos vacíos
     if (
       !formData.name ||
       !formData.email ||
@@ -77,6 +102,13 @@ export default function ContactoSoporte() {
       !formData.message
     ) {
       setError("Por favor, completa todos los campos.");
+      return;
+    }
+
+    // --- INTEGRACIÓN DE LA VALIDACIÓN AVANZADA ---
+    const errorMensaje = validarMensaje(formData.message);
+    if (errorMensaje) {
+      setError(errorMensaje);
       return;
     }
 
@@ -196,7 +228,7 @@ export default function ContactoSoporte() {
                     id="name"
                     name="name"
                     value={formData.name}
-                    readOnly // <--- CAMBIO IMPORTANTE
+                    readOnly // Campo de solo lectura
                     className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-medium cursor-not-allowed focus:outline-none shadow-inner"
                     title="Este campo se obtiene de tu perfil y no se puede editar"
                   />
@@ -215,7 +247,7 @@ export default function ContactoSoporte() {
                     id="email"
                     name="email"
                     value={formData.email}
-                    readOnly // <--- CAMBIO IMPORTANTE
+                    readOnly // Campo de solo lectura
                     className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-medium cursor-not-allowed focus:outline-none shadow-inner"
                     title="Este campo se obtiene de tu perfil y no se puede editar"
                   />
