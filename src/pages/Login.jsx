@@ -13,14 +13,20 @@ export default function Login() {
   const navigate = useNavigate();
 
   const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
-  const esFormularioValido = () => esCorreoValido(email) && password.length > 0;
+
+  // CAMBIO: Ahora validamos que la contraseña tenga al menos 8 caracteres
+  const esFormularioValido = () =>
+    esCorreoValido(email) && password.length >= 8;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
 
     if (!esFormularioValido()) {
-      setMensaje("Introduce un correo válido y tu contraseña.");
+      // CAMBIO: Mensaje de error actualizado
+      setMensaje(
+        "El correo debe ser válido y la contraseña de al menos 8 caracteres."
+      );
       return;
     }
 
@@ -120,7 +126,6 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  // Agregamos 'pr-10' para que el texto no se encime con el icono
                   className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                   disabled={cargando}
                 />
@@ -130,7 +135,7 @@ export default function Login() {
                   type="button"
                   onClick={() => setMostrarPassword(!mostrarPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
-                  tabIndex="-1" // Evita que se seleccione con Tab antes del submit
+                  tabIndex="-1"
                 >
                   {mostrarPassword ? (
                     // Icono Ojo Abierto
@@ -185,6 +190,7 @@ export default function Login() {
 
             <button
               type="submit"
+              // CAMBIO: El botón se deshabilita si no cumple los 8 caracteres
               disabled={!esFormularioValido() || cargando}
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 hover:shadow-blue-500/30 
                 ${
