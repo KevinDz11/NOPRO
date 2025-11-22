@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
 export default function ContactoSoporte() {
   useAuthListener();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -14,8 +15,47 @@ export default function ContactoSoporte() {
   });
 
   const [cargando, setCargando] = useState(false);
+  const [cargandoDatosUsuario, setCargandoDatosUsuario] = useState(true);
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+
+      // Si no hay token, redirigimos al login (seguridad básica)
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/clientes/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo cargar la información del usuario.");
+        }
+
+        const data = await response.json();
+
+        // Rellenamos el formulario con los datos de la BD
+        setFormData((prev) => ({
+          ...prev,
+          name: data.nombre,
+          email: data.email,
+        }));
+      } catch (err) {
+        console.error("Error cargando usuario:", err);
+        setError("No se pudieron cargar tus datos automáticamente.");
+      } finally {
+        setCargandoDatosUsuario(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +97,7 @@ export default function ContactoSoporte() {
       }
 
       setMensajeExito(data.mensaje || "Mensaje enviado correctamente.");
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      setFormData((prev) => ({ ...prev, subject: "", message: "" }));
     } catch (err) {
       console.error("Error enviando soporte:", err);
       setError(err.message || "Ocurrió un error inesperado.");
@@ -79,7 +119,6 @@ export default function ContactoSoporte() {
       {/* NAVBAR MODERNO */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
-          {/* Logo redirige a Home */}
           <Link
             to="/Home"
             className="flex items-center space-x-3 group cursor-pointer"
@@ -108,12 +147,10 @@ export default function ContactoSoporte() {
               HISTORIAL PRODUCTOS
             </Link>
 
-            {/* Botón Cerrar Sesión */}
             <li
               onClick={() => {
                 localStorage.removeItem("authToken");
                 localStorage.removeItem("auth");
-                // Redirige al usuario (puedes usar useNavigate o recargar)
                 window.location.href = "/";
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
@@ -139,143 +176,146 @@ export default function ContactoSoporte() {
           </div>
 
           <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Nombre */}
-              <div className="group">
-                <label
-                  htmlFor="name"
-                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
-                >
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
-                  disabled={cargando}
-                  placeholder="Ej. Juan Pérez"
-                />
+            {/* Mostrar un loader pequeño si estamos trayendo los datos del usuario */}
+            {cargandoDatosUsuario ? (
+              <div className="text-center py-10 text-slate-500">
+                Cargando tus datos...
               </div>
-
-              {/* Email */}
-              <div className="group">
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
-                >
-                  Correo Electrónico
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
-                  disabled={cargando}
-                  placeholder="tucorreo@ejemplo.com"
-                />
-              </div>
-
-              {/* Asunto */}
-              <div className="group">
-                <label
-                  htmlFor="subject"
-                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
-                >
-                  Asunto
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
-                  disabled={cargando}
-                  placeholder="Resumen de tu consulta"
-                />
-              </div>
-
-              {/* Mensaje */}
-              <div className="group">
-                <label
-                  htmlFor="message"
-                  className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
-                >
-                  Mensaje
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows="4"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
-                  disabled={cargando}
-                  placeholder="Describe tu problema o duda aquí..."
-                />
-              </div>
-
-              {/* Mensajes de Estado */}
-              {error && (
-                <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                  ⚠️ {error}
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Nombre (Solo Lectura) */}
+                <div className="group">
+                  <label
+                    htmlFor="name"
+                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                  >
+                    Nombre (Registrado)
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    readOnly // <--- CAMBIO IMPORTANTE
+                    className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-medium cursor-not-allowed focus:outline-none shadow-inner"
+                    title="Este campo se obtiene de tu perfil y no se puede editar"
+                  />
                 </div>
-              )}
-              {mensajeExito && (
-                <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in flex items-center justify-center gap-2">
-                  ✅ {mensajeExito}
-                </div>
-              )}
 
-              {/* Botón de Envío */}
-              <button
-                type="submit"
-                className={`w-full py-3.5 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform hover:-translate-y-0.5
-                  ${
-                    cargando
-                      ? "bg-slate-300 cursor-not-allowed shadow-none"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
-                  }`}
-                disabled={cargando}
-              >
-                {cargando ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Enviando...
-                  </span>
-                ) : (
-                  "Enviar Mensaje"
+                {/* Email (Solo Lectura) */}
+                <div className="group">
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                  >
+                    Correo Electrónico (Registrado)
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    readOnly // <--- CAMBIO IMPORTANTE
+                    className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-medium cursor-not-allowed focus:outline-none shadow-inner"
+                    title="Este campo se obtiene de tu perfil y no se puede editar"
+                  />
+                </div>
+
+                {/* Asunto (Editable) */}
+                <div className="group">
+                  <label
+                    htmlFor="subject"
+                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                  >
+                    Asunto
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                    disabled={cargando}
+                    placeholder="Resumen de tu consulta"
+                  />
+                </div>
+
+                {/* Mensaje (Editable) */}
+                <div className="group">
+                  <label
+                    htmlFor="message"
+                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                  >
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows="4"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
+                    disabled={cargando}
+                    placeholder="Describe tu problema o duda aquí..."
+                  />
+                </div>
+
+                {/* Mensajes de Estado */}
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
+                    ⚠️ {error}
+                  </div>
                 )}
-              </button>
-            </form>
+                {mensajeExito && (
+                  <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in flex items-center justify-center gap-2">
+                    ✅ {mensajeExito}
+                  </div>
+                )}
+
+                {/* Botón de Envío */}
+                <button
+                  type="submit"
+                  className={`w-full py-3.5 rounded-xl font-bold text-white text-lg shadow-lg transition-all transform hover:-translate-y-0.5
+                    ${
+                      cargando
+                        ? "bg-slate-300 cursor-not-allowed shadow-none"
+                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
+                    }`}
+                  disabled={cargando}
+                >
+                  {cargando ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Enviando...
+                    </span>
+                  ) : (
+                    "Enviar Mensaje"
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </main>

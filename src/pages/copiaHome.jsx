@@ -152,9 +152,8 @@ export default function CopiaHome() {
             Aplicación web para identificar normas aplicables a productos
           </h1>
           <p className="text-slate-500 text-lg leading-relaxed max-w-3xl mx-auto">
-            Esta herramienta online permite identificar las normas mexicanas
-            aplicables a productos: Smart TV, laptops y luminarias para
-            exterior.
+            Esta herramienta permite identificar las normas mexicanas aplicables
+            a productos: Smart TV, laptops y luminarias para exterior.
             <br />
             <span className="font-medium text-slate-600">
               No se necesita instalación.

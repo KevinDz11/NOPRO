@@ -81,7 +81,7 @@ export default function Registro() {
           <form onSubmit={handleRegistro} className="space-y-4">
             <input
               type="text"
-              placeholder="Nombre completo"
+              placeholder="Nombre (apellidos opcionales)"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"

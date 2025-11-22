@@ -304,8 +304,8 @@ export default function SubirArchivos() {
             </span>
           </h1>
           <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-            Carga Ficha Técnica, Manual y Etiquetado para un análisis normativo
-            integral.
+            Carga ficha técnica, manual de usuario y etiquetado para el análisis
+            normativo.
           </p>
         </div>
 
@@ -481,7 +481,7 @@ export default function SubirArchivos() {
             </div>
             <div className="p-6 flex-grow flex flex-col">
               <p className="text-slate-500 mb-4 text-xs flex-grow">
-                IA Visual para detectar logos NOM y advertencias.
+                Detección de logos normativos y advertencias.
               </p>
               <div className="mb-4">
                 <input

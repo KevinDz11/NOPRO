@@ -156,7 +156,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
         <header className="text-center mb-16 max-w-3xl mx-auto">
           <div className="inline-block mb-4 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold tracking-wide uppercase">
-            Herramienta de Análisis IA
+            Herramienta de Análisis
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
             Identificación de Normas <br />
@@ -165,9 +165,9 @@ export default function Home() {
             </span>
           </h1>
           <p className="text-lg text-slate-500 leading-relaxed">
-            Analiza fichas técnicas y manuales de usuario automáticamente.
-            Detecta el cumplimiento de normas NOM/NMX para Laptops, Smart TVs y
-            Luminarias.
+            Analiza fichas técnicas, manuales de usuario y etiquetas de forma
+            automática. Detecta el cumplimiento de normas NOM/NMX para Laptops,
+            Smart TV's y Luminarias.
           </p>
         </header>
 
@@ -176,7 +176,7 @@ export default function Home() {
             <TarjetaProducto
               titulo="Laptop"
               icono="💻"
-              descripcion="Análisis de seguridad eléctrica, eficiencia energética y etiquetado para computadoras portátiles."
+              descripcion="Realizar el análisis de normas para una Laptop."
               ruta="/subir/Laptop"
               colorBase="from-blue-500 to-cyan-500"
             />
@@ -185,7 +185,7 @@ export default function Home() {
             <TarjetaProducto
               titulo="Smart TV"
               icono="📺"
-              descripcion="Verificación de conectividad, consumo de energía y estándares de seguridad en pantallas."
+              descripcion="Realizar el análisis de normas para una Smart TV."
               ruta="/subir/SmartTV"
               colorBase="from-purple-500 to-pink-500"
             />
@@ -194,7 +194,7 @@ export default function Home() {
             <TarjetaProducto
               titulo="Luminaria Exterior"
               icono="💡"
-              descripcion="Revisión de normas IP, resistencia térmica y seguridad en iluminación LED para exteriores."
+              descripcion="Realizar el análisis de normas para una Luminaria para exterior."
               ruta="/subir/Luminaria"
               colorBase="from-yellow-500 to-orange-500"
             />
