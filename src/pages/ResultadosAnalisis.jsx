@@ -4,222 +4,480 @@ import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+// --- ESTILOS MANUALES (PARA REEMPLAZAR TAILWIND EN EL PDF) ---
+// Definimos colores HEX y estructuras Flex/Grid manualmente
+const S = {
+  container: {
+    fontFamily: "'Helvetica', 'Arial', sans-serif",
+    backgroundColor: "#ffffff",
+    padding: "40px",
+    minHeight: "297mm", // Altura A4
+    color: "#334155",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    borderBottom: "2px solid #1e293b",
+    paddingBottom: "20px",
+    marginBottom: "30px",
+  },
+  headerLeft: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "5px",
+  },
+  brandTitle: {
+    fontSize: "10px",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: "2px",
+    color: "#94a3b8",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  mainTitle: {
+    fontSize: "28px",
+    fontWeight: "800",
+    margin: "0",
+    color: "#0f172a",
+    lineHeight: "1.2",
+  },
+  subTitle: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#2563eb",
+    margin: "0",
+  },
+  headerRight: {
+    textAlign: "right",
+    fontSize: "12px",
+    color: "#64748b",
+  },
+  // Grid simulado con Flexbox para compatibilidad máxima
+  summaryBox: {
+    backgroundColor: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: "12px",
+    padding: "20px",
+    marginBottom: "40px",
+    display: "flex",
+    justifyContent: "space-between", // Distribuye las 4 cajas
+    gap: "15px",
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: "8px",
+    padding: "15px",
+    textAlign: "center",
+    flex: "1", // Para que ocupen el mismo ancho
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    border: "1px solid #f1f5f9",
+  },
+  cardLabel: {
+    fontSize: "10px",
+    color: "#64748b",
+    marginBottom: "4px",
+    textTransform: "uppercase",
+    fontWeight: "bold",
+  },
+  cardValue: {
+    fontSize: "16px",
+    fontWeight: "bold",
+    color: "#1e293b",
+  },
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    color: "#1e293b",
+    marginBottom: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    borderBottom: "1px solid #f1f5f9",
+    paddingBottom: "10px",
+  },
+  // Tabla
+  tableContainer: {
+    border: "1px solid #e2e8f0",
+    borderRadius: "12px",
+    overflow: "hidden",
+    marginBottom: "30px",
+    backgroundColor: "#ffffff",
+    pageBreakInside: "avoid", // Evita cortar tablas a la mitad
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: "12px",
+  },
+  th: {
+    backgroundColor: "#f1f5f9",
+    color: "#475569",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    padding: "12px 15px",
+    textAlign: "left",
+    borderBottom: "1px solid #e2e8f0",
+    fontSize: "10px",
+  },
+  td: {
+    padding: "12px 15px",
+    verticalAlign: "top",
+    borderBottom: "1px solid #e2e8f0",
+    color: "#334155",
+  },
+  tag: {
+    display: "inline-block",
+    padding: "2px 6px",
+    borderRadius: "4px",
+    fontSize: "10px",
+    fontWeight: "600",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    marginTop: "4px",
+  },
+  contextBox: {
+    backgroundColor: "#fefce8",
+    borderLeft: "3px solid #facc15",
+    padding: "8px",
+    fontStyle: "italic",
+    borderRadius: "4px",
+    marginBottom: "4px",
+    color: "#1e293b",
+  },
+  footer: {
+    marginTop: "50px",
+    paddingTop: "20px",
+    borderTop: "1px solid #e2e8f0",
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: "10px",
+    color: "#94a3b8",
+  },
+};
+
+// --- COMPONENTE TABLA (REUTILIZABLE) ---
+const TablaHallazgos = ({ analisis }) => {
+  if (!analisis || analisis.length === 0) {
+    return (
+      <div
+        style={{
+          ...S.card,
+          backgroundColor: "#fff7ed",
+          borderColor: "#ffedd5",
+          color: "#9a3412",
+        }}
+      >
+        <strong>Sin coincidencias normativas</strong>
+        <p style={{ fontSize: "11px", margin: "5px 0 0 0" }}>
+          No se detectaron elementos clave.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={S.tableContainer}>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={{ ...S.th, width: "35%" }}>Norma y Categoría</th>
+            <th style={{ ...S.th, width: "55%" }}>Evidencia</th>
+            <th style={{ ...S.th, width: "10%", textAlign: "center" }}>Pág.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {analisis.map((item, index) => {
+            const esVisual =
+              item.Norma &&
+              (item.Norma.includes("Visual") ||
+                item.Norma.includes("Inspección Visual"));
+
+            // Colores dinámicos
+            const colorNorma = esVisual ? "#9333ea" : "#1d4ed8";
+            const bgContext = esVisual ? "#faf5ff" : "#fefce8";
+            const borderContext = esVisual ? "#c084fc" : "#facc15";
+
+            return (
+              <tr key={index}>
+                <td style={S.td}>
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "13px",
+                      color: colorNorma,
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {item.Norma}
+                  </div>
+                  <span style={S.tag}>{item.Categoria}</span>
+                  {esVisual && (
+                    <span
+                      style={{
+                        ...S.tag,
+                        backgroundColor: "#f3e8ff",
+                        color: "#7e22ce",
+                        marginLeft: "5px",
+                        border: "1px solid #e9d5ff",
+                      }}
+                    >
+                      📷 IA
+                    </span>
+                  )}
+                </td>
+                <td style={S.td}>
+                  <div
+                    style={{
+                      ...S.contextBox,
+                      backgroundColor: bgContext,
+                      borderLeftColor: borderContext,
+                    }}
+                  >
+                    "{item.Contexto}"
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>
+                    <strong>Patrón:</strong> {item.Hallazgo}
+                  </div>
+                </td>
+                <td style={{ ...S.td, textAlign: "center" }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "24px",
+                      height: "24px",
+                      lineHeight: "24px",
+                      borderRadius: "50%",
+                      backgroundColor: "#f1f5f9",
+                      color: "#334155",
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                    }}
+                  >
+                    {item.Pagina}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 function ResultadosAnalisis() {
   useAuthListener();
   const [datos, setDatos] = useState(null);
-  const contentRef = useRef(null); // Referencia al área imprimible
+  const [generando, setGenerando] = useState(false);
+  const contentRef = useRef(null);
 
   useEffect(() => {
-    // Leemos los datos que guardaremos en localStorage desde la página de subida
     const data = localStorage.getItem("ultimoAnalisis");
     if (data) {
       setDatos(JSON.parse(data));
     }
   }, []);
 
-  const descargarPDF = () => {
+  const descargarPDF = async () => {
+    if (generando) return;
+    setGenerando(true);
+
+    const safetyTimeout = setTimeout(() => {
+      setGenerando(false);
+      alert("El proceso tardó demasiado.");
+    }, 20000);
+
     const element = contentRef.current;
+
     const opt = {
       margin: 10,
-      filename: `Reporte_IA_${datos?.nombre || "documento"}.pdf`,
+      filename: `Reporte_${datos?.categoria_producto || "Analisis"}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: {
+        scale: 2, // Mejor calidad
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        // Aquí seguimos eliminando los estilos externos para evitar el error OKLCH
+        onclone: (clonedDoc) => {
+          const styles = clonedDoc.querySelectorAll(
+            'style, link[rel="stylesheet"]'
+          );
+          styles.forEach((s) => s.remove());
+        },
+      },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     };
-    html2pdf().set(opt).from(element).save();
+
+    try {
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error(error);
+      alert("Error al generar PDF.");
+    } finally {
+      clearTimeout(safetyTimeout);
+      setGenerando(false);
+    }
   };
 
-  if (!datos)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold text-slate-700">
-            Generando reporte...
-          </h2>
-          <p className="text-slate-500">Por favor espera un momento.</p>
-        </div>
-      </div>
-    );
+  if (!datos) return <div className="p-10 text-center">Cargando datos...</div>;
+
+  const esGeneral = datos.tipo_vista === "general";
+  const totalHallazgos = esGeneral
+    ? datos.sub_reportes.reduce(
+        (acc, curr) => acc + (curr.data.analisis_ia?.length || 0),
+        0
+      )
+    : datos.analisis_ia?.length || 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans relative pb-20">
-      {/* Fondo Decorativo */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-200 to-slate-50 -z-10"></div>
-
-      {/* NAVBAR MODERNO (Solo para navegación, no sale en PDF) */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4 sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="NOPRO" className="h-8" />
-            <span className="font-bold text-slate-700 text-lg hidden sm:block">
-              Resultados del Análisis
-            </span>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              to="/Home"
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition"
-            >
-              Volver al Inicio
-            </Link>
-            <button
-              onClick={descargarPDF}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-blue-500/30 font-bold text-sm flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
-            >
-              <span className="text-lg">⬇</span> Descargar PDF
-            </button>
-          </div>
+    <div className="min-h-screen bg-slate-50 relative">
+      {/* NAVBAR (Solo visible en pantalla, no afecta al PDF) */}
+      <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="NOPRO" className="h-8" />
+          <span className="font-bold text-slate-700">Vista Previa</span>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => window.close()}
+            className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-lg"
+          >
+            Cerrar
+          </button>
+          <button
+            onClick={descargarPDF}
+            disabled={generando}
+            className={`px-5 py-2 text-white font-bold rounded-lg text-sm shadow-lg transition-all ${
+              generando ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {generando ? "Generando..." : "⬇ Descargar PDF"}
+          </button>
         </div>
       </nav>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <main className="max-w-4xl mx-auto px-4 mt-8 animate-fade-in-up">
-        {/* Área del Reporte (Esto se convierte a PDF) */}
-        <div
-          ref={contentRef}
-          className="bg-white p-10 md:p-16 rounded-none md:rounded-xl shadow-2xl text-slate-800 border border-slate-100 relative overflow-hidden"
-        >
-          {/* Marca de agua sutil */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -z-0 opacity-50"></div>
-
-          {/* Encabezado del Documento */}
-          <header className="border-b-2 border-slate-800 pb-6 mb-8 flex justify-between items-end relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <img src={logo} alt="NOPRO" className="h-6 opacity-80" />
-                <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">
-                  Reporte Oficial
-                </span>
+      <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-2xl">
+        {/* === ÁREA IMPRIMIBLE === */}
+        {/* Usamos el objeto "S" para aplicar estilos inline 100% seguros */}
+        <div ref={contentRef} style={S.container} id="pdf-content">
+          {/* HEADER */}
+          <header style={S.header}>
+            <div style={S.headerLeft}>
+              <div style={S.brandTitle}>
+                <img
+                  src={logo}
+                  alt="Logo"
+                  style={{ height: "14px", opacity: 0.6 }}
+                />
+                Reporte Oficial
               </div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Informe de Conformidad
-              </h1>
-              <p className="text-blue-600 font-medium mt-1">
-                Análisis Automatizado por Inteligencia Artificial
+              <h1 style={S.mainTitle}>{datos.titulo_reporte}</h1>
+              <p style={S.subTitle}>
+                {esGeneral
+                  ? "Análisis Integral Multi-Documento"
+                  : "Análisis Automatizado por IA"}
               </p>
             </div>
-            <div className="text-right text-sm text-slate-500">
-              <p className="font-bold text-slate-700">
-                {datos.marca_producto} {datos.modelo_producto}
+            <div style={S.headerRight}>
+              <p
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  color: "#334155",
+                }}
+              >
+                {datos.marca_producto}
               </p>
-              <p className="text-xs uppercase tracking-wide mt-1">
-                {new Date().toLocaleDateString("es-ES", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+              <p>{datos.modelo_producto}</p>
+              <p style={{ marginTop: "5px", textTransform: "uppercase" }}>
+                {new Date().toLocaleDateString()}
               </p>
             </div>
           </header>
 
-          {/* Resumen Ejecutivo */}
-          <section className="mb-10 bg-slate-50 p-6 rounded-xl border border-slate-200">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
-              Resumen del Análisis
-            </h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-3 bg-white rounded-lg shadow-sm">
-                <p className="text-xs text-slate-500">Categoría</p>
-                <p className="font-bold text-slate-800">
-                  {datos.categoria_producto}
-                </p>
-              </div>
-              <div className="p-3 bg-white rounded-lg shadow-sm">
-                <p className="text-xs text-slate-500">Documento</p>
-                <p className="font-bold text-slate-800 truncate px-2">
-                  {datos.titulo_reporte.replace("Reporte ", "")}
-                </p>
-              </div>
-              <div className="p-3 bg-white rounded-lg shadow-sm">
-                <p className="text-xs text-slate-500">Hallazgos</p>
-                <p
-                  className={`font-bold ${
-                    datos.analisis_ia?.length > 0
-                      ? "text-blue-600"
-                      : "text-orange-500"
-                  }`}
-                >
-                  {datos.analisis_ia?.length || 0} detectados
-                </p>
-              </div>
+          {/* RESUMEN (GRID MANUAL) */}
+          <section style={S.summaryBox}>
+            <div style={S.card}>
+              <p style={S.cardLabel}>Categoría</p>
+              <p style={S.cardValue}>{datos.categoria_producto}</p>
+            </div>
+            <div style={S.card}>
+              <p style={S.cardLabel}>Tipo Reporte</p>
+              <p style={S.cardValue}>{esGeneral ? "Completo" : "Individual"}</p>
+            </div>
+            <div style={S.card}>
+              <p style={S.cardLabel}>Hallazgos</p>
+              <p style={{ ...S.cardValue, color: "#2563eb" }}>
+                {totalHallazgos}
+              </p>
+            </div>
+            <div style={S.card}>
+              <p style={S.cardLabel}>Estado</p>
+              <p style={{ ...S.cardValue, color: "#16a34a" }}>Finalizado</p>
             </div>
           </section>
 
-          {/* Tabla de Hallazgos */}
-          {datos.analisis_ia && datos.analisis_ia.length > 0 ? (
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <span className="w-2 h-6 bg-blue-600 rounded-full"></span>
-                Detalle de Cumplimiento Normativo
-              </h3>
-
-              <div className="overflow-hidden rounded-xl border border-slate-200">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 text-slate-600 text-xs uppercase font-bold tracking-wider">
-                      <th className="p-4 w-1/3">Norma & Categoría</th>
-                      <th className="p-4 w-1/2">Evidencia en Documento</th>
-                      <th className="p-4 text-center w-20">Pág.</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {datos.analisis_ia.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-blue-50/30 transition-colors"
-                      >
-                        <td className="p-4 align-top">
-                          <div className="font-bold text-blue-700 text-sm mb-1">
-                            {item.Norma}
-                          </div>
-                          <div className="text-xs text-slate-500 font-medium bg-slate-100 inline-block px-2 py-1 rounded">
-                            {item.Categoria}
-                          </div>
-                        </td>
-                        <td className="p-4 align-top">
-                          <div className="text-sm text-slate-800 italic bg-yellow-50 p-2 rounded border-l-2 border-yellow-400 mb-1">
-                            "{item.Contexto}"
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                            <span className="font-bold">Patrón detectado:</span>{" "}
-                            {item.Hallazgo}
-                          </div>
-                        </td>
-                        <td className="p-4 align-top text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-sm border border-slate-200">
-                            {item.Pagina}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* CONTENIDO PRINCIPAL */}
+          {esGeneral ? (
+            <div>
+              {datos.sub_reportes.map((sub, idx) => (
+                <div
+                  key={idx}
+                  style={{ pageBreakInside: "avoid", marginBottom: "40px" }}
+                >
+                  <h3 style={S.sectionTitle}>
+                    <span
+                      style={{
+                        backgroundColor: "#1e293b",
+                        color: "white",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    Resultados: {sub.titulo}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "#94a3b8",
+                      paddingLeft: "35px",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    Archivo fuente: {sub.data.nombre || "N/A"}
+                  </p>
+                  <TablaHallazgos analisis={sub.data.analisis_ia} />
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="p-8 bg-orange-50 border border-orange-100 rounded-2xl text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                ⚠️
-              </div>
-              <h3 className="text-lg font-bold text-orange-800 mb-2">
-                Sin coincidencias normativas claras
-              </h3>
-              <p className="text-sm text-orange-700 max-w-md mx-auto">
-                Nuestro sistema no detectó frases clave que coincidan
-                exactamente con las normas NMX/NOM en este documento. Te
-                recomendamos revisar manualmente o subir un documento más
-                completo.
-              </p>
+            <div>
+              <h3 style={S.sectionTitle}>Detalle de Cumplimiento Normativo</h3>
+              <TablaHallazgos analisis={datos.analisis_ia} />
             </div>
           )}
 
-          <div className="mt-16 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
-            <p>Generado por NOPRO Systems v1.0</p>
-            <p>Este documento es de carácter informativo.</p>
-          </div>
+          {/* FOOTER */}
+          <footer style={S.footer}>
+            <span>Generado automáticamente por NOPRO AI Platform</span>
+            <span>Documento confidencial - Uso interno</span>
+          </footer>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
