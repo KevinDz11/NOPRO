@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 load_dotenv()
 from fastapi import FastAPI
-from backend.routers import clientes, productos, documentos, auth, soporte
-from backend.database import Base, engine
+from .routers import clientes, productos, documentos, auth, soporte
+from .database import Base, engine
 from backend import models
-from backend.routers import clientes, productos, documentos
+from .routers import clientes, productos, documentos
 from fastapi.middleware.cors import CORSMiddleware
 
 # ⚠️ ADVERTENCIA: Esto borrará todos tus datos (usuarios, productos)
