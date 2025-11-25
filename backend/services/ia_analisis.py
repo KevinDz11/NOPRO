@@ -662,8 +662,8 @@ def extraer_texto_pdf(ruta_pdf):
 def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
     """
     Analiza el documento.
-    - Si es 'Ficha' o 'Manual': Busca normas en el texto Y hace análisis visual.
-    - Si es 'Etiqueta': SALTA el texto y analiza SOLO imágenes (YOLO + Google).
+    - Si es 'Ficha' o 'Manual': SOLO Texto (Regex). Se OMITE cualquier análisis visual.
+    - Si es 'Etiqueta': SOLO Visual (Google Cloud + YOLO). Se unifica el resultado.
     """
     resultados = []
 
@@ -722,77 +722,52 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
         print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
 
     # =================================================================
-    # 2. ANÁLISIS VISUAL (Siempre en PDFs, Crítico para Etiqueta)
+    # 2. ANÁLISIS VISUAL (EXCLUSIVO PARA ETIQUETA)
     # =================================================================
-    if ruta_pdf.lower().endswith(".pdf"):
-        print(f"\n--- 🔍 DEBUG VISUAL ---")
+    # La condición asegura que SOLO la etiqueta pase por YOLO/Google
+    if ruta_pdf.lower().endswith(".pdf") and tipo_doc == "Etiqueta":
+        print(f"\n--- 🔍 DEBUG VISUAL (Solo Etiqueta) ---")
         print(f"Archivo: {os.path.basename(ruta_pdf)}")
-        print(f"Marca esperada: '{marca_esperada}'")
 
         try:
             # Llamada al servicio de visión (ia_vision.py)
             hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
             
-            yolo_list = hallazgos.get("yolo_detections", [])
-            google_list = hallazgos.get("google_detections", [])
+            # Recuperamos AMBAS listas
+            yolo_list = hallazgos.get("yolo_detections", [])     # IA Interna (NOMs, etc)
+            google_list = hallazgos.get("google_detections", []) # Google (Textos/Logos)
 
             print(f"DEBUG -> Lista YOLO recibida: {yolo_list}")
+            print(f"DEBUG -> Lista Google recibida: {google_list}")
             
-            # A. PROCESAR YOLO (Modelo best.pt)
+            # Combinamos las listas en una sola
+            hallazgos_totales = []
+            if google_list:
+                hallazgos_totales.extend(google_list)
             if yolo_list:
-                detecciones_str = ", ".join(yolo_list)
-                val_msg = ""
-                
-                # Validación de marca
-                if marca_esperada:
-                    marca_clean = marca_esperada.strip().lower()
-                    match = False
-                    for det in yolo_list:
-                        # Comparación flexible: "samsung" in "logo_samsung"
-                        if marca_clean in det.lower() or det.lower() in marca_clean:
-                            match = True
-                            break
-                    
-                    if match:
-                        val_msg = f" ✅ Coincide con '{marca_esperada}'"
-                        print(f"DEBUG -> ¡HAY COINCIDENCIA CON MARCA!")
-                    else:
-                        val_msg = f" ⚠️ No coincide con '{marca_esperada}'"
-                        print(f"DEBUG -> No hubo coincidencia de marca.")
+                hallazgos_totales.extend(yolo_list)
+            
+            # (Opcional) Eliminar duplicados si fuera necesario:
+            # hallazgos_totales = list(set(hallazgos_totales))
 
+            if hallazgos_totales:
+                hallazgos_str = ", ".join(hallazgos_totales)
                 resultados.append({
-                    "Norma": "Inspección Visual (IA Interna)",
-                    "Categoria": "Logos Detectados",
-                    "Hallazgo": detecciones_str,
+                    "Norma": "Inspección Visual",
+                    "Categoria": "Elementos Detectados",
+                    "Hallazgo": hallazgos_str,
                     "Pagina": 1,
-                    "Contexto": f"YOLO detectó: {detecciones_str}.{val_msg}"
+                    "Contexto": f"Se detectó: {hallazgos_str}"
                 })
             else:
-                print("DEBUG -> YOLO devolvió lista vacía.")
-
-            # B. PROCESAR GOOGLE VISION (Marcas y Texto en imagen)
-            if google_list:
-                google_str = ", ".join(google_list)
+                # Sin hallazgos de ninguna de las dos IAs
                 resultados.append({
-                    "Norma": "Inspección Visual (Google Cloud)",
-                    "Categoria": "Marcas/Logos Oficiales",
-                    "Hallazgo": google_str,
+                    "Norma": "Inspección Visual",
+                    "Categoria": "Sin Hallazgos",
+                    "Hallazgo": "N/A",
                     "Pagina": 1,
-                    "Contexto": f"Google Vision identificó: {google_str}"
+                    "Contexto": "Se analizó la imagen pero no se detectaron elementos normativos ni marcas conocidas."
                 })
-            
-            # C. MANEJO DE "SIN HALLAZGOS"
-            if not yolo_list and not google_list:
-                print("DEBUG -> ¡Ninguna IA detectó nada!")
-                # Si es etiqueta, avisamos que está vacía visualmente
-                if tipo_doc == "Etiqueta":
-                    resultados.append({
-                        "Norma": "Inspección Visual",
-                        "Categoria": "Sin Hallazgos",
-                        "Hallazgo": "N/A",
-                        "Pagina": 1,
-                        "Contexto": "Se analizó la imagen pero no se detectaron logos normativos ni marcas conocidas."
-                    })
 
         except Exception as e:
             print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")

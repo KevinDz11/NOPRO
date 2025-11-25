@@ -216,19 +216,6 @@ const TablaHallazgos = ({ analisis }) => {
                     {item.Norma}
                   </div>
                   <span style={S.tag}>{item.Categoria}</span>
-                  {esVisual && (
-                    <span
-                      style={{
-                        ...S.tag,
-                        backgroundColor: "#f3e8ff",
-                        color: "#7e22ce",
-                        marginLeft: "5px",
-                        border: "1px solid #e9d5ff",
-                      }}
-                    >
-                      📷 IA
-                    </span>
-                  )}
                 </td>
                 <td style={S.td}>
                   <div

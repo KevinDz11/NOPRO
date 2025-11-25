@@ -40,6 +40,15 @@ async def solicitar_reset_password(
     user = crud.get_cliente_by_email(db, email=request.email)
     
     if user:
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Si el usuario existe pero no ha verificado su cuenta, lanzamos un error.
+        if not user.estado:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La cuenta no ha sido verificada. Por favor, verifica tu correo antes de solicitar un cambio."
+            )
+        # --- FIN DE LA CORRECCIÓN ---
+
         token = auth.create_reset_token()
         # El token expira en 1 hora
         expires = datetime.now(timezone.utc) + timedelta(hours=1) 
@@ -60,7 +69,10 @@ async def solicitar_reset_password(
         fm = FastMail(conf)
         background_tasks.add_task(fm.send_message, message)
 
-    return {"mensaje": "Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña."}
+    # Nota: Por seguridad, a veces se prefiere no revelar si el usuario existe o no,
+    # pero como en el bloque 'if' ya lanzamos una excepción específica si no está verificado,
+    # el frontend recibirá ese error 400 y mostrará el mensaje.
+    return {"mensaje": "Si tu correo está registrado y verificado, recibirás un enlace para restablecer tu contraseña."}
 
 
 @router.post("/ejecutar-reset-password", status_code=status.HTTP_200_OK)
