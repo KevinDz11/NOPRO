@@ -70,8 +70,10 @@ export default function NuevaContrasena() {
             Recuperar Contraseña
           </h2>
           <p className="text-slate-500 mb-8 text-sm leading-relaxed">
-            Ingresa tu correo electrónico y te enviaremos un enlace seguro para
-            restablecer tu acceso.
+            Ingresa tu correo electrónico registrado y verificado, y te
+            enviaremos un enlace seguro para restablecer tu acceso a dicho
+            correo. Si tu correo no cumple estas características, no se enviará
+            el correo de recuperación.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">

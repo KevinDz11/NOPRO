@@ -12,7 +12,7 @@ const ModalCarga = ({ tipo, mensaje }) => (
         <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
         <div className="absolute inset-0 flex items-center justify-center text-2xl">
-          {tipo === "Manual" ? "📖" : tipo === "Etiqueta" ? "🏷️" : "📄"}
+          {tipo === "Manual" ? "" : tipo === "Etiqueta" ? "" : ""}
         </div>
       </div>
       <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
@@ -28,7 +28,7 @@ const ModalCarga = ({ tipo, mensaje }) => (
               Proceso Extenso
             </p>
             <p className="text-orange-600 text-xs leading-relaxed">
-              Esto puede tardar de 3 a 5 minutos. Por favor,{" "}
+              Esto puede tardar hasta 5 minutos. Por favor,{" "}
               <strong>no cierres esta pestaña</strong>.
             </p>
           </div>
@@ -42,15 +42,12 @@ const ModalCarga = ({ tipo, mensaje }) => (
 const ModalFeedback = ({ tipo, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
     <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full animate-bounce-in border border-slate-100">
-      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
-        ✅
-      </div>
+      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"></div>
       <h3 className="text-xl font-bold text-slate-800 mb-2">
         ¡Análisis Completado!
       </h3>
       <p className="text-slate-500 text-sm mb-6">
-        El documento <strong>{tipo}</strong> ha sido procesado y validado
-        correctamente por la IA.
+        El documento <strong>{tipo}</strong> ha sido procesado y validado.
       </p>
       <button
         onClick={onClose}
@@ -183,17 +180,14 @@ export default function SubirArchivos() {
 
     try {
       let nombreUI = "Ficha Técnica";
-      let mensajeUI =
-        "Extrayendo especificaciones técnicas y validando datos...";
+      let mensajeUI = "Analizando documento...";
 
       if (tipoArchivo === "manual") {
         nombreUI = "Manual";
-        mensajeUI =
-          "Leyendo documentos extensos, aplicando NLP y verificando normas...";
+        mensajeUI = "Analizando documento extenso...";
       } else if (tipoArchivo === "etiqueta") {
         nombreUI = "Etiqueta";
-        mensajeUI =
-          "Analizando imagen con IA (YOLO + Google Vision) buscando logos...";
+        mensajeUI = "Analizando documento, buscando logos...";
       }
 
       setLoadingType(nombreUI);
@@ -397,7 +391,7 @@ export default function SubirArchivos() {
               }`}
             >
               {result
-                ? "ANALIZADO ✅"
+                ? "ANALIZADO"
                 : loading && loadingType === typeLabel
                 ? "..."
                 : "ANALIZAR"}
@@ -548,7 +542,6 @@ export default function SubirArchivos() {
             titulo="Ficha Técnica"
             desc="Especificaciones de voltaje y potencia."
             color="blue"
-            icon="📄"
             result={resultadoFicha}
             setFileFn={iniciarCarga}
             progress={progreso.ficha}
@@ -559,7 +552,6 @@ export default function SubirArchivos() {
             titulo="Manual"
             desc="Instrucciones de seguridad y mantenimiento."
             color="orange"
-            icon="📖"
             result={resultadoManual}
             setFileFn={iniciarCarga}
             progress={progreso.manual}
@@ -570,7 +562,6 @@ export default function SubirArchivos() {
             titulo="Etiqueta"
             desc="Detección de logos normativos y advertencias."
             color="purple"
-            icon="🏷️"
             result={resultadoEtiqueta}
             setFileFn={iniciarCarga}
             progress={progreso.etiqueta}
@@ -579,13 +570,13 @@ export default function SubirArchivos() {
         </div>
 
         {/* BOTÓN REPORTE GENERAL - MODIFICADO AQUÍ */}
-        {(resultadoFicha || resultadoManual || resultadoEtiqueta) && (
+        {resultadoFicha && resultadoManual && resultadoEtiqueta && (
           <div className="flex justify-center mt-10 mb-8 animate-fade-in-up">
             <button
               onClick={verReporteGeneral}
               className="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl hover:bg-slate-800 hover:scale-105 transition-all font-bold flex items-center gap-3 border border-slate-700 transform"
             >
-              <span className="text-xl">📊</span> Ver Reporte General Unificado
+              <span className="text-xl"></span> Ver Reporte General Unificado
             </button>
           </div>
         )}
