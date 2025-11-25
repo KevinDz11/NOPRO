@@ -1,17 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
-import { Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
 // --- ESTILOS MANUALES (PARA REEMPLAZAR TAILWIND EN EL PDF) ---
-// Definimos colores HEX y estructuras Flex/Grid manualmente
 const S = {
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
     backgroundColor: "#ffffff",
     padding: "40px",
-    minHeight: "297mm", // Altura A4
+    minHeight: "297mm",
     color: "#334155",
     width: "100%",
     boxSizing: "border-box",
@@ -57,15 +55,14 @@ const S = {
     fontSize: "12px",
     color: "#64748b",
   },
-  // Grid simulado con Flexbox para compatibilidad máxima
   summaryBox: {
     backgroundColor: "#f8fafc",
     border: "1px solid #e2e8f0",
     borderRadius: "12px",
     padding: "20px",
-    marginBottom: "40px",
+    marginBottom: "30px",
     display: "flex",
-    justifyContent: "space-between", // Distribuye las 4 cajas
+    justifyContent: "space-between",
     gap: "15px",
   },
   card: {
@@ -73,7 +70,7 @@ const S = {
     borderRadius: "8px",
     padding: "15px",
     textAlign: "center",
-    flex: "1", // Para que ocupen el mismo ancho
+    flex: "1",
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     border: "1px solid #f1f5f9",
   },
@@ -100,14 +97,13 @@ const S = {
     borderBottom: "1px solid #f1f5f9",
     paddingBottom: "10px",
   },
-  // Tabla
   tableContainer: {
     border: "1px solid #e2e8f0",
     borderRadius: "12px",
     overflow: "hidden",
     marginBottom: "30px",
     backgroundColor: "#ffffff",
-    pageBreakInside: "avoid", // Evita cortar tablas a la mitad
+    pageBreakInside: "avoid",
   },
   table: {
     width: "100%",
@@ -160,7 +156,7 @@ const S = {
   },
 };
 
-// --- COMPONENTE TABLA (REUTILIZABLE) ---
+// --- COMPONENTE TABLA (Maneja Texto e Imagen) ---
 const TablaHallazgos = ({ analisis }) => {
   if (!analisis || analisis.length === 0) {
     return (
@@ -192,10 +188,74 @@ const TablaHallazgos = ({ analisis }) => {
         </thead>
         <tbody>
           {analisis.map((item, index) => {
+            // --- BLOQUE ESPECIAL: SI HAY IMAGEN ---
+            if (item.ImagenBase64) {
+              return (
+                <tr key={index}>
+                  <td
+                    colSpan="3"
+                    style={{ padding: "0", borderBottom: "1px solid #e2e8f0" }}
+                  >
+                    <div
+                      style={{
+                        padding: "20px",
+                        backgroundColor: "#f8fafc",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          marginBottom: "10px",
+                          borderBottom: "1px dashed #cbd5e1",
+                          paddingBottom: "10px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: "bold",
+                            color: "#475569",
+                            fontSize: "12px",
+                          }}
+                        >
+                          📸 EVIDENCIA VISUAL DEL ANÁLISIS
+                        </span>
+                      </div>
+
+                      {/* Imagen con borde y sombra */}
+                      <img
+                        src={`data:image/jpeg;base64,${item.ImagenBase64}`}
+                        alt="Evidencia Analizada"
+                        style={{
+                          maxWidth: "90%",
+                          maxHeight: "600px",
+                          border: "4px solid white",
+                          borderRadius: "4px",
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+
+                      <p
+                        style={{
+                          fontSize: "11px",
+                          marginTop: "10px",
+                          color: "#64748b",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {item.Contexto}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              );
+            }
+            // --------------------------------------
+
             const esVisual =
               item.Norma &&
               (item.Norma.includes("Visual") ||
-                item.Norma.includes("Inspección Visual"));
+                item.Norma.includes("Inspección Visual") ||
+                item.Norma.includes("Gráfica"));
 
             // Colores dinámicos
             const colorNorma = esVisual ? "#9333ea" : "#1d4ed8";
@@ -290,7 +350,6 @@ function ResultadosAnalisis() {
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        // Aquí seguimos eliminando los estilos externos para evitar el error OKLCH
         onclone: (clonedDoc) => {
           const styles = clonedDoc.querySelectorAll(
             'style, link[rel="stylesheet"]'
@@ -324,7 +383,7 @@ function ResultadosAnalisis() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative">
-      {/* NAVBAR (Solo visible en pantalla, no afecta al PDF) */}
+      {/* NAVBAR */}
       <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <img src={logo} alt="NOPRO" className="h-8" />
@@ -352,7 +411,6 @@ function ResultadosAnalisis() {
       {/* CONTENEDOR PRINCIPAL */}
       <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-2xl">
         {/* === ÁREA IMPRIMIBLE === */}
-        {/* Usamos el objeto "S" para aplicar estilos inline 100% seguros */}
         <div ref={contentRef} style={S.container} id="pdf-content">
           {/* HEADER */}
           <header style={S.header}>
