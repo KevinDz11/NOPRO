@@ -73,6 +73,7 @@ class ResultadoIA(BaseModel):
     Hallazgo: Optional[str] = None
     Pagina: int
     Contexto: Optional[str] = None
+    ImagenBase64: Optional[str] = None
 
 # Schema de respuesta extendido
 class DocumentoAnalisisOut(DocumentoOut):

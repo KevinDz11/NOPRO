@@ -663,7 +663,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
     """
     Analiza el documento.
     - Si es 'Ficha' o 'Manual': SOLO Texto (Regex). Se OMITE cualquier análisis visual.
-    - Si es 'Etiqueta': SOLO Visual (Google Cloud + YOLO). Se unifica el resultado.
+    - Si es 'Etiqueta': Realiza análisis VISUAL (YOLO + Google) e incluye la imagen marcada.
     """
     resultados = []
 
@@ -733,43 +733,60 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
             # Llamada al servicio de visión (ia_vision.py)
             hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
             
-            # Recuperamos AMBAS listas
-            yolo_list = hallazgos.get("yolo_detections", [])     # IA Interna (NOMs, etc)
-            google_list = hallazgos.get("google_detections", []) # Google (Textos/Logos)
+            # Recuperamos datos del diccionario que devuelve ia_vision
+            yolo_list = hallazgos.get("yolo_detections", [])
+            google_list = hallazgos.get("google_detections", [])
+            img_base64 = hallazgos.get("image_base64") # <--- LA IMAGEN PROCESADA
 
-            print(f"DEBUG -> Lista YOLO recibida: {yolo_list}")
-            print(f"DEBUG -> Lista Google recibida: {google_list}")
+            print(f"DEBUG -> Lista YOLO: {yolo_list}")
             
-            # Combinamos las listas en una sola
+            # Combinamos hallazgos de texto (nombres de logos/etiquetas)
             hallazgos_totales = []
-            if google_list:
-                hallazgos_totales.extend(google_list)
-            if yolo_list:
-                hallazgos_totales.extend(yolo_list)
-            
-            # (Opcional) Eliminar duplicados si fuera necesario:
-            # hallazgos_totales = list(set(hallazgos_totales))
+            if google_list: hallazgos_totales.extend(google_list)
+            if yolo_list: hallazgos_totales.extend(yolo_list)
 
+            # A. AGREGAR HALLAZGOS DE TEXTO (Lo que lee la IA)
             if hallazgos_totales:
                 hallazgos_str = ", ".join(hallazgos_totales)
                 resultados.append({
-                    "Norma": "Inspección Visual",
-                    "Categoria": "Elementos Detectados",
+                    "Norma": "Inspección Visual IA",
+                    "Categoria": "Elementos Identificados",
                     "Hallazgo": hallazgos_str,
                     "Pagina": 1,
-                    "Contexto": f"Se detectó: {hallazgos_str}"
+                    "Contexto": f"Se detectaron textos/logos: {hallazgos_str}"
                 })
             else:
-                # Sin hallazgos de ninguna de las dos IAs
                 resultados.append({
-                    "Norma": "Inspección Visual",
-                    "Categoria": "Sin Hallazgos",
+                    "Norma": "Inspección Visual IA",
+                    "Categoria": "Sin Hallazgos Textuales",
                     "Hallazgo": "N/A",
                     "Pagina": 1,
-                    "Contexto": "Se analizó la imagen pero no se detectaron elementos normativos ni marcas conocidas."
+                    "Contexto": "No se detectaron textos legibles o logos conocidos."
                 })
+
+            # B. AGREGAR LA EVIDENCIA GRÁFICA (LA IMAGEN)
+            # Este es el bloque crucial que faltaba o fallaba antes
+            if img_base64:
+                print("✅ Imagen Base64 detectada, agregando al reporte...")
+                resultados.append({
+                    "Norma": "Evidencia Gráfica",
+                    "Categoria": "Análisis de Imagen",
+                    "Hallazgo": "Detección de Objetos",
+                    "Pagina": 1,
+                    "Contexto": "Visualización de zonas detectadas por la IA.",
+                    "ImagenBase64": img_base64  # <--- ESTO ES LO QUE EL FRONTEND VA A PINTAR
+                })
+            else:
+                print("⚠️ ADVERTENCIA: La función ia_vision devolvió 'image_base64' vacío o nulo.")
 
         except Exception as e:
             print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
+            resultados.append({
+                "Norma": "Error Sistema",
+                "Categoria": "Fallo en Visión",
+                "Hallazgo": str(e),
+                "Pagina": 0,
+                "Contexto": "Ocurrió un error al procesar la imagen."
+            })
 
     return resultados
