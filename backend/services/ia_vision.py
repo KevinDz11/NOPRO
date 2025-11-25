@@ -3,7 +3,8 @@ import os
 import fitz  # PyMuPDF
 import numpy as np
 import base64
-from PIL import Image, ImageDraw, ImageFont # Importante: ImageDraw y ImageFont
+import random
+from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 from google.cloud import vision
 from dotenv import load_dotenv
@@ -12,6 +13,44 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best.pt")
+
+# --- CONFIGURACIÓN DE COLORES ---
+# Define colores específicos para clases conocidas.
+# El formato es HEX string.
+COLOR_MAP = {
+    # Marcas
+    "Samsung": "#1d4ed8",  # Azul fuerte
+    "LG": "#c50f46",       # Rojo oscuro
+    "Sony": "#000000",     # Negro
+    "Brand": "#1d4ed8",
+    
+    # Normativas
+    "NOM": "#16a34a",      # Verde
+    "NOM-CE": "#16a34a",
+    "Energy Star": "#eab308", # Amarillo
+    "UL": "#dc2626",       # Rojo
+    
+    # Advertencias / Simbolos
+    "basura": "#f97316",   # Naranja
+    "choque": "#dc2626",   # Rojo
+    "choque electr": "#dc2626",
+    "doble aislamiento": "#9333ea", # Morado
+    "reciclaje": "#22c55e", # Verde claro
+}
+
+def get_color_for_label(label):
+    """Devuelve un color específico o uno aleatorio basado en el nombre."""
+    # 1. Buscar coincidencia en el mapa
+    for key, color in COLOR_MAP.items():
+        if key.lower() in label.lower():
+            return color
+    
+    # 2. Si no existe, generar color aleatorio consistente (hash)
+    random.seed(label)
+    r = random.randint(50, 200)
+    g = random.randint(50, 200)
+    b = random.randint(50, 200)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 # Configurar Credenciales
 json_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -32,25 +71,58 @@ except Exception as e:
     print(f"⚠️ Error cargando 'best.pt', usando fallback: {e}")
     model = YOLO("yolov8n.pt")
 
-def consultar_google_vision(pil_image):
+def consultar_google_vision_avanzado(pil_image):
+    """
+    Retorna tanto descripciones como COORDENADAS (bounding poly)
+    para poder dibujar las cajas de los logos detectados por Google.
+    """
+    detecciones = [] # Lista de dicts: {label, score, box: [x1, y1, x2, y2]}
+    nombres_simples = []
+
     try:
         img_byte_arr = io.BytesIO()
         pil_image.save(img_byte_arr, format='PNG')
         content = img_byte_arr.getvalue()
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=content)
+        
+        # Usamos logo_detection
         response = client.logo_detection(image=image)
-        logos = response.logo_annotations
-        return [f"{logo.description} ({logo.score:.2f})" for logo in logos]
+        
+        for logo in response.logo_annotations:
+            desc = logo.description
+            score = logo.score
+            
+            # Obtener vértices para la caja
+            vertices = logo.bounding_poly.vertices
+            
+            # Si hay vértices, calculamos la caja bounding (min/max)
+            if vertices:
+                x_coords = [v.x for v in vertices]
+                y_coords = [v.y for v in vertices]
+                x1, y1 = min(x_coords), min(y_coords)
+                x2, y2 = max(x_coords), max(y_coords)
+                
+                detecciones.append({
+                    "label": desc,
+                    "score": score,
+                    "box": [x1, y1, x2, y2],
+                    "source": "Google"
+                })
+            
+            nombres_simples.append(f"{desc} ({score:.2f})")
+            
+        return detecciones, nombres_simples
+
     except Exception as e:
         print(f"❌ Error Google Vision: {e}")
-        return []
+        return [], []
 
 def analizar_imagen_pdf(ruta_pdf):
     resultados = {
         "yolo_detections": [],
         "google_detections": [],
-        "image_base64": None, # Campo clave para la imagen
+        "image_base64": None,
         "status": "success"
     }
 
@@ -72,11 +144,15 @@ def analizar_imagen_pdf(ruta_pdf):
             img_data = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 3))
             pil_image = Image.fromarray(img_data, 'RGB')
 
-        # 3. Detección YOLO
-        results = model(pil_image, verbose=False)
+        # Lista maestra de objetos a dibujar
+        objetos_a_dibujar = []
 
-        # Filtro de mejor confianza
+        # 3. Detección YOLO (Interna)
+        results = model(pil_image, verbose=False)
+        yolo_nombres = []
+        
         if results and results[0].boxes:
+            # Filtrar por mejor confianza
             mejor_indice = {}
             for i, box in enumerate(results[0].boxes):
                 cls_id = int(box.cls[0]) 
@@ -85,49 +161,67 @@ def analizar_imagen_pdf(ruta_pdf):
                     mejor_indice[cls_id] = (conf, i)
             
             indices = [item[1] for item in mejor_indice.values()]
-            results[0].boxes = results[0].boxes[indices]
+            boxes_filtradas = results[0].boxes[indices]
 
-            # --- DIBUJAR CAJAS (Draw) ---
-            draw = ImageDraw.Draw(pil_image)
-            try:
-                # Intentar cargar fuente estándar
-                font = ImageFont.truetype("arial.ttf", 40)
-            except:
-                font = ImageFont.load_default()
-
-            for box in results[0].boxes:
+            for box in boxes_filtradas:
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
                 cls_id = int(box.cls[0])
                 name = model.names[cls_id]
                 conf = float(box.conf[0])
-                label = f"{name} {conf:.1f}"
-
-                # Rectángulo Rojo
-                draw.rectangle([x1, y1, x2, y2], outline="red", width=6)
                 
-                # Fondo del texto para que se lea
-                text_bbox = draw.textbbox((x1, y1), label, font=font)
-                draw.rectangle([text_bbox[0], text_bbox[1]-5, text_bbox[2]+5, text_bbox[3]+5], fill="red")
-                draw.text((x1, y1-5), label, fill="white", font=font)
+                yolo_nombres.append(name)
+                objetos_a_dibujar.append({
+                    "label": name,
+                    "score": conf,
+                    "box": [x1, y1, x2, y2],
+                    "source": "YOLO"
+                })
+        
+        resultados["yolo_detections"] = yolo_nombres
 
-        # 4. Extraer Nombres
-        detected_classes = []
-        if results and results[0].boxes:
-            unique_indices = results[0].boxes.cls.unique()
-            detected_classes = [model.names[int(idx)] for idx in unique_indices]
-        resultados["yolo_detections"] = detected_classes
+        # 4. Detección Google (Nube) - Ahora con coordenadas
+        google_objs, google_nombres = consultar_google_vision_avanzado(pil_image)
+        objetos_a_dibujar.extend(google_objs) # Agregamos los logos de Google a la lista de dibujo
+        resultados["google_detections"] = google_nombres
 
-        # 5. Google Vision
-        resultados["google_detections"] = consultar_google_vision(pil_image)
+        # 5. DIBUJAR TODO (YOLO + GOOGLE)
+        draw = ImageDraw.Draw(pil_image)
+        try:
+            font = ImageFont.truetype("arial.ttf", 30)
+        except:
+            font = ImageFont.load_default()
 
-        # 6. --- REDIMENSIONAR Y CONVERTIR A BASE64 ---
-        # IMPORTANTE: Reducir tamaño para evitar problemas de memoria en frontend
+        for obj in objetos_a_dibujar:
+            label = obj["label"]
+            score = obj["score"]
+            box = obj["box"] # [x1, y1, x2, y2]
+            
+            # Obtener color dinámico
+            color = get_color_for_label(label)
+            
+            # Dibujar Caja
+            draw.rectangle(box, outline=color, width=5)
+            
+            # Dibujar Etiqueta
+            text = f"{label} {score:.2f}"
+            
+            # Fondo del texto (Mismo color que la caja)
+            text_bbox = draw.textbbox((box[0], box[1]), text, font=font)
+            # Ajustar posición si se sale de la imagen arriba
+            text_y = box[1] - 35 if box[1] > 35 else box[1]
+            
+            draw.rectangle(
+                [text_bbox[0]-5, text_y, text_bbox[2]+5, text_y+35], 
+                fill=color
+            )
+            draw.text((text_bbox[0], text_y), text, fill="white", font=font)
+
+        # 6. Redimensionar y Base64
         try:
             base_width = 800
             if pil_image.width > base_width:
                 w_percent = (base_width / float(pil_image.width))
                 h_size = int((float(pil_image.height) * float(w_percent)))
-                # Usar Resampling.LANCZOS si está disponible, sino BILINEAR
                 resample_method = Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.LANCZOS
                 pil_image = pil_image.resize((base_width, h_size), resample_method)
 
@@ -135,9 +229,9 @@ def analizar_imagen_pdf(ruta_pdf):
             pil_image.save(buffered, format="JPEG", quality=85)
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
             resultados["image_base64"] = img_str
-            print("✅ Imagen convertida a Base64 exitosamente.")
+            print("✅ Imagen Base64 generada con cajas multicolor.")
         except Exception as img_err:
-            print(f"⚠️ Error generando imagen Base64: {img_err}")
+            print(f"⚠️ Error generando imagen: {img_err}")
 
         return resultados
 
