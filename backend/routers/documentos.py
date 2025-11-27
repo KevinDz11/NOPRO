@@ -13,86 +13,58 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def subir_y_analizar(
     id_producto: int = Form(...),
     nombre: str = Form(...),
-    tipo: str = Form(...),      # Recibe "ficha", "manual" o "etiqueta"
-    categoria: str = Form(...), # Recibe "Laptop", "SmartTV", "Luminaria"
-    
-    # --- NUEVO: Recibimos la marca (Opcional, por defecto vacía) ---
+    tipo: str = Form(...),
+    categoria: str = Form(...), 
     marca: str = Form(""), 
-    # ---------------------------------------------------------------
-
     archivo: UploadFile = File(...),
     analizar: bool = Form(True),
     db: Session = Depends(database.get_db),
     current_user: models.Cliente = Depends(auth.get_current_user)
 ):
     try:
-        # 1. Obtener ID del cliente desde el token (Seguridad)
         id_cliente = current_user.id_cliente
 
-        # 2. Guardar el archivo físicamente en el servidor
+        # 1. Guardar archivo físico
         file_path = os.path.join(UPLOAD_DIR, archivo.filename)
         with open(file_path, "wb") as f:
             f.write(archivo.file.read())
 
-        # 3. Registrar el documento en la Base de Datos
+        # 2. Crear registro inicial en BD (Sin análisis todavía)
         documento_data = schemas.DocumentoCreate(
             id_cliente=id_cliente,
             id_producto=id_producto,
             nombre=nombre
         )
-        # create_documento guarda la URL/Path y retorna el objeto guardado
         doc_db = crud.create_documento(db, documento_data, archivo_url=file_path)
 
-        # 4. EJECUTAR ANÁLISIS DE IA (Si se solicitó y es PDF)
+        # 3. EJECUTAR ANÁLISIS IA
         resultados_ia = []
         if analizar and archivo.filename.lower().endswith(".pdf"):
-            
-            # --- A. Normalizar Categoría ---
-            cat_map = {
-                "laptop": "Laptop",
-                "smarttv": "SmartTV",
-                "smart tv": "SmartTV",
-                "tv": "SmartTV",
-                "luminaria": "Luminaria",
-                "iluminacion": "Luminaria"
-            }
-            # Si no encuentra la categoría, usa "Laptop" por defecto para no fallar
+            cat_map = {"laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", "luminaria": "Luminaria"}
             categoria_clean = cat_map.get(categoria.lower(), "Laptop")
 
-            # --- B. Normalizar Tipo (MODIFICADO) ---
-            # Ahora soportamos Ficha, Manual y Etiqueta
-            tipo_lower = tipo.lower()
-            if "ficha" in tipo_lower:
-                tipo_clean = "Ficha"
-            elif "manual" in tipo_lower:
-                tipo_clean = "Manual"
-            elif "etiqueta" in tipo_lower:
-                tipo_clean = "Etiqueta"
-            else:
-                tipo_clean = "Ficha" # Default
+            tipo_clean = "Ficha"
+            if "manual" in tipo.lower(): tipo_clean = "Manual"
+            elif "etiqueta" in tipo.lower(): tipo_clean = "Etiqueta"
 
-            # --- C. Llamar al Cerebro Maestro ---
-            print(f"🧠 Iniciando análisis IA: {categoria_clean} - {tipo_clean} (Marca: {marca})")
+            print(f"🧠 Analizando: {categoria_clean} - {tipo_clean}...")
             
-            # Pasamos la marca como argumento extra para validación visual
+            # Ejecutar cerebro
             resultados_ia = ia_analisis.analizar_documento(
-                file_path, 
-                tipo_clean, 
-                categoria_clean, 
-                marca_esperada=marca
+                file_path, tipo_clean, categoria_clean, marca_esperada=marca
             )
 
-        # 5. Retornar la respuesta combinada (Datos BD + Resultados IA)
-        return {
-            "id_documento": doc_db.id_documento,
-            "nombre": doc_db.nombre,
-            "archivo_url": doc_db.archivo_url,
-            "analisis_ia": resultados_ia
-        }
+            # --- PASO CRUCIAL: GUARDAR RESULTADOS EN LA BD ---
+            if resultados_ia:
+                crud.update_documento_analisis(db, doc_db.id_documento, resultados_ia)
+                # Actualizamos el objeto local para retornarlo con datos
+                doc_db.analisis_ia = resultados_ia
+
+        return doc_db
 
     except Exception as e:
-        print(f"Error en subir_y_analizar: {e}")
-        raise HTTPException(status_code=500, detail=f"Error al procesar documento: {str(e)}")
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/", response_model=list[schemas.DocumentoOut])
 def listar_documentos(db: Session = Depends(database.get_db)):

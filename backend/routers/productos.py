@@ -79,3 +79,15 @@ def subir_documento(
 @router.get("/documentos/", response_model=list[schemas.DocumentoOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
+
+@router.delete("/{producto_id}")
+def eliminar_producto(producto_id: int, db: Session = Depends(database.get_db)):
+    # Lógica simple de borrado
+    producto = db.query(models.Producto).filter(models.Producto.id_producto == producto_id).first()
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    
+    # Recuerda que si tienes cascade en models, esto borra los documentos también
+    db.delete(producto)
+    db.commit()
+    return {"mensaje": "Producto eliminado"}

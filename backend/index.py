@@ -1,9 +1,10 @@
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
 # IMPORTACIONES CORRECTAS (SIN PUNTOS)
 from backend.routers import clientes, productos, documentos, auth, soporte
 from backend.database import Base, engine
@@ -31,6 +32,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+uploads_path = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_path, exist_ok=True) # Crear carpeta si no existe
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 app.include_router(auth.router)
 app.include_router(clientes.router)
