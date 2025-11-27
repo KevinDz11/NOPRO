@@ -138,3 +138,19 @@ def create_documento(db: Session, documento: schemas.DocumentoCreate, archivo_ur
     db.commit()
     db.refresh(db_doc)
     return db_doc
+
+def update_documento_analisis(db: Session, documento_id: int, analisis_resultados: list):
+    """
+    Guarda los resultados del análisis de IA en la base de datos
+    para que estén disponibles en el historial.
+    """
+    # 1. Buscamos el documento
+    db_doc = db.query(models.Documento).filter(models.Documento.id_documento == documento_id).first()
+    
+    if db_doc:
+        # 2. Guardamos los datos (SQLAlchemy maneja la conversión a JSON automáticamente)
+        db_doc.analisis_ia = analisis_resultados
+        db.commit()
+        db.refresh(db_doc)
+        
+    return db_doc

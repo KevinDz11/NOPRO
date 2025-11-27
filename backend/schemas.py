@@ -1,9 +1,62 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
-from typing import List, Optional
 
-# Cliente
+# --- 1. SCHEMAS DE RESULTADOS IA Y DOCUMENTOS ---
+class ResultadoIA(BaseModel):
+    Norma: str
+    Categoria: str
+    Hallazgo: Optional[str] = None
+    Pagina: int
+    Contexto: Optional[str] = None
+    ImagenBase64: Optional[str] = None
+
+class DocumentoBase(BaseModel):
+    nombre: str
+    archivo_url: str
+
+class DocumentoCreate(BaseModel):
+    id_cliente: int
+    id_producto: int
+    nombre: str
+
+class DocumentoOut(BaseModel):
+    id_documento: int
+    nombre: str
+    archivo_url: str
+    
+    class Config:
+        from_attributes = True
+
+# Schema extendido que INCLUYE el análisis
+class DocumentoAnalisisOut(DocumentoOut):
+    analisis_ia: List[ResultadoIA] = []
+    
+    class Config:
+        from_attributes = True
+
+# --- 2. SCHEMAS DE PRODUCTO ---
+class ProductoBase(BaseModel):
+    nombre: str
+    marca: Optional[str] = None
+    descripcion: Optional[str] = None
+
+class ProductoCreate(ProductoBase):
+    pass
+
+class ProductoOut(BaseModel):
+    id_producto: int
+    nombre: str
+    marca: Optional[str]             
+    descripcion: Optional[str]
+    fecha_registro: Optional[datetime]
+    # IMPORTANTE: Usamos DocumentoAnalisisOut para que viaje la info de la IA
+    documentos: List[DocumentoAnalisisOut] = [] 
+    
+    class Config:
+        from_attributes = True
+
+# --- 3. SCHEMAS DE CLIENTE ---
 class ClienteBase(BaseModel):
     nombre: str
     email: str
@@ -19,62 +72,12 @@ class ClienteOut(BaseModel):
     estado: bool
     
     class Config:
-        from_attributes = True # <-- CORRECCIÓN
-
-# Producto
-class ProductoBase(BaseModel):
-    nombre: str
-    marca: Optional[str] = None
-    descripcion: Optional[str] = None
-
-class ProductoCreate(ProductoBase):
-    pass
-
-class ProductoOut(BaseModel):
-    id_producto: int
-    nombre: str
-    marca: Optional[str]             
-    descripcion: Optional[str]
-    fecha_registro: Optional[datetime] 
-    
-    class Config:
-        from_attributes = True # <-- CORRECCIÓN
-
-# Documento
-class DocumentoBase(BaseModel):
-    nombre: str
-    archivo_url: str
-
-class DocumentoCreate(BaseModel): # <-- CAMBIO MODIFICADO (quitamos herencia)
-    id_cliente: int
-    id_producto: int
-    nombre: str
-
-class DocumentoOut(BaseModel):
-    id_documento: int
-    nombre: str
-    archivo_url: str
-    
-    class Config:
         from_attributes = True
 
-
-# --- Schema para el Token ---
+# --- 4. OTROS ---
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 class TokenData(BaseModel):
     email: Optional[str] = None
-    
-
-class ResultadoIA(BaseModel):
-    Norma: str
-    Categoria: str
-    Hallazgo: Optional[str] = None
-    Pagina: int
-    Contexto: Optional[str] = None
-    ImagenBase64: Optional[str] = None
-
-# Schema de respuesta extendido
-class DocumentoAnalisisOut(DocumentoOut):
-    analisis_ia: List[ResultadoIA] = []

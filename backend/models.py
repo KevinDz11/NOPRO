@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, TIMESTAMP, JSON
 from sqlalchemy.orm import relationship
 from .database import Base
 from sqlalchemy.sql import func
@@ -41,6 +41,6 @@ class Documento(Base):
     nombre = Column(String(150), nullable=False)
     archivo_url = Column(String(255))
     fecha_subida = Column(TIMESTAMP, server_default=func.now())
-
+    analisis_ia = Column(JSON, nullable=True)
     cliente = relationship("Cliente", back_populates="documentos")
     producto = relationship("Producto", back_populates="documentos")
