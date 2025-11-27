@@ -5,18 +5,27 @@ from unidecode import unidecode
 from backend.services import ia_vision
 import os
 
-# Intentamos cargar el modelo de lenguaje (necesario para análisis semántico avanzado)
+# =========================================================================
+#  CONFIGURACIÓN SPACY
+# =========================================================================
+# Cargamos el modelo una sola vez. Deshabilitamos NER y Tagger para velocidad
+# ya que tus criterios se basan en reglas y no en entidades pre-entrenadas.
 try:
-    nlp = spacy.load("es_core_news_md", disable=["ner", "parser", "tagger"])
-    nlp.add_pipe("sentencizer")
+    print("⏳ Cargando modelo spaCy...")
+    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
+    nlp.add_pipe("sentencizer") # Vital para detectar oraciones completas
+    print("✅ Modelo spaCy cargado correctamente.")
 except OSError:
-    print("⚠️ Modelo Spacy no encontrado. Ejecuta: python -m spacy download es_core_news_md")
-    nlp = None
+    print("⚠️ Modelo Spacy no encontrado. Ejecutando descarga...")
+    from spacy.cli import download
+    download("es_core_news_md")
+    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
+    nlp.add_pipe("sentencizer")
 
 # =========================================================================
 #  BASE DE DATOS DE CRITERIOS (CEREBRO MAESTRO)
 # =========================================================================
-
+# Se mantiene intacta tu base de datos de patrones
 CRITERIOS_POR_PRODUCTO = {
     "Laptop": {
         "Ficha": {
@@ -642,110 +651,119 @@ CRITERIOS_POR_PRODUCTO = {
 #  FUNCIONES DE EXTRACCIÓN Y ANÁLISIS
 # =========================================================================
 
-def extraer_texto_pdf(ruta_pdf):
-    """Extrae el texto del PDF y lo limpia para facilitar el análisis."""
-    texto_paginas = []
+def extraer_documento_spacy(ruta_pdf):
+    """
+    Extrae texto y genera un objeto DOC de spaCy por página.
+    Esto permite análisis semántico y detección de oraciones.
+    """
+    docs_paginas = []
     try:
         with pdfplumber.open(ruta_pdf) as pdf:
             for i, pagina in enumerate(pdf.pages):
                 txt = pagina.extract_text()
                 if txt:
-                    # Limpieza para análisis semántico o regex robusto
-                    clean = unidecode(txt.lower())
-                    clean = re.sub(r'[^a-z0-9\s]', ' ', clean)
-                    clean = re.sub(r'\s+', ' ', clean).strip()
-                    texto_paginas.append({"pagina": i+1, "texto": clean, "original": txt})
+                    # 1. Limpieza básica
+                    clean_text = unidecode(txt.lower()) # Normalización
+                    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+                    
+                    # 2. PROCESAMIENTO CON SPACY (El "Cerebro")
+                    # Creamos un objeto 'doc' que contiene tokens y oraciones
+                    doc = nlp(clean_text)
+                    
+                    docs_paginas.append({
+                        "pagina": i+1,
+                        "doc_spacy": doc, # Guardamos el objeto inteligente
+                        "original": txt
+                    })
     except Exception as e:
         print(f"Error leyendo PDF: {e}")
-    return texto_paginas
+    return docs_paginas
 
 def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
     """
-    Analiza el documento.
-    - Si es 'Ficha' o 'Manual': SOLO Texto (Regex). Se OMITE cualquier análisis visual.
-    - Si es 'Etiqueta': Realiza análisis VISUAL (YOLO + Google) e incluye la imagen marcada.
+    Analiza el documento usando spaCy para estructura y Regex para patrones específicos.
     """
     resultados = []
 
     # =================================================================
-    # 1. ANÁLISIS DE TEXTO (Solo si NO es Etiqueta)
+    # 1. ANÁLISIS DE TEXTO (NLP + Regex Híbrido)
     # =================================================================
     if tipo_doc != "Etiqueta":
-        print(f"📄 Analizando TEXTO para {tipo_doc} de {categoria_producto}...")
+        print(f"📄 Analizando TEXTO (Motor spaCy) para {tipo_doc} de {categoria_producto}...")
         
-        # Obtener criterios del diccionario global CRITERIOS_POR_PRODUCTO
         prod_criterios = CRITERIOS_POR_PRODUCTO.get(categoria_producto, {})
         normas_a_buscar = prod_criterios.get(tipo_doc, {})
 
         if normas_a_buscar:
-            texto_paginas = extraer_texto_pdf(ruta_pdf)
+            # Obtenemos los objetos inteligentes de spaCy
+            docs_paginas = extraer_documento_spacy(ruta_pdf)
             
             for norma, categorias in normas_a_buscar.items():
                 for categoria, lista_patrones in categorias.items():
                     for patron_str in lista_patrones:
-                        # Compilación segura de Regex
-                        try:
-                            regex = re.compile(patron_str, re.IGNORECASE)
-                        except re.error:
-                            regex = None
                         
-                        for pagina in texto_paginas:
-                            encontrado = False
-                            contexto = ""
+                        # Compilación del patrón (Necesario porque tus criterios son regex complejos)
+                        try:
+                            regex_compilado = re.compile(patron_str, re.IGNORECASE)
+                        except re.error:
+                            continue
 
-                            # A. Búsqueda Regex (Texto Original)
-                            if regex:
-                                match = regex.search(pagina["original"])
-                                if match:
-                                    encontrado = True
-                                    start = max(0, match.start() - 60)
-                                    end = min(len(pagina["original"]), match.end() + 60)
-                                    contexto = pagina["original"][start:end].strip().replace("\n", " ")
+                        # Buscamos en cada página procesada por spaCy
+                        for pag_data in docs_paginas:
+                            doc = pag_data["doc_spacy"] # Este es el objeto spaCy
                             
-                            # B. Búsqueda Simple (Texto Limpio)
-                            if not encontrado:
-                                patron_limpio = unidecode(patron_str.lower())
-                                if patron_limpio in pagina["texto"]:
-                                    encontrado = True
-                                    contexto = f"Mención encontrada: '{patron_str}'"
+                            # Usamos el texto completo del doc para buscar el patrón
+                            # (SpaCy no soporta regex multipalabra en Matcher nativo fácilmente,
+                            #  así que proyectamos el regex sobre el texto del doc)
+                            match = regex_compilado.search(doc.text)
+                            
+                            if match:
+                                # Obtenemos las posiciones exactas donde empieza y termina el hallazgo
+                                start_char, end_char = match.span()
+                                
+                                # --- CAMBIO CLAVE: VENTANA DE CONTEXTO ---
+                                # En lugar de buscar una "oración" (que falla en tablas),
+                                # recortamos 60 caracteres antes y después del hallazgo.
+                                window_size = 60 
+                                
+                                start_ctx = max(0, start_char - window_size)
+                                end_ctx = min(len(doc.text), end_char + window_size)
+                                
+                                # Extraemos el recorte y limpiamos saltos de línea para que se vea bonito en el reporte
+                                raw_context = doc.text[start_ctx:end_ctx]
+                                contexto_limpio = "..." + raw_context.replace("\n", " ").strip() + "..."
 
-                            if encontrado:
+                                # Guardamos el resultado limpio
                                 resultados.append({
                                     "Norma": norma,
                                     "Categoria": categoria,
                                     "Hallazgo": patron_str[:50] + "..." if len(patron_str)>50 else patron_str,
-                                    "Pagina": pagina["pagina"],
-                                    "Contexto": contexto
+                                    "Pagina": pag_data["pagina"],
+                                    "Contexto": contexto_limpio  # <--- AHORA ES UN RECORTE LIMPIO
                                 })
-                                break # Encontrado, pasamos al siguiente patrón
+                                
+                                # Opcional: Break para no buscar el mismo patrón 2 veces en la misma página
+                                # Si quieres detectar TODAS las ocurrencias, quita este break.
+                                break
+
     else:
         print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
 
     # =================================================================
-    # 2. ANÁLISIS VISUAL (EXCLUSIVO PARA ETIQUETA)
+    # 2. ANÁLISIS VISUAL (Sin cambios, usa IA Vision)
     # =================================================================
-    # La condición asegura que SOLO la etiqueta pase por YOLO/Google
     if ruta_pdf.lower().endswith(".pdf") and tipo_doc == "Etiqueta":
         print(f"\n--- 🔍 DEBUG VISUAL (Solo Etiqueta) ---")
-        print(f"Archivo: {os.path.basename(ruta_pdf)}")
-
         try:
-            # Llamada al servicio de visión (ia_vision.py)
             hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
-            
-            # Recuperamos datos del diccionario que devuelve ia_vision
             yolo_list = hallazgos.get("yolo_detections", [])
             google_list = hallazgos.get("google_detections", [])
-            img_base64 = hallazgos.get("image_base64") # <--- LA IMAGEN PROCESADA
+            img_base64 = hallazgos.get("image_base64")
 
-            print(f"DEBUG -> Lista YOLO: {yolo_list}")
-            
-            # Combinamos hallazgos de texto (nombres de logos/etiquetas)
             hallazgos_totales = []
             if google_list: hallazgos_totales.extend(google_list)
             if yolo_list: hallazgos_totales.extend(yolo_list)
 
-            # A. AGREGAR HALLAZGOS DE TEXTO (Lo que lee la IA)
             if hallazgos_totales:
                 hallazgos_str = ", ".join(hallazgos_totales)
                 resultados.append({
@@ -764,20 +782,15 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                     "Contexto": "No se detectaron textos legibles o logos conocidos."
                 })
 
-            # B. AGREGAR LA EVIDENCIA GRÁFICA (LA IMAGEN)
-            # Este es el bloque crucial que faltaba o fallaba antes
             if img_base64:
-                print("✅ Imagen Base64 detectada, agregando al reporte...")
                 resultados.append({
                     "Norma": "Evidencia Gráfica",
                     "Categoria": "Análisis de Imagen",
                     "Hallazgo": "Detección de Objetos",
                     "Pagina": 1,
                     "Contexto": "Visualización de zonas detectadas por la IA.",
-                    "ImagenBase64": img_base64  # <--- ESTO ES LO QUE EL FRONTEND VA A PINTAR
+                    "ImagenBase64": img_base64
                 })
-            else:
-                print("⚠️ ADVERTENCIA: La función ia_vision devolvió 'image_base64' vacío o nulo.")
 
         except Exception as e:
             print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
