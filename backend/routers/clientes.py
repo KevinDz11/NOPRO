@@ -126,6 +126,17 @@ def read_users_me(current_user: models.Cliente = Depends(auth.get_current_user))
     """Devuelve la información del usuario actualmente logueado."""
     return current_user
 
+@router.delete("/me", status_code=status.HTTP_200_OK) 
+def delete_current_user(
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    deleted_user = crud.delete_cliente(db=db, cliente_id=current_user.id_cliente)
+    if not deleted_user:
+         raise HTTPException(status_code=404, detail="Usuario no encontrado para eliminar.")
+    
+    return {"mensaje": "Cuenta eliminada correctamente."}
+
 @router.get("/{cliente_id}", response_model=schemas.ClienteOut)
 def obtener_cliente(cliente_id: int, db: Session = Depends(database.get_db)):
     cliente = crud.get_cliente(db, cliente_id)
@@ -205,13 +216,3 @@ def update_current_user_password(
     return {"mensaje": "Contraseña actualizada correctamente."}
 
 
-@router.delete("/me", status_code=status.HTTP_200_OK) 
-def delete_current_user(
-    db: Session = Depends(database.get_db),
-    current_user: models.Cliente = Depends(auth.get_current_user)
-):
-    deleted_user = crud.delete_cliente(db=db, cliente_id=current_user.id_cliente)
-    if not deleted_user:
-         raise HTTPException(status_code=404, detail="Usuario no encontrado para eliminar.")
-    
-    return {"mensaje": "Cuenta eliminada correctamente."}

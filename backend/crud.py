@@ -35,12 +35,47 @@ def create_cliente(db: Session, cliente: schemas.ClienteCreate):
     return db_cliente
 
 def delete_cliente(db: Session, cliente_id: int):
-    """Elimina un cliente por su ID."""
+    """
+    Elimina un cliente forzando primero la eliminación de todos sus
+    documentos y productos asociados para evitar errores de llave foránea.
+    """
+    # 1. Obtenemos el cliente. Si no existe, retornamos None.
     cliente = get_cliente(db, cliente_id)
-    if cliente:
+    if not cliente:
+        return None
+
+    try:
+        # 2. BORRADO DE DOCUMENTOS (Limpieza profunda)
+        # Primero borramos documentos vinculados directamente al cliente
+        db.query(models.Documento).filter(models.Documento.id_cliente == cliente_id).delete(synchronize_session=False)
+        
+        # Luego buscamos los productos del cliente para borrar documentos que estén vinculados al producto
+        # (Esto previene errores si un documento quedó huérfano de id_cliente pero tiene id_producto)
+        productos = db.query(models.Producto).filter(models.Producto.id_cliente == cliente_id).all()
+        producto_ids = [p.id_producto for p in productos]
+        
+        if producto_ids:
+            db.query(models.Documento).filter(models.Documento.id_producto.in_(producto_ids)).delete(synchronize_session=False)
+
+        # 3. BORRADO DE PRODUCTOS
+        # Una vez sin documentos estorbando, borramos los productos
+        db.query(models.Producto).filter(models.Producto.id_cliente == cliente_id).delete(synchronize_session=False)
+
+        # 4. BORRADO DEL CLIENTE
+        # Ahora que está "desnudo" (sin dependencias), lo borramos.
         db.delete(cliente)
+        
+        # 5. Confirmar cambios en la BD
         db.commit()
-    return cliente
+        
+        return cliente
+
+    except Exception as e:
+        # Si algo falla, deshacemos cualquier cambio parcial para no romper la BD
+        db.rollback()
+        print(f"❌ ERROR CRÍTICO AL ELIMINAR CLIENTE {cliente_id}: {e}")
+        # Relanzamos el error para que el frontend se entere
+        raise e
 
 def set_reset_token(db: Session, user: models.Cliente, token: str, expires: datetime):
     """Guarda el token de reseteo y su expiración en la BD."""
