@@ -15,8 +15,8 @@ class Cliente(Base):
     verification_code = Column(String(10), nullable=True)
     reset_token = Column(String(255), unique=True, nullable=True, index=True)
     reset_token_expires = Column(TIMESTAMP(timezone=True), nullable=True)
-    productos = relationship("Producto", back_populates="cliente")
-    documentos = relationship("Documento", back_populates="cliente")
+    productos = relationship("Producto", back_populates="cliente", cascade="all, delete-orphan")
+    documentos = relationship("Documento", back_populates="cliente", cascade="all, delete-orphan")
 
 class Producto(Base):
     __tablename__ = "productos"
@@ -30,7 +30,7 @@ class Producto(Base):
     fecha_registro = Column(TIMESTAMP, server_default=func.now())
 
     cliente = relationship("Cliente", back_populates="productos")
-    documentos = relationship("Documento", back_populates="producto")
+    documentos = relationship("Documento", back_populates="producto", cascade="all, delete-orphan")
 
 class Documento(Base):
     __tablename__ = "documentos"

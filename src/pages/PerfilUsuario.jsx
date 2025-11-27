@@ -14,7 +14,10 @@ const PerfilUsuario = () => {
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
   const [cargando, setCargando] = useState(false);
-  const [mostrarModal, setMostrarModal] = useState(false);
+
+  // Modales
+  const [mostrarModal, setMostrarModal] = useState(false); // Modal de confirmar "¿Estás seguro?"
+  const [mostrarModalExito, setMostrarModalExito] = useState(false); // Nuevo Modal de éxito (Verde)
 
   const navigate = useNavigate();
 
@@ -52,11 +55,11 @@ const PerfilUsuario = () => {
     fetchUserData();
   }, [navigate]);
 
-  // Lógica de eliminación (Sin cambios)
+  // Lógica de eliminación MEJORADA (Sin alert feo)
   const ejecutarEliminacion = async () => {
     setError("");
     setMensajeExito("");
-    setMostrarModal(false);
+    setMostrarModal(false); // Cerramos el modal de pregunta
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -66,6 +69,7 @@ const PerfilUsuario = () => {
 
     setCargando(true);
     try {
+      // Nota: Asegúrate de que en tu backend la ruta /me esté ANTES que /{id}
       const response = await fetch("http://localhost:8000/clientes/me", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -73,16 +77,19 @@ const PerfilUsuario = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Error al eliminar la cuenta.");
+        // Convertimos el error a texto para que no salga [object Object]
+        const mensajeError = JSON.stringify(errorData, null, 2);
+        throw new Error(mensajeError);
       }
 
-      alert("Cuenta eliminada correctamente.");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("auth");
-      navigate("/");
+      // ÉXITO: Limpiamos todo y mostramos el modal bonito
+      localStorage.clear();
+      setMostrarModalExito(true);
     } catch (err) {
       console.error("Error eliminando cuenta:", err);
-      setError(err.message || "Ocurrió un error inesperado.");
+      // Aquí sí usamos alert o setError para errores técnicos
+      alert("No se pudo eliminar: \n" + err.message);
+      setError("Ocurrió un error. Revisa la consola.");
     } finally {
       setCargando(false);
     }
@@ -90,6 +97,11 @@ const PerfilUsuario = () => {
 
   const handleEliminarCuenta = () => {
     setMostrarModal(true);
+  };
+
+  // Función para irse al inicio cuando el usuario de click en "Entendido"
+  const handleFinalizar = () => {
+    window.location.href = "/";
   };
 
   return (
@@ -101,7 +113,6 @@ const PerfilUsuario = () => {
       {/* NAVBAR MODERNO */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
-          {/* Logo redirige a Home */}
           <Link
             to="/Home"
             className="flex items-center space-x-3 group cursor-pointer"
@@ -117,7 +128,6 @@ const PerfilUsuario = () => {
           </Link>
 
           <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
-            {/* Enlace Home eliminado, ahora se usa el Logo */}
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
@@ -131,7 +141,6 @@ const PerfilUsuario = () => {
               CONTACTAR SOPORTE
             </Link>
 
-            {/* Botón Cerrar Sesión */}
             <li
               onClick={() => {
                 localStorage.removeItem("authToken");
@@ -233,7 +242,7 @@ const PerfilUsuario = () => {
         </div>
       </main>
 
-      {/* MODAL MODERNO */}
+      {/* MODAL DE CONFIRMACIÓN (ROJO) */}
       {mostrarModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
           <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full animate-fade-in-up border border-white/50 text-center">
@@ -268,6 +277,36 @@ const PerfilUsuario = () => {
                 {cargando ? "Eliminando..." : "Sí, Eliminar"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ÉXITO (VERDE - NUEVO) */}
+      {mostrarModalExito && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 transition-all duration-300">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full animate-bounce-in border border-white/50 text-center relative overflow-hidden">
+            {/* Confeti decorativo de fondo */}
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-green-50 to-transparent -z-10"></div>
+
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-green-50">
+              <span className="text-4xl animate-pulse">👋</span>
+            </div>
+
+            <h3 className="text-2xl font-extrabold text-slate-800 mb-2">
+              ¡Cuenta Eliminada!
+            </h3>
+
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              Lamentamos verte partir. Todos tus datos han sido borrados
+              correctamente del sistema.
+            </p>
+
+            <button
+              onClick={handleFinalizar}
+              className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold text-lg hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-500/30 transition-all transform hover:-translate-y-1"
+            >
+              Regresar al Inicio
+            </button>
           </div>
         </div>
       )}
