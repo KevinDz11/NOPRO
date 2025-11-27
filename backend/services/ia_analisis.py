@@ -1,805 +1,513 @@
-import pdfplumber
+import os
 import re
+from typing import List, Dict, Any, Optional, Tuple
+
+import pdfplumber
 import spacy
 from unidecode import unidecode
 from backend.services import ia_vision
-import os
 
-# =========================================================================
-#  CONFIGURACIÓN SPACY
-# =========================================================================
-# Cargamos el modelo una sola vez. Deshabilitamos NER y Tagger para velocidad
-# ya que tus criterios se basan en reglas y no en entidades pre-entrenadas.
+# --------------------------------------------
+# Inicialización spaCy
+# --------------------------------------------
+print("⏳ Inicializando motor spaCy (es_core_news_md)...")
+
 try:
-    print("⏳ Cargando modelo spaCy...")
-    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
-    nlp.add_pipe("sentencizer") # Vital para detectar oraciones completas
-    print("✅ Modelo spaCy cargado correctamente.")
-except OSError:
-    print("⚠️ Modelo Spacy no encontrado. Ejecutando descarga...")
-    from spacy.cli import download
-    download("es_core_news_md")
-    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
-    nlp.add_pipe("sentencizer")
+    nlp = spacy.load("es_core_news_md", disable=["ner", "parser", "tagger"])
+    if "sentencizer" not in nlp.pipe_names:
+        nlp.add_pipe("sentencizer")
+    print("✅ Modelo spaCy cargado.")
+except:
+    print("⚠️ Modelo spaCy no encontrado. Ejecuta: python -m spacy download es_core_news_md")
+    nlp = None
 
-# =========================================================================
-#  BASE DE DATOS DE CRITERIOS (CEREBRO MAESTRO)
-# =========================================================================
-# Se mantiene intacta tu base de datos de patrones
-CRITERIOS_POR_PRODUCTO = {
-    "Laptop": {
-        "Ficha": {
-            "NMX-I-60950-1-NYCE-2015": {
-                "Seguridad eléctrica y desempeño": [
-                    r"resistencia (diel[ée]ctrica|de aislamiento).{0,20}3[,\.]000 ?v",
-                    r"prueba(s)? (diel[ée]ctrica|de aislamiento).{0,20}1 ?minuto",
-                    r"material(es)? ign[íi]fug(os|a).{0,10}ul[- ]?94 ?v-0",
-                    r"distancia (mínima )?de aislamiento.{0,10}2\.?5 ?mm",
-                    r"protecci[oó]n t[ée]rmica.{0,20}(sensor|desconexi[oó]n|interruptor)",
-                    r"desconect(a|e).{0,10}70 ?°c",
-                    r"prueba(s)? de (corto ?circuito|sobrecorriente|fuga de corriente)",
-                    r"prueba(s)? de estabilidad mec[aá]nica.{0,20}ca[ií]da libre",
-                    r"(sin|no presenta) da[ñn]o (funcional|estructural)"
-                ]
+CRITERIOS_POR_PRODUCTO: Dict[str, Dict[str, Dict[str, List[Dict[str, Any]]]]] = {
+
+# =======================================================
+# 🟩 1. LUMINARIA
+# =======================================================
+"Luminaria": {
+    
+    # --------------------------
+    # FICHA
+    # --------------------------
+    "Ficha": {
+        "NOM-031-ENER-2019": [
+            {
+                "id": "eficacia_luminosa_>99",
+                "descripcion": "Eficacia luminosa mayor a 99 lm/W.",
+                "core_terms": ["lm/w", "eficacia", "lumen", "lmw"],
+                "context_terms": ["nom-031", "lm-79"],
+                "numeric_rule": {
+                    "type": "min_value",
+                    "unit_patterns": ["lm/w", "lmw"],
+                    "min": 99
+                }
             },
-            "NOM-008-SCFI-2002": {
-                "Unidades y etiquetado comercial": [
-                    r"unidad(es)? de medida.{0,20}(kg|g|°c|v|w|%|hz)",
-                    r"(longitud|masa|temperatura|tiempo|corriente|voltaje).{0,20}(expresad[ao]s?|indicad[ao]s?) en",
-                    r"etiqueta.*(unidad(es)? de medida|valores nominales)",
-                    r"valores nominales?.{0,20}(voltaje|corriente|frecuencia|potencia)",
-                    r"informaci[oó]n cuantitativa.*?(sistema internacional|s\.?i\.?)"
-                ]
+            {
+                "id": "factor_potencia",
+                "descripcion": "Factor de potencia >= 0.89.",
+                "core_terms": ["fp", "factor", "pf"],
+                "context_terms": [],
+                "numeric_rule": {
+                    "type": "min_value",
+                    "unit_patterns": ["fp", "pf"],
+                    "min": 0.89
+                }
             },
-            "NOM-024-SCFI-2013": {
-                "Información técnica y comercial": [
-                    r"(procesador|cpu).{0,20}(intel|amd|apple|modelo|frecuencia|n[úu]cleos)",
-                    r"(gpu|gr[aá]ficos?).{0,20}(integrada|dedicada|modelo|frecuencia)",
-                    r"memoria.{0,20}(ram|ddr\d|capacidad|gb)",
-                    r"almacenamiento.{0,20}(ssd|hdd|sata|nvme|capacidad)",
-                    r"bater[ií]a.{0,30}(capacidad nominal|wh|ion de litio|li-ion|duraci[oó]n)",
-                    r"(dimensiones|peso).{0,20}\d+.*?(mm|g|cm)",
-                    r"certificaci[oó]n(es)?.{0,20}(nyce|ce|ul|energy ?star|rohs|fcc)",
-                    r"(compatible|soporta).{0,20}(windows|linux|macos)",
-                    r"(perif[eé]rico|dock|monitor|adaptador usb[- ]?c)",
-                    r"manual de usuario|instrucciones de instalaci[oó]n",
-                    r"(nombre|raz[oó]n social) del (fabricante|importador)",
-                    r"n[uú]mero de serie|modelo del producto"
-                ]
+            {
+                "id": "grado_proteccion_ip",
+                "descripcion": "Grado de protección IP20–IP65.",
+                "core_terms": ["ip20", "ip54", "ip65", "grado", "proteccion"],
+                "context_terms": []
             }
-        },
-        "Manual": {
-            "NOM-019-SE-2021": {
-                "Marcado de seguridad": [
-                    "doble aislamiento", "aislamiento reforzado", "protección contra descargas",
-                    "marcado CE", "símbolo de tierra", "riesgo eléctrico", "descarga eléctrica",
-                    "seguridad eléctrica", "aislante", "pictograma de advertencia"
-                ],
-                "Especificaciones eléctricas": [
-                    "corriente máxima", "tensión nominal", "voltaje de operación", "frecuencia",
-                    "consumo de energía", "potencia nominal", "amperaje", "eficiencia energética",
-                    "capacidad de carga", "factor de potencia"
-                ],
-                "Advertencias visibles": [
-                    "alto voltaje", "no abrir", "precaución", "advertencia",
-                    "riesgo de choque eléctrico", "mantener fuera del alcance de niños",
-                    "riesgo de incendio", "superficie caliente", "no exponer al agua",
-                    "solo personal autorizado", "riesgo de descarga"
-                ]
-            },
-            "NMX-I-60950-1-NYCE-2015": {
-                "Instrucciones de seguridad": [
-                    "conexión a tierra", "toma de tierra", "puesta a tierra",
-                    "ventilación adecuada", "no bloquear rejillas", "mantener alejado de niños",
-                    "desconectar antes de limpiar", "evitar humedad", "no utilizar en exteriores",
-                    "instalación segura", "precauciones de seguridad"
-                ],
-                "Especificaciones técnicas": [
-                    "sobretensiones", "picos de voltaje", "protector contra sobrecarga",
-                    "fusible de protección", "compatibilidad con UPS", "supresor de picos",
-                    "corriente de fuga", "límites de potencia", "tolerancia térmica",
-                    "modo de fallo seguro"
-                ],
-                "Mantenimiento": [
-                    "mantener seco", "no abrir el equipo", "usar solo el cargador original",
-                    "limpieza con paño seco", "no utilizar solventes", "revisión periódica",
-                    "desconectar antes de mantenimiento", "revisión por técnico autorizado"
-                ]
-            },
-            "NOM-008-SCFI-2002": {
-                "Composición y vida útil": [
-                    "plástico ABS", "policarbonato", "vida útil estimada", "resistente a golpes",
-                    "material no tóxico", "carcasa ignífuga", "durabilidad", "resistencia mecánica",
-                    "reciclable", "cumple con RoHS"
-                ],
-                "Instrucciones de uso seguro": [
-                    "mantener al menos 10 cm", "uso en interiores", "no cubrir el equipo",
-                    "no exponer al sol", "no utilizar cerca de agua", "uso adecuado",
-                    "temperatura de operación", "colocar sobre superficie estable",
-                    "no insertar objetos extraños"
-                ],
-                "Limitaciones de modificación": [
-                    "no modificar", "sin autorización", "no manipular circuitos internos",
-                    "no cambiar piezas originales", "no reparar por cuenta propia"
-                ],
-                "Información de homologación": [
-                    "IFT", "cumple normativa", "certificación NOM", "cumple con estándares",
-                    "autorizado por NYCE", "registro ante autoridad", "cumple con regulaciones mexicanas"
-                ]
-            },
-            "Información complementaria requerida": {
-                "Especificaciones técnicas": [
-                    "procesador", "cpu", "chipset", "memoria ram", "almacenamiento",
-                    "disco duro", "ssd", "puertos", "entrada hdmi", "puerto usb",
-                    "bluetooth", "wifi", "pantalla", "resolución", "dimensiones", "peso",
-                    "consumo eléctrico", "batería", "voltaje de entrada", "eficiencia energética"
-                ],
-                "Condiciones de garantía": [
-                    "garantía", "cobertura", "servicio técnico", "manual de garantía",
-                    "centro autorizado", "condiciones de reparación", "plazo de garantía",
-                    "soporte posventa", "cambios y devoluciones", "política de servicio"
-                ],
-                "Instrucciones de uso y seguridad": [
-                    "advertencias", "precauciones", "configuración inicial", "instalación",
-                    "mantenimiento preventivo", "uso adecuado", "instrucciones del fabricante",
-                    "manual de usuario", "uso correcto", "operación segura"
-                ]
-            }
-        }
+        ]
     },
-    "SmartTV": {
-        "Ficha": {
-            "NOM-001-SCFI-2018": {
-                "Seguridad eléctrica": [
-                    r"100[-–]?240\s*v(ac)?",
-                    r"50\s*/\s*60\s*hz",
-                    r"potencia\s+nominal\s+160\s*w",
-                    r"≤?\s*0[.,]5\s*w",
-                    r"entrada\s+de\s+energ[ií]a",
-                    r"condici[oó]n\s+de\s+trabajo",
-                    r"clasificaci[oó]n\s+de\s+fuego\s+ul94[- ]?hb75",
-                    r"tensi[oó]n",
-                    r"corriente"
-                ]
+
+    # --------------------------
+    # MANUAL
+    # --------------------------
+    "Manual": {
+        "NMX-J-507/2-ANCE-2013": [
+            {
+                "id": "instrucciones_instalacion",
+                "descripcion": "Instrucciones de instalación y diagramas.",
+                "core_terms": ["instalacion", "montaje", "diagrama"],
+                "context_terms": ["manual"]
             },
-            "NMX-I-60065-NYCE-2015": {
-                "Seguridad térmica y ventilación": [
-                    r"temperatura\s+de\s+operaci[oó]n",
-                    r"temperatura\s+de\s+trabajo",
-                    r"5[°º]\s*c\s*[-–~]\s*40[°º]\s*c",
-                    r"humedad\s*20%\s*[-–~]\s*80%",
-                    r"temperatura\s+de\s+almacenamiento",
-                    r"condici[oó]n\s+de\s+trabajo"
-                ]
-            },
-            "NMX-I-60950-1-NYCE-2015": {
-                "Conexión de periféricos": [
-                    r"hdmi\s*2\.0",
-                    r"hdcp\s*2\.2",
-                    r"usb\s*2\.0",
-                    r"rj[- ]?45",
-                    r"salida\s+spdif",
-                    r"entrada\s+av",
-                    r"uhd\s*\(3840\s*x\s*2160\)",
-                    r"audio\s+digital",
-                    r"video\s+compuesto"
-                ],
-                "Seguridad en interfaces": [
-                    r"interferencia\s+electromagn[eé]tica",
-                    r"emisi[oó]n\s+radiada",
-                    r"compatibilidad\s+electromagn[eé]tica",
-                    r"filtro\s+emi"
-                ]
-            },
-            "NOM-032-ENER-2013": {
-                "Eficiencia energética": [
-                    r"potencia\s+nominal\s+160\s*w",
-                    r"≤?\s*0[.,]5\s*w",
-                    r"modo\s+espera",
-                    r"stand[- ]?by",
-                    r"consumo\s+de\s+energ[ií]a"
-                ]
-            },
-            "NOM-192-SCFI/SCT1-2013": {
-                "Conectividad inalámbrica": [
-                    r"wi[-]?\s?fi",
-                    r"ieee\s*802\.11[a-z/]+",
-                    r"2t2r",
-                    r"bluetooth\s*5\.1",
-                    r"2\.4\s*(ghz)?",
-                    r"5[.,]15\s*(ghz)?",
-                    r"5[.,]85\s*(ghz)?"
-                ],
-                "Advertencias RF": [
-                    r"interferencia\s+de\s+radio",
-                    r"potencia\s+de\s+transmisi[oó]n",
-                    r"cumple\s+con\s+ift"
-                ]
-            },
-            "NMX-J-606-ANCE-2008": {
-                "Componentes y fusibles": [
-                    r"ul94[- ]?hb75",
-                    r"clasificaci[oó]n\s+de\s+fuego",
-                    r"protecci[oó]n\s+t[eé]rmica",
-                    r"resistencia\s+diel[eé]ctrica",
-                    r"circuito\s+interno"
-                ]
-            },
-            "NMX-J-640-ANCE-2010": {
-                "Identificación y etiquetas": [
-                    r"lanix",
-                    r"x\s*smart\s*tv\s*mod\.\s*x65",
-                    r"etiqueta",
-                    r"informaci[oó]n\s+t[eé]cnica"
-                ],
-                "Durabilidad de marcaje": [
-                    r"marcado\s+permanente",
-                    r"etiqueta\s+durable",
-                    r"marcado\s+indeleble"
-                ]
-            },
-            "NMX-J-551-ANCE-2012": {
-                "Cableado y alimentación": [
-                    r"cable\s+de\s+poder",
-                    r"alimentaci[oó]n",
-                    r"entrada\s+de\s+energ[ií]a",
-                    r"100[-–]?240\s*v(ac)?"
-                ],
-                "Recomendaciones de seguridad": [
-                    r"no\s+sobrecargue",
-                    r"verifique\s+el\s+cableado",
-                    r"reemplazo\s+de\s+cable"
-                ]
+            {
+                "id": "advertencias",
+                "descripcion": "Advertencias de seguridad eléctrica.",
+                "core_terms": ["desconecte", "riesgo", "humedad"],
+                "context_terms": []
             }
-        },
-        "Manual": {
-            "NOM-001-SCFI-2018": {
-                "Seguridad eléctrica": [
-                    r"riesgo de descarga",
-                    r"riesgo de choque",
-                    r"desconecte el televisor",
-                    r"no conecte el equipo si esta danado",
-                    r"utilice un tomacorriente adecuado",
-                    r"no retire la tapa",
-                    r"no desensamble el producto",
-                    r"conecte el cable de alimentacion",
-                    r"proteccion contra sobre(carga|corriente)",
-                    r"no modifique el cable",
-                    r"no utilice enchufes sueltos"
-                ],
-                "Advertencias al usuario": [
-                    r"no moje el televisor",
-                    r"mantenga alejado del agua",
-                    r"no exponer el equipo a humedad",
-                    r"no coloque objetos encima",
-                    r"mantener fuera del alcance de ninos",
-                    r"desconecte antes de limpiar",
-                    r"utilice accesorios originales",
-                    r"no utilizar cerca del calor",
-                    r"no introducir objetos en las ranuras"
-                ],
-                "Servicio y soporte": [
-                    r"servicio tecnico autorizado",
-                    r"no intente reparar",
-                    r"centro de servicio",
-                    r"contacte al fabricante",
-                    r"garantia",
-                    r"asistencia tecnica",
-                    r"reparacion solo por personal calificado"
-                ]
-            },
-            "NMX-I-60065-NYCE-2015": {
-                "Seguridad térmica y ventilación": [
-                    r"no cubra las ranuras",
-                    r"mantenga una ventilacion adecuada",
-                    r"mantenga espacio alrededor",
-                    r"no bloquee las aberturas",
-                    r"riesgo de sobrecalentamiento",
-                    r"no coloque cerca de fuentes de calor",
-                    r"superficie caliente",
-                    r"temperatura de operacion"
-                ],
-                "Conexión y operación segura": [
-                    r"conecte correctamente los cables",
-                    r"no conecte si esta humedo",
-                    r"no manipule el cable danado",
-                    r"evite sobrecargar la toma",
-                    r"adaptadores certificados",
-                    r"asegure la conexion del cable"
-                ],
-                "Mantenimiento preventivo": [
-                    r"limpie con pano suave",
-                    r"no use solventes",
-                    r"mantenimiento periodico",
-                    r"inspeccion por tecnico autorizado",
-                    r"retire el polvo",
-                    r"desconecte antes de limpiar"
-                ]
-            },
-            "NMX-I-60950-1-NYCE-2015": {
-                "Conexión de periféricos": [
-                    r"conecte el dispositivo usb",
-                    r"puertos usb",
-                    r"conexion ethernet",
-                    r"puerto hdmi",
-                    r"cable original",
-                    r"dispositivos danados",
-                    r"entrada av",
-                    r"salida optica",
-                    r"audio digital"
-                ],
-                "Seguridad en interfaces": [
-                    r"proteccion de puertos",
-                    r"descargas electrostaticas",
-                    r"pruebas de esd",
-                    r"aislamiento de senal",
-                    r"manejo de conectores",
-                    r"no forzar el conector"
-                ],
-                "Instrucciones generales": [
-                    r"instale correctamente",
-                    r"precauciones de montaje",
-                    r"manual de usuario",
-                    r"no utilizar en exteriores sin proteccion"
-                ]
-            },
-            "NOM-032-ENER-2013": {
-                "Eficiencia energética": [
-                    r"modo eco",
-                    r"modo ahorro",
-                    r"modo stand ?by",
-                    r"consumo en espera",
-                    r"ahorre energia",
-                    r"apagado automatico",
-                    r"reduzca el brillo",
-                    r"uso eficiente de energia"
-                ],
-                "Consejos al usuario": [
-                    r"desconecte el televisor cuando no lo use",
-                    r"optimice el consumo",
-                    r"apague funciones no utilizadas",
-                    r"active el ahorro de energia"
-                ]
-            },
-            "NOM-192-SCFI/SCT1-2013": {
-                "Conectividad inalámbrica": [
-                    r"configuracion de red",
-                    r"wifi",
-                    r"bluetooth",
-                    r"sintonizador digital",
-                    r"frecuencia de operacion",
-                    r"conexion inalambrica"
-                ],
-                "Advertencias RF": [
-                    r"mantenga distancia",
-                    r"no cubra las antenas",
-                    r"interferencia electromagnetica",
-                    r"potencia de transmision",
-                    r"cumple con ift"
-                ]
-            },
-            "NMX-J-606-ANCE-2008": {
-                "Componentes y fusibles": [
-                    r"fusible de proteccion",
-                    r"circuito interno",
-                    r"proteccion termica",
-                    r"personal calificado",
-                    r"componentes internos"
-                ],
-                "Compatibilidad y accesorios": [
-                    r"accesorios compatibles",
-                    r"adaptador compatible",
-                    r"proteccion contra cortocircuito",
-                    r"tolerancia electrica"
-                ]
-            },
-            "NMX-J-640-ANCE-2010": {
-                "Identificación y etiquetas": [
-                    r"modelo",
-                    r"numero de serie",
-                    r"informacion del producto",
-                    r"etiqueta",
-                    r"fabricante",
-                    r"datos tecnicos"
-                ],
-                "Durabilidad de marcaje": [
-                    r"marcado permanente",
-                    r"etiqueta legible",
-                    r"ubicada en la parte posterior"
-                ]
-            },
-            "NMX-J-551-ANCE-2012": {
-                "Cableado y alimentación": [
-                    r"cable de alimentacion",
-                    r"cable de poder",
-                    r"no doblar el cable",
-                    r"voltaje adecuado",
-                    r"extensiones seguras",
-                    r"reemplazo de cable"
-                ],
-                "Recomendaciones de seguridad": [
-                    r"no usar cables danados",
-                    r"no jalar el cable",
-                    r"revisar el cableado",
-                    r"uso correcto del cable"
-                ]
+        ]
+    }
+},
+
+# =======================================================
+# 🟦 2. SMARTTV
+# =======================================================
+"SmartTV": {
+
+    # --------------------------
+    # FICHA
+    # --------------------------
+    "Ficha": {
+        "NOM-001-SCFI-2018": [
+            {
+                "id": "tension_frecuencia_potencia",
+                "descripcion": "Tensión, frecuencia, potencia.",
+                "core_terms": ["voltaje", "tension", "hz", "w", "potencia"],
+                "context_terms": []
             }
-        }
+        ],
+        "NMX-I-60065-NYCE-2015": [
+            {
+                "id": "corriente_fuga",
+                "descripcion": "Corriente de fuga, aislamiento.",
+                "core_terms": ["fuga", "aislamiento", "mω", "megaohm"],
+                "context_terms": []
+            }
+        ],
+        "NMX-I-60950-1-NYCE-2015": [
+            {
+                "id": "puertos_interfaces_tv",
+                "descripcion": "Conectividad USB/HDMI/Ethernet.",
+                "core_terms": ["usb", "hdmi", "ethernet", "puerto"],
+                "context_terms": []
+            }
+        ],
+        "NOM-032-ENER-2013": [
+            {
+                "id": "modos_consumo_tv",
+                "descripcion": "Consumo en modos SDR/HDR/4K y standby.",
+                "core_terms": ["standby", "modo", "consumo", "energia"],
+                "context_terms": []
+            }
+        ],
+        "NOM-192-SCFI/SCT1-2013": [
+            {
+                "id": "conectividad_inalambrica_tv",
+                "descripcion": "WiFi, BT, bandas de operación.",
+                "core_terms": ["wifi", "bluetooth", "2.4", "5ghz"],
+                "context_terms": []
+            }
+        ]
     },
-    "Luminaria": {
-        "Ficha": {
-            "NMX-J-038/1-ANCE-2005": {
-                "Verificación de desempeño y seguridad eléctrica": [
-                    "pruebas a 60 hz", "ensayos a 60hz", "condiciones mexicanas",
-                    "seguridad eléctrica", "cumplimiento de pruebas", "ensayos eléctricos",
-                    "corriente de fuga", "resistencia dieléctrica", "pruebas de laboratorio",
-                    "evaluación eléctrica", "pruebas de seguridad", "prueba dieléctrica"
-                ],
-                "Condiciones térmicas y de tensión nacional": [
-                    "variación de tensión", "variación de voltaje", "protección térmica",
-                    "temperatura de operación", "tensión nominal", "sobretensión",
-                    "tensión sin carga", "thermal protection", "thermal shutdown",
-                    "rango de voltaje", "derating", "operación continua"
-                ]
-            },
-            "NOM-031-ENER-2019": {
-                "Eficacia luminosa (lm/w)": [
-                    "eficacia luminosa", "lm/w", "lúmenes por vatio", "rendimiento luminoso",
-                    "eficiencia lumínica", "eficacia lumínica", ">99 lm/w", "lmw",
-                    "performance lumínico", "eficiencia óptica", "luminous efficacy",
-                    "148 lm/w", "eficiencia del luminario"
-                ],
-                "Factor de potencia y pérdidas": [
-                    "factor de potencia", "fp", ">0.89", ">0.90", "pérdidas eléctricas",
-                    "lm-79", "eficiencia energética", "power factor", "pf",
-                    "distorsión armónica", "pérdidas del driver", "driver efficiency"
-                ],
-                "Flujo luminoso y distribución": [
-                    "flujo luminoso nominal", "lm output", "lúmenes", "distribución luminosa",
-                    "índice g", "uniformidad", "curva fotométrica", "iesna",
-                    "tipo i", "tipo ii", "tipo iii", "tipo iv", "tipo v",
-                    "photometric distribution", "beam pattern", "beam angle"
-                ],
-                "Curvas fotométricas (.ies o .ldt)": [
-                    ".ies", ".ldt", "archivo ies", "archivo digital", "fotometría",
-                    "curva fotométrica", "lm-79", "lm-75", "fotometrías",
-                    "C0/C90", "C0/C180", "intensidad lumínica", "cd/100lm",
-                    "archivo fotométrico", "IES file"
-                ],
-                "Temperatura de color y CRI": [
-                    "temperatura de color", "cct", "cri", "índice de reproducción cromática",
-                    "blanco cálido", "blanco neutro", "4000k", "5000k", "6500k",
-                    "color rendering index", "chromaticity", "CCT <3999K"
-                ]
-            },
-            "NMX-J-507/2-ANCE-2013": {
-                "Parámetros eléctricos": [
-                    "tensión", "voltaje", "corriente", "pérdidas", "thd",
-                    "distorsión armónica total", "condiciones de prueba",
-                    "ensayo eléctrico", "frecuencia", "driver", "120-277v",
-                    "347/480v", "consumo eléctrico", "watts", "wattage"
-                ],
-                "Ciclos de encendido": [
-                    "1500 ciclos", "encendido", "apagado", "ciclos on/off",
-                    "vida útil de encendido", "durabilidad", "switching cycles"
-                ]
-            },
-            "NMX-J-543-ANCE-2013": {
-                "Ensayos eléctricos": [
-                    "resistencia dieléctrica", "corriente de fuga", "sobrecorriente",
-                    "sobretemperatura", "4000 v rms", "0.5 ma", "prueba de aislamiento",
-                    "pruebas eléctricas", "ensayo eléctrico", "laboratorio acreditado",
-                    "dielectric test", "high-pot test"
-                ],
-                "Compatibilidad y vida útil": [
-                    "10,000 ciclos", "resistencia a impactos", "ik08", "0.7 j",
-                    "impacto mecánico", "vibración 3g", "vida útil", "compatibilidad",
-                    "resistencia mecánica", "shock resistance", "vibration test"
-                ]
-            },
-            "NMX-J-610/4-5-ANCE-2013": {
-                "Aislamiento eléctrico y térmico": [
-                    "aislamiento eléctrico", "aislamiento térmico", "10 mΩ",
-                    "4000 v rms", "ensayo dieléctrico", "prueba de aislamiento",
-                    "thermal insulation", "electrical insulation"
-                ],
-                "Prueba de envejecimiento": [
-                    "1000 horas", "operación continua", "envejecimiento",
-                    "prueba prolongada", "life test", "aging test", "TM-21", "LM-80"
-                ],
-                "Evaluación fotobiológica": [
-                    "fotobiológica", "rg0", "rg1", "iec 62471", "riesgo ocular",
-                    "riesgo fotobiológico", "photobiological safety"
-                ],
-                "Grado de protección IP": [
-                    "ip20", "ip65", "ip66", "grado de protección", "hermeticidad",
-                    "índice de protección", "protección ik", "ik08", "resistencia al polvo",
-                    "resistencia al agua", "waterproof", "dustproof"
-                ]
-            },
-            "NOM-030-ENER-2016": {
-                "Eficiencia energética y pérdidas totales": [
-                    "eficiencia energética", "pérdidas totales", "límites de eficiencia",
-                    "potencia nominal", "ahorro de energía", "energy efficiency",
-                    "consumo", "wattage", "eficiencia del sistema"
-                ]
-            },
-            "NOM-024-ENER-2016": {
-                "Compatibilidad y control inteligente": [
-                    "eficacia mínima", "vida útil", "sensores", "dimmers",
-                    "1-10v", "dali", "zigbee", "controladores inteligentes",
-                    "protocolo", "photocell", "nema 3 pins", "nema 7 pins",
-                    "smart control", "wireless", "dimming", "atenuación"
-                ]
+
+    # --------------------------
+    # MANUAL
+    # --------------------------
+    "Manual": {
+        "NOM-001-SCFI-2018": [
+            {
+                "id": "advertencias_electricas_tv",
+                "descripcion": "Advertencias: no abrir, desconectar.",
+                "core_terms": ["no abrir", "desconectar", "choque"],
+                "context_terms": []
             }
-        },
-        "Manual": {
-            "NMX-J-507/2-ANCE-2013": {
-                "Métodos de prueba fotométricos": [
-                    "fotometría", "pruebas fotométricas", "ensayo LM-79", "curva fotométrica",
-                    "distribución luminosa", "patrón de iluminación", "haz luminoso", "ángulo de haz",
-                    "eficiencia luminosa", "rendimiento luminoso", "flujo luminoso", "lúmenes",
-                    "intensidad luminosa", "candelas", "temperatura de color", "CCT", "CRI",
-                    "IEC 60598", "archivo IES", "archivo LDT", "curva polar", "diagrama fotométrico"
-                ],
-                "Instalación y montaje": [
-                    "instalación del luminario", "montaje", "altura de instalación", "altura de montaje",
-                    "alineación del haz", "orientación del luminario", "ángulo de inclinación",
-                    "soporte mecánico", "bracket", "abrazadera", "anclaje", "perno de fijación",
-                    "distancias mínimas", "estructura de soporte", "vibraciones", "protección exterior",
-                    "montaje en poste", "montaje en pared", "montaje suspendido"
-                ],
-                "Advertencias y mantenimiento": [
-                    "desconectar antes de abrir", "corte de energía", "riesgo eléctrico",
-                    "no exponer a humedad", "superficie caliente", "riesgo de quemaduras",
-                    "limpieza del difusor", "limpieza óptica", "mantenimiento preventivo",
-                    "reemplazo de módulo", "vida útil", "degradación lumínica", "LM-80",
-                    "inspección visual", "verificación periódica", "riesgo de incendio"
-                ]
-            },
-            "NMX-J-543-ANCE-2013": {
-                "Conectadores eléctricos": [
-                    "conector", "conectador", "terminal eléctrica", "terminal de conexión",
-                    "enchufe", "contacto eléctrico", "punto de conexión", "aislamiento",
-                    "corriente máxima", "tensión nominal", "tensión hasta 35 kV",
-                    "resistencia de contacto", "torque de terminal", "borne", "clamp",
-                    "seguridad eléctrica", "compatibilidad eléctrica"
-                ],
-                "Seguridad eléctrica": [
-                    "riesgo de descarga eléctrica", "protección contra arco", "arco eléctrico",
-                    "distancia de seguridad", "distancia libre", "distancia de fuga",
-                    "sobretensión", "protección contra sobrecorriente", "aislamiento reforzado",
-                    "protección contra choque eléctrico", "advertencia eléctrica",
-                    "etiqueta de advertencia", "trabajo con tensión", "uso autorizado"
-                ],
-                "Documentación de instalación": [
-                    "manual de instalación", "manual técnico", "guía de instalación",
-                    "diagrama de conexión", "esquema eléctrico", "hoja técnica",
-                    "certificación", "documentación técnica", "registro de torque",
-                    "inspección periódica", "procedimiento de instalación"
-                ]
-            },
-            "NMX-J-610/4-5-ANCE-2013": {
-                "Compatibilidad electromagnética (EMC)": [
-                    "compatibilidad electromagnética", "EMC", "EMI", "interferencia electromagnética",
-                    "distorsión armónica", "THD", "armónicos", "inmunidad a impulsos",
-                    "transitorios eléctricos", "sobretensiones transitorias", "surge protection",
-                    "descarga atmosférica", "protección contra picos", "IEC 61000-4-5",
-                    "técnicas de medición", "campo electromagnético perturbado", "ruido eléctrico"
-                ],
-                "Instalación del luminario eléctrico": [
-                    "alimentación eléctrica", "tensión de operación", "voltaje nominal", "voltaje de entrada",
-                    "corriente de operación", "frecuencia 50/60 Hz", "factor de potencia", "PF",
-                    "puesta a tierra", "grounding", "conexión equipotencial", "protección contra sobrecorriente",
-                    "fusible", "protección térmica", "blindaje EMI", "filtro EMI"
-                ]
-            },
-            "NOM-030-ENER-2016": {
-                "Eficiencia energética lámparas LED integradas": [
-                    "eficiencia energética", "eficacia luminosa", "lm/W", "lúmenes por vatio",
-                    "flujo luminoso total", "lúmenes iniciales", "vida útil nominal", "L70",
-                    "temperatura de color correlacionada", "CCT", "índice de reproducción cromática",
-                    "CRI", "IRC", "tensión 100-277 V", "frecuencia 50/60 Hz",
-                    "clasificación de lámparas", "ahorro de energía", "consumo eléctrico"
-                ],
-                "Marcado e información del producto": [
-                    "marca del fabricante", "modelo", "tensión de entrada", "potencia nominal",
-                    "potencia consumida", "flujo luminoso", "fecha de fabricación",
-                    "etiqueta energética", "etiqueta de eficiencia", "información del empaque",
-                    "garantía mínima 3 años", "número de serie", "datos de fabricación"
-                ],
-                "Pruebas y procedimientos de conformidad": [
-                    "laboratorio acreditado", "informe de pruebas", "prueba LM-79",
-                    "estabilización térmica", "ensayo de flujo inicial", "ensayo de 1 000 h",
-                    "seguimiento de producción", "certificación NOM", "pruebas de desempeño",
-                    "ensayo de eficacia", "condiciones de prueba"
-                ]
-            },
-            "NOM-024-ENER-2016": {
-                "Instalación eficiente de luminarios exteriores": [
-                    "altura de montaje", "alineación fotométrica", "sensor de movimiento",
-                    "sensor CREPUSCULAR", "fotocélula", "carga conectada", "diseño de alumbrado público",
-                    "iluminancia", "niveles de iluminación", "ópticas limpias", "control de atenuación",
-                    "diseño sustentable", "sistema de control inteligente", "dimmers compatibles"
-                ],
-                "Mantenimiento y reemplazo": [
-                    "revisión anual", "limpieza de ópticas", "limpieza del difusor",
-                    "sustitución por degradación lumínica", ">30% pérdida de flujo",
-                    "inspección visual", "registro de mantenimiento", "equipo obsoleto",
-                    "reemplazo preventivo", "vida útil reducida"
-                ],
-                "Advertencias de uso e instalación": [
-                    "no usar con dimmers no compatibles", "no exponer a humedad",
-                    "riesgo de incendio", "sobrecalentamiento", "superficie caliente",
-                    "instalación por personal calificado", "no cubrir luminario",
-                    "riesgo eléctrico", "advertencia", "peligro"
-                ]
-            },
-            "Información complementaria requerida": {
-                "Especificaciones técnicas": [
-                    "voltaje", "tensión", "corriente", "potencia", "energía", "seguridad",
-                    "riesgo", "manual", "advertencia", "instalación", "funcionamiento",
-                    "operación", "protección", "equipo", "usuario", "conexión",
-                    "carcasa", "material", "IP65", "IP67", "temperatura de operación"
-                ]
+        ],
+        "NMX-I-60065-NYCE-2015": [
+            {
+                "id": "ventilacion_tv",
+                "descripcion": "Ventilación y sobrecalentamiento.",
+                "core_terms": ["ventilacion", "calor", "temperatura"],
+                "context_terms": []
             }
-        }
+        ],
+        "NOM-032-ENER-2013": [
+            {
+                "id": "modo_eco_tv",
+                "descripcion": "Modo ECO.",
+                "core_terms": ["eco", "ahorro", "energia"],
+                "context_terms": []
+            }
+        ],
+        "NOM-192-SCFI/SCT1-2013": [
+            {
+                "id": "configuracion_red_tv",
+                "descripcion": "Configuración de red/antenas.",
+                "core_terms": ["wifi", "red", "bt", "bluetooth"],
+                "context_terms": []
+            }
+        ]
+    }
+},
+
+# =======================================================
+# 🟪 3. LAPTOP
+# =======================================================
+"Laptop": {
+
+    # --------------------------
+    # FICHA
+    # --------------------------
+    "Ficha": {
+        "NMX-I-60950-1-NYCE-2015": [
+            {
+                "id": "prueba_dielectrica_3000v",
+                "descripcion": "Prueba dieléctrica >2500 V.",
+                "core_terms": ["3000", "3kv", "dielec", "aislamiento"],
+                "context_terms": [],
+                "numeric_rule": {
+                    "type": "min_value",
+                    "unit_patterns": ["v", "vac"],
+                    "min": 2500
+                }
+            },
+            {
+                "id": "material_ul94_v0",
+                "descripcion": "Material ignífugo UL94 V-0.",
+                "core_terms": ["ul94", "v0", "v-0"],
+                "context_terms": []
+            },
+            {
+                "id": "distancia_aislamiento_2_5mm",
+                "descripcion": "Aislamiento >2.5 mm.",
+                "core_terms": ["2.5", "mm", "aislamiento"],
+                "context_terms": []
+            },
+            {
+                "id": "proteccion_termica_70c",
+                "descripcion": "Protección térmica a 70°C.",
+                "core_terms": ["70", "°c", "termica", "centrigrados"],
+                "context_terms": []
+            },
+            {
+                "id": "prueba_caida",
+                "descripcion": "Prueba de caída libre.",
+                "core_terms": ["caida", "impacto", "1m"],
+                "context_terms": []
+            }
+        ],
+        "NOM-008-SCFI-2002": [
+            {
+                "id": "materiales_laptop",
+                "descripcion": "Materiales del producto.",
+                "core_terms": ["abs", "aluminio", "plastico", "carcasa"],
+                "context_terms": []
+            },
+            {
+                "id": "vida_util_laptop",
+                "descripcion": "Vida útil/ durabilidad.",
+                "core_terms": ["vida util", "durabilidad", "ciclos"],
+                "context_terms": []
+            }
+        ],
+        "NOM-024-SCFI-2013": [
+            {
+                "id": "especificaciones_tecnicas_laptop",
+                "descripcion": "CPU, RAM, SSD, pantalla.",
+                "core_terms": ["cpu", "ram", "ssd", "hdd", "pantalla"],
+                "context_terms": []
+            },
+            {
+                "id": "certificaciones_laptop",
+                "descripcion": "Certificaciones varias.",
+                "core_terms": ["ce", "ul", "nyce", "rohs"],
+                "context_terms": []
+            }
+        ]
+    },
+
+    # --------------------------
+    # MANUAL
+    # --------------------------
+    "Manual": {
+        "NMX-I-60950-1-NYCE-2015": [
+            {
+                "id": "seguridad_laptop_manual",
+                "descripcion": "Advertencias: humedad, líquidos, desconexión.",
+                "core_terms": ["humedad", "liquidos", "desconectar", "limpiar"],
+                "context_terms": []
+            }
+        ],
+        "NOM-008-SCFI-2002": [
+            {
+                "id": "garantia_laptop",
+                "descripcion": "Garantía: periodo y cobertura.",
+                "core_terms": ["garantia", "cobertura", "defectos"],
+                "context_terms": []
+            }
+        ],
+        "NOM-024-SCFI-2013": [
+            {
+                "id": "instrucciones_uso_laptop",
+                "descripcion": "Instrucciones de uso/configuración.",
+                "core_terms": ["instalar", "configurar", "manual"],
+                "context_terms": []
+            }
+        ]
     }
 }
+}
 
-# =========================================================================
-#  FUNCIONES DE EXTRACCIÓN Y ANÁLISIS
-# =========================================================================
+def normalizar_texto_basico(texto: str) -> str:
+    if not texto:
+        return ""
+    return unidecode(texto.lower()).strip()
 
-def extraer_documento_spacy(ruta_pdf):
+
+def normalizar_token(token) -> str:
+    return unidecode(token.lemma_.lower())
+
+
+def extraer_documento_spacy(ruta_pdf: str):
+    paginas = []
+    if nlp is None:
+        return paginas
+
+    with pdfplumber.open(ruta_pdf) as pdf:
+        for i, pagina in enumerate(pdf.pages):
+            txt = pagina.extract_text()
+            if not txt or len(txt) < 10:
+                continue
+
+            doc = nlp(" ".join(txt.split()))
+            paginas.append({
+                "pagina": i+1,
+                "texto": txt,
+                "doc_spacy": doc
+            })
+    return paginas
+
+
+def _contar_hits_terminos(sent, terms):
+    if not terms:
+        return 0
+
+    sent_norm = normalizar_texto_basico(sent.text)
+    count = 0
+
+    for t in terms:
+        term_norm = normalizar_texto_basico(t)
+        patron = r"\b" + re.escape(term_norm) + r"\b"
+        if re.search(patron, sent_norm):
+            count += 1
+
+    return count
+
+
+
+def _extraer_numeros_y_unidades(sent):
+    resultados = []
+    tokens = list(sent)
+    for i, tok in enumerate(tokens):
+        if tok.like_num:
+            raw = tok.text.replace(",", ".")
+            try:
+                valor = float(re.findall(r"[\d\.]+", raw)[0])
+            except:
+                continue
+            unidad = ""
+            for j in range(i+1, min(i+3, len(tokens))):
+                unidad += " " + tokens[j].text
+            resultados.append((valor, normalizar_texto_basico(unidad.strip())))
+    return resultados
+
+
+def _cumple_regla_numerica(rule, sent):
+    if not rule:
+        return False, None
+
+    valores = _extraer_numeros_y_unidades(sent)
+    if not valores:
+        return False, None
+
+    for valor, unidad in valores:
+        if any(up in unidad for up in rule["unit_patterns"]):
+            if rule["type"] == "min_value" and valor >= rule["min"]:
+                return True, f"{valor} >= {rule['min']}"
+    return False, None
+
+
+def evaluar_requisito_en_sentencia(requisito, sent):
     """
-    Extrae texto y genera un objeto DOC de spaCy por página.
-    Esto permite análisis semántico y detección de oraciones.
+    Devuelve (cumple, info_detallada) para un requisito en una oración.
     """
-    docs_paginas = []
-    try:
-        with pdfplumber.open(ruta_pdf) as pdf:
-            for i, pagina in enumerate(pdf.pages):
-                txt = pagina.extract_text()
-                if txt:
-                    # 1. Limpieza básica
-                    clean_text = unidecode(txt.lower()) # Normalización
-                    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-                    
-                    # 2. PROCESAMIENTO CON SPACY (El "Cerebro")
-                    # Creamos un objeto 'doc' que contiene tokens y oraciones
-                    doc = nlp(clean_text)
-                    
-                    docs_paginas.append({
-                        "pagina": i+1,
-                        "doc_spacy": doc, # Guardamos el objeto inteligente
-                        "original": txt
-                    })
-    except Exception as e:
-        print(f"Error leyendo PDF: {e}")
-    return docs_paginas
+    core_hits = _contar_hits_terminos(sent, requisito.get("core_terms", []))
+    context_hits = _contar_hits_terminos(sent, requisito.get("context_terms", []))
+    min_core = requisito.get("min_core_hits", 1)
+    min_ctx = requisito.get("min_context_hits", 0)
+
+    info = {
+        "core_hits": core_hits,
+        "context_hits": context_hits,
+        "numeric_info": None,
+    }
+
+    if core_hits < min_core:
+        return False, info
+
+    if context_hits < min_ctx:
+        return False, info
+
+    numeric_rule = requisito.get("numeric_rule")
+    if numeric_rule:
+        ok_num, detail = _cumple_regla_numerica(numeric_rule, sent)
+        info["numeric_info"] = detail
+        if not ok_num:
+            return False, info
+
+    return True, info
+
 
 def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
-    """
-    Analiza el documento usando spaCy para estructura y Regex para patrones específicos.
-    """
     resultados = []
 
-    # =================================================================
-    # 1. ANÁLISIS DE TEXTO (NLP + Regex Híbrido)
-    # =================================================================
+    # --------------------------------------------------------
+    # 1. Análisis de TEXTO con spaCy (Ficha / Manual)
+    # --------------------------------------------------------
     if tipo_doc != "Etiqueta":
-        print(f"📄 Analizando TEXTO (Motor spaCy) para {tipo_doc} de {categoria_producto}...")
-        
-        prod_criterios = CRITERIOS_POR_PRODUCTO.get(categoria_producto, {})
-        normas_a_buscar = prod_criterios.get(tipo_doc, {})
+        prod = CRITERIOS_POR_PRODUCTO.get(categoria_producto, {})
+        normas = prod.get(tipo_doc, {})
 
-        if normas_a_buscar:
-            # Obtenemos los objetos inteligentes de spaCy
-            docs_paginas = extraer_documento_spacy(ruta_pdf)
-            
-            for norma, categorias in normas_a_buscar.items():
-                for categoria, lista_patrones in categorias.items():
-                    for patron_str in lista_patrones:
-                        
-                        # Compilación del patrón (Necesario porque tus criterios son regex complejos)
-                        try:
-                            regex_compilado = re.compile(patron_str, re.IGNORECASE)
-                        except re.error:
+        paginas = extraer_documento_spacy(ruta_pdf)
+
+        for pagina in paginas:
+            doc = pagina["doc_spacy"]
+            num = pagina["pagina"]
+
+            for norma, requisitos in normas.items():
+                for req in requisitos:
+                    encontrado = False
+
+                    for sent in doc.sents:
+                        cumple, info = evaluar_requisito_en_sentencia(req, sent)
+                        if not cumple:
                             continue
 
-                        # Buscamos en cada página procesada por spaCy
-                        for pag_data in docs_paginas:
-                            doc = pag_data["doc_spacy"] # Este es el objeto spaCy
-                            
-                            # Usamos el texto completo del doc para buscar el patrón
-                            # (SpaCy no soporta regex multipalabra en Matcher nativo fácilmente,
-                            #  así que proyectamos el regex sobre el texto del doc)
-                            match = regex_compilado.search(doc.text)
-                            
-                            if match:
-                                # Obtenemos las posiciones exactas donde empieza y termina el hallazgo
-                                start_char, end_char = match.span()
-                                
-                                # --- CAMBIO CLAVE: VENTANA DE CONTEXTO ---
-                                # En lugar de buscar una "oración" (que falla en tablas),
-                                # recortamos 60 caracteres antes y después del hallazgo.
-                                window_size = 60 
-                                
-                                start_ctx = max(0, start_char - window_size)
-                                end_ctx = min(len(doc.text), end_char + window_size)
-                                
-                                # Extraemos el recorte y limpiamos saltos de línea para que se vea bonito en el reporte
-                                raw_context = doc.text[start_ctx:end_ctx]
-                                contexto_limpio = "..." + raw_context.replace("\n", " ").strip() + "..."
+                        # -------- NUEVO: construir el texto del Patrón --------
+                        sent_norm = normalizar_texto_basico(sent.text)
+                        def _term_in_sentence(term, sent_norm):
+                            term_norm = normalizar_texto_basico(term)
+                            patron = r"\b" + re.escape(term_norm) + r"\b"
+                            return re.search(patron, sent_norm) is not None
 
-                                # Guardamos el resultado limpio
-                                resultados.append({
-                                    "Norma": norma,
-                                    "Categoria": categoria,
-                                    "Hallazgo": patron_str[:50] + "..." if len(patron_str)>50 else patron_str,
-                                    "Pagina": pag_data["pagina"],
-                                    "Contexto": contexto_limpio  # <--- AHORA ES UN RECORTE LIMPIO
-                                })
-                                
-                                # Opcional: Break para no buscar el mismo patrón 2 veces en la misma página
-                                # Si quieres detectar TODAS las ocurrencias, quita este break.
-                                break
+                        core_detectados = [
+                            t for t in req.get("core_terms", [])
+                            if _term_in_sentence(t, sent_norm)
+                        ]
 
+                        ctx_detectados = [
+                            t for t in req.get("context_terms", [])
+                            if _term_in_sentence(t, sent_norm)
+                        ]
+
+                        partes = []
+                        if core_detectados:
+                            partes.append(", ".join(core_detectados))
+                        if ctx_detectados:
+                            partes.append("ctx: " + ", ".join(ctx_detectados))
+                        if info.get("numeric_info"):
+                            partes.append("num: " + info["numeric_info"])
+
+                        patron_final = " | ".join(partes) if partes else "N/A"
+                        # ------------------------------------------------------
+                        resultados.append({
+                            "Norma": norma,
+                            "Categoria": tipo_doc,
+                            "Producto": categoria_producto,
+                            "RequisitoID": req["id"],
+                            "DescripcionRequisito": req.get("descripcion", ""),
+                            "Pagina": num,
+                            "Contexto": sent.text,
+                            "Hallazgo": patron_final,      # 👈 ESTE ES EL CAMPO QUE USAS EN EL PDF
+                            "Razonamiento": str(info),
+                        })
+
+                        break   # ya encontramos evidencia para este requisito en esta página
+
+    # --------------------------------------------------------
+    # 2. Análisis VISUAL EXACTO COMO ME LO DISTE
+    # --------------------------------------------------------
     else:
-        print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
+        print(f"👁️ [VISIÓN] Analizando Etiqueta...")
 
-    # =================================================================
-    # 2. ANÁLISIS VISUAL (Sin cambios, usa IA Vision)
-    # =================================================================
-    if ruta_pdf.lower().endswith(".pdf") and tipo_doc == "Etiqueta":
-        print(f"\n--- 🔍 DEBUG VISUAL (Solo Etiqueta) ---")
         try:
-            hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
-            yolo_list = hallazgos.get("yolo_detections", [])
-            google_list = hallazgos.get("google_detections", [])
-            img_base64 = hallazgos.get("image_base64")
+            vis = ia_vision.analizar_imagen_pdf(ruta_pdf)
 
-            hallazgos_totales = []
-            if google_list: hallazgos_totales.extend(google_list)
-            if yolo_list: hallazgos_totales.extend(yolo_list)
+            yolo = vis.get("yolo_detections", [])
+            google = vis.get("google_detections", [])
+            logos = list(set(yolo + google))
 
-            if hallazgos_totales:
-                hallazgos_str = ", ".join(hallazgos_totales)
+            if logos:
                 resultados.append({
-                    "Norma": "Inspección Visual IA",
-                    "Categoria": "Elementos Identificados",
-                    "Hallazgo": hallazgos_str,
+                    "Norma": "Etiquetado (Visual)",
+                    "Categoria": "Logos",
+                    "Hallazgo": ", ".join(logos),
                     "Pagina": 1,
-                    "Contexto": f"Se detectaron textos/logos: {hallazgos_str}"
+                    "Contexto": "Detección visual de certificaciones."
                 })
             else:
                 resultados.append({
-                    "Norma": "Inspección Visual IA",
-                    "Categoria": "Sin Hallazgos Textuales",
-                    "Hallazgo": "N/A",
+                    "Norma": "Etiquetado (Visual)",
+                    "Categoria": "Logos",
+                    "Hallazgo": "No detectados",
                     "Pagina": 1,
-                    "Contexto": "No se detectaron textos legibles o logos conocidos."
+                    "Contexto": "Sin logos reconocidos."
                 })
 
-            if img_base64:
+            # ⚠️ NO TOCADO — EXACTAMENTE COMO ME LO PROPORCIONASTE
+            img_b64 = vis.get("image_base64")
+            if img_b64:
                 resultados.append({
                     "Norma": "Evidencia Gráfica",
                     "Categoria": "Análisis de Imagen",
                     "Hallazgo": "Detección de Objetos",
                     "Pagina": 1,
                     "Contexto": "Visualización de zonas detectadas por la IA.",
-                    "ImagenBase64": img_base64
+                    "ImagenBase64": img_b64
                 })
 
         except Exception as e:
-            print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
             resultados.append({
                 "Norma": "Error Sistema",
                 "Categoria": "Fallo en Visión",
                 "Hallazgo": str(e),
                 "Pagina": 0,
-                "Contexto": "Ocurrió un error al procesar la imagen."
+                "Contexto": "Ocurrió un error al procesar la etiqueta."
             })
 
     return resultados
