@@ -11,7 +11,7 @@ from backend.database import Base, engine
 from backend import models
 
 
-Base.metadata.drop_all(bind=engine) 
+#Base.metadata.drop_all(bind=engine) 
 
 # 2. Esta línea CREARÁ las tablas de nuevo (con la columna 'marca')
 # Base.metadata.create_all(bind=engine)

@@ -73,7 +73,7 @@ def delete_cliente(db: Session, cliente_id: int):
     except Exception as e:
         # Si algo falla, deshacemos cualquier cambio parcial para no romper la BD
         db.rollback()
-        print(f"❌ ERROR CRÍTICO AL ELIMINAR CLIENTE {cliente_id}: {e}")
+        print(f"ERROR CRÍTICO AL ELIMINAR CLIENTE {cliente_id}: {e}")
         # Relanzamos el error para que el frontend se entere
         raise e
 

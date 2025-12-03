@@ -47,7 +47,7 @@ def subir_y_analizar(
             if "manual" in tipo.lower(): tipo_clean = "Manual"
             elif "etiqueta" in tipo.lower(): tipo_clean = "Etiqueta"
 
-            print(f"🧠 Analizando: {categoria_clean} - {tipo_clean}...")
+            print(f"Analizando: {categoria_clean} - {tipo_clean}...")
             
             # Ejecutar cerebro
             resultados_ia = ia_analisis.analizar_documento(
