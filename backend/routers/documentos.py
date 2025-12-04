@@ -47,7 +47,7 @@ def subir_y_analizar(
             if "manual" in tipo.lower(): tipo_clean = "Manual"
             elif "etiqueta" in tipo.lower(): tipo_clean = "Etiqueta"
 
-            print(f"🧠 Analizando: {categoria_clean} - {tipo_clean}...")
+            print(f"Analizando: {categoria_clean} - {tipo_clean}...")
             
             # Ejecutar cerebro
             resultados_ia = ia_analisis.analizar_documento(
@@ -59,6 +59,11 @@ def subir_y_analizar(
                 crud.update_documento_analisis(db, doc_db.id_documento, resultados_ia)
                 # Actualizamos el objeto local para retornarlo con datos
                 doc_db.analisis_ia = resultados_ia
+
+        # <--- CORRECCIÓN AQUÍ: Asegurar que nunca sea None ---
+        if doc_db.analisis_ia is None:
+            doc_db.analisis_ia = []
+        # -----------------------------------------------------
 
         return doc_db
 

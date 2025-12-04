@@ -1,24 +1,38 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; // <--- CORREGIDO: Solo useState
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- COMPONENTE VISUAL: MODAL DE CARGA ---
-const ModalCarga = ({ tipo, mensaje }) => (
+// --- COMPONENTE VISUAL: MODAL DE CARGA CON BARRA ---
+const ModalCarga = ({ tipo, mensaje, progreso }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
     <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full animate-fade-in-up border border-white/50">
+      {/* Icono animado */}
       <div className="relative w-20 h-20 mx-auto mb-6">
         <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-        <div className="absolute inset-0 flex items-center justify-center text-2xl">
-          {tipo === "Manual" ? "" : tipo === "Etiqueta" ? "" : ""}
+        {/* Porcentaje en el centro */}
+        <div className="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">
+          {Math.round(progreso)}%
         </div>
       </div>
+
       <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
         Analizando {tipo}
       </h3>
-      <p className="text-slate-500 text-sm font-medium">{mensaje}</p>
+      <p className="text-slate-500 text-sm font-medium mb-6">{mensaje}</p>
+
+      {/* BARRA DE PROGRESO */}
+      <div className="w-full bg-slate-200 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
+        <div
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-300 ease-out"
+          style={{ width: `${progreso}%` }}
+        ></div>
+      </div>
+      <p className="text-xs text-slate-400 font-semibold text-right">
+        {progreso < 100 ? "Procesando..." : "Finalizando..."}
+      </p>
 
       {tipo === "Manual" && (
         <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left">
@@ -84,6 +98,7 @@ export default function SubirArchivos() {
   const [loading, setLoading] = useState(false);
   const [loadingType, setLoadingType] = useState("");
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [loadingProgress, setLoadingProgress] = useState(0); // Estado para la barra
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successType, setSuccessType] = useState("");
 
@@ -113,7 +128,7 @@ export default function SubirArchivos() {
     if (tipo === "ficha") setFicha(archivo);
     if (tipo === "etiqueta") setEtiqueta(archivo);
 
-    // Animación barra
+    // Animación visual de selección (barra pequeña en la tarjeta)
     let p = 0;
     const interval = setInterval(() => {
       p += 15;
@@ -123,7 +138,6 @@ export default function SubirArchivos() {
   };
 
   const limpiarArchivo = (tipo) => {
-    // 1. Resetear estado del archivo
     if (tipo === "manual") {
       setManual(null);
       setResultadoManual(null);
@@ -134,11 +148,7 @@ export default function SubirArchivos() {
       setEtiqueta(null);
       setResultadoEtiqueta(null);
     }
-
-    // 2. Resetear progreso
     setProgreso((prev) => ({ ...prev, [tipo]: 0 }));
-
-    // 3. Forzar re-render del input file cambiando su key
     setInputKeys((prev) => ({ ...prev, [tipo]: prev[tipo] + 1 }));
   };
 
@@ -178,20 +188,26 @@ export default function SubirArchivos() {
       return navigate("/login");
     }
 
+    let nombreUI = "Ficha Técnica";
+    let mensajeUI = "Analizando documento...";
+    let incrementoVelocidad = 500;
+    let incrementoValor = 5;
+
+    if (tipoArchivo === "manual") {
+      nombreUI = "Manual";
+      mensajeUI = "Analizando documento extenso (lectura profunda)...";
+      incrementoVelocidad = 1500;
+      incrementoValor = 2;
+    } else if (tipoArchivo === "etiqueta") {
+      nombreUI = "Etiqueta";
+      mensajeUI = "Analizando documento, buscando logos...";
+      incrementoVelocidad = 300;
+    }
+
     try {
-      let nombreUI = "Ficha Técnica";
-      let mensajeUI = "Analizando documento...";
-
-      if (tipoArchivo === "manual") {
-        nombreUI = "Manual";
-        mensajeUI = "Analizando documento extenso...";
-      } else if (tipoArchivo === "etiqueta") {
-        nombreUI = "Etiqueta";
-        mensajeUI = "Analizando documento, buscando logos...";
-      }
-
       setLoadingType(nombreUI);
       setLoadingMessage(mensajeUI);
+      setLoadingProgress(0);
       setLoading(true);
 
       const idProducto = await asegurarProducto(token);
@@ -205,6 +221,14 @@ export default function SubirArchivos() {
       formData.append("archivo", archivo);
       formData.append("analizar", "true");
 
+      // --- SIMULACIÓN BARRA DE PROGRESO ---
+      const intervalId = setInterval(() => {
+        setLoadingProgress((prev) => {
+          if (prev >= 90) return 90; // Tope simulado
+          return prev + Math.random() * incrementoValor;
+        });
+      }, incrementoVelocidad);
+
       const response = await axios.post(
         "http://localhost:8000/documentos/subir-analizar",
         formData,
@@ -213,25 +237,40 @@ export default function SubirArchivos() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
+          // Progreso real de subida (opcional, mezclado con la simulación)
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setLoadingProgress((prev) => {
+              const subidaEscalada = percentCompleted * 0.3;
+              return subidaEscalada > prev ? subidaEscalada : prev;
+            });
+          },
           timeout: 600000,
         }
       );
 
-      // Guardar resultados
-      if (tipoArchivo === "manual") setResultadoManual(response.data);
-      else if (tipoArchivo === "etiqueta") setResultadoEtiqueta(response.data);
-      else setResultadoFicha(response.data);
+      clearInterval(intervalId); // Limpiamos intervalo
+      setLoadingProgress(100); // Completamos barra
 
-      // Mostrar modal de éxito en lugar de alert
-      setSuccessType(nombreUI);
-      setShowSuccessModal(true);
+      // Pequeño delay para UX
+      setTimeout(() => {
+        setLoading(false);
+        if (tipoArchivo === "manual") setResultadoManual(response.data);
+        else if (tipoArchivo === "etiqueta")
+          setResultadoEtiqueta(response.data);
+        else setResultadoFicha(response.data);
+
+        setSuccessType(nombreUI);
+        setShowSuccessModal(true);
+      }, 500);
     } catch (error) {
       console.error(error);
+      setLoading(false);
       const msg =
         error.response?.data?.detail || "Ocurrió un error de conexión.";
       alert(`Error: ${msg}`);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -242,22 +281,19 @@ export default function SubirArchivos() {
       categoria_producto: producto,
       marca_producto: marca,
       modelo_producto: modelo,
-      tipo_vista: "individual", // Flag para saber cómo renderizar
+      tipo_vista: "individual",
     };
     localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
     window.open("/resultados-analisis", "_blank");
   };
 
-  // --- LÓGICA REPORTE GENERAL ---
   const verReporteGeneral = () => {
-    // Validar que haya al menos un resultado
     if (!resultadoFicha && !resultadoManual && !resultadoEtiqueta) {
       return alert(
         "Debes analizar al menos un documento para generar el reporte general."
       );
     }
 
-    // Estructurar datos combinados
     const subReportes = [];
     if (resultadoFicha)
       subReportes.push({ titulo: "Ficha Técnica", data: resultadoFicha });
@@ -271,7 +307,7 @@ export default function SubirArchivos() {
       categoria_producto: producto,
       marca_producto: marca,
       modelo_producto: modelo,
-      tipo_vista: "general", // Flag importante
+      tipo_vista: "general",
       sub_reportes: subReportes,
     };
 
@@ -291,7 +327,6 @@ export default function SubirArchivos() {
     progress,
     typeLabel,
   }) => {
-    // Clases de colores dinámicas
     const grad =
       color === "blue"
         ? "from-blue-600 to-indigo-600"
@@ -318,7 +353,6 @@ export default function SubirArchivos() {
 
     return (
       <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col relative">
-        {/* Header Card */}
         <div
           className={`bg-gradient-to-r ${grad} px-6 py-4 relative overflow-hidden`}
         >
@@ -331,11 +365,10 @@ export default function SubirArchivos() {
         <div className="p-6 flex-grow flex flex-col">
           <p className="text-slate-500 mb-4 text-xs flex-grow">{desc}</p>
 
-          {/* Input File o Info Archivo */}
           <div className="mb-4">
             {!fileValue ? (
               <input
-                key={inputKeys[tipoKey]} // KEY para resetear
+                key={inputKeys[tipoKey]}
                 type="file"
                 accept=".pdf"
                 onChange={(e) => setFileFn(e, tipoKey)}
@@ -352,7 +385,6 @@ export default function SubirArchivos() {
                     {fileValue.name}
                   </span>
                 </div>
-                {/* Botón Eliminar */}
                 <button
                   onClick={() => limpiarArchivo(tipoKey)}
                   disabled={loading}
@@ -365,7 +397,6 @@ export default function SubirArchivos() {
             )}
           </div>
 
-          {/* Barra de Progreso */}
           <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
             <div
               className={`${
@@ -379,11 +410,10 @@ export default function SubirArchivos() {
             ></div>
           </div>
 
-          {/* Botones de Acción */}
           <div className="flex gap-2 mt-auto">
             <button
               onClick={() => procesarArchivo(tipoKey)}
-              disabled={!fileValue || loading || result} // Deshabilitar si ya hay resultado
+              disabled={!fileValue || loading || result}
               className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
                 !fileValue || loading || result
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
@@ -415,7 +445,14 @@ export default function SubirArchivos() {
     <div className="min-h-screen bg-slate-50 pb-24 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
 
-      {loading && <ModalCarga tipo={loadingType} mensaje={loadingMessage} />}
+      {loading && (
+        <ModalCarga
+          tipo={loadingType}
+          mensaje={loadingMessage}
+          progreso={loadingProgress}
+        />
+      )}
+
       {showSuccessModal && (
         <ModalFeedback
           tipo={successType}
@@ -423,7 +460,7 @@ export default function SubirArchivos() {
         />
       )}
 
-      {/* NAVBAR (Igual que antes) */}
+      {/* NAVBAR */}
       <nav className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm navbar px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
           <Link
@@ -569,7 +606,6 @@ export default function SubirArchivos() {
           />
         </div>
 
-        {/* BOTÓN REPORTE GENERAL - MODIFICADO AQUÍ */}
         {resultadoFicha && resultadoManual && resultadoEtiqueta && (
           <div className="flex justify-center mt-10 mb-8 animate-fade-in-up">
             <button
