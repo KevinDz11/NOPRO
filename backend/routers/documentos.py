@@ -60,6 +60,11 @@ def subir_y_analizar(
                 # Actualizamos el objeto local para retornarlo con datos
                 doc_db.analisis_ia = resultados_ia
 
+        # <--- CORRECCIÓN AQUÍ: Asegurar que nunca sea None ---
+        if doc_db.analisis_ia is None:
+            doc_db.analisis_ia = []
+        # -----------------------------------------------------
+
         return doc_db
 
     except Exception as e:

@@ -1,28 +1,22 @@
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-# IMPORTACIONES CORRECTAS (SIN PUNTOS)
+
+# IMPORTACIONES ABSOLUTAS (REQUIEREN __init__.py)
 from backend.routers import clientes, productos, documentos, auth, soporte
 from backend.database import Base, engine
 from backend import models
 
 
-#Base.metadata.drop_all(bind=engine) 
-
-# 2. Esta línea CREARÁ las tablas de nuevo (con la columna 'marca')
-# Base.metadata.create_all(bind=engine)
-# Crear tablas sólo si no existen
 Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Backend NOPRO")
 
-# Configuración de CORS para permitir solicitudes desde el frontend
 origins = [
-    "http://localhost:5173",  # La dirección de tu frontend en desarrollo
-    "http://localhost:3000",  # Otra posible dirección si usas create-react-app
+    "http://localhost:5173",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -33,10 +27,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-uploads_path = os.path.join(os.path.dirname(__file__), "uploads")
-os.makedirs(uploads_path, exist_ok=True) # Crear carpeta si no existe
-app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
-
 app.include_router(auth.router)
 app.include_router(clientes.router)
 app.include_router(productos.router)
@@ -45,4 +35,4 @@ app.include_router(soporte.router)
 
 @app.get("/")
 def root():
-    return {"mensaje": "Backend NOPRO corriendo con uploads"}
+    return {"mensaje": "Backend NOPRO funcionando en Render"}

@@ -3,6 +3,80 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+// --- TEXTO DE TÉRMINOS Y CONDICIONES (REUTILIZADO) ---
+const TERMINOS_LEGALES = (
+  <div className="space-y-4 text-left text-slate-600 text-sm overflow-y-auto max-h-[60vh] p-2">
+    <p>
+      <strong>Última actualización: Diciembre 2025</strong>
+    </p>
+
+    <h4 className="font-bold text-slate-800">1. Aceptación de los Términos</h4>
+    <p>
+      Al registrarse y utilizar los servicios de NOPRO, usted acepta cumplir con
+      estos términos y condiciones. Si no está de acuerdo, por favor no utilice
+      la plataforma.
+    </p>
+
+    <h4 className="font-bold text-slate-800">2. Uso del Servicio</h4>
+    <p>
+      NOPRO proporciona herramientas de análisis normativo mediante IA. El
+      usuario se compromete a utilizar la plataforma únicamente con fines
+      legales y relacionados con la conformidad de productos electrónicos.
+    </p>
+
+    <h4 className="font-bold text-slate-800">3. Privacidad y Datos</h4>
+    <p>
+      Respetamos su privacidad. Sus datos personales (nombre, correo) y los
+      documentos subidos se utilizan exclusivamente para el funcionamiento del
+      servicio y el análisis solicitado. No compartimos información con terceros
+      sin su consentimiento explícito.
+    </p>
+
+    <h4 className="font-bold text-slate-800">4. Responsabilidades</h4>
+    <p>
+      Aunque nuestra IA ofrece un alto grado de precisión, NOPRO no se hace
+      responsable de errores en la interpretación normativa. Los resultados son
+      herramientas de apoyo y no sustituyen el juicio de un experto legal o
+      certificador oficial.
+    </p>
+
+    <h4 className="font-bold text-slate-800">5. Cancelación</h4>
+    <p>
+      Usted puede dar de baja su cuenta en cualquier momento contactando a
+      soporte. NOPRO se reserva el derecho de suspender cuentas que violen estas
+      normas.
+    </p>
+  </div>
+);
+
+// --- COMPONENTE MODAL DE TÉRMINOS ---
+const ModalTerminos = ({ onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 flex flex-col max-h-[90vh]">
+      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 className="text-xl font-bold text-slate-800">
+          Términos y Condiciones
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-red-500 text-2xl font-bold"
+        >
+          &times;
+        </button>
+      </div>
+      <div className="p-6 overflow-y-auto">{TERMINOS_LEGALES}</div>
+      <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl text-right">
+        <button
+          onClick={onClose}
+          className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition-all"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ContactoSoporte() {
   useAuthListener();
   const navigate = useNavigate();
@@ -18,6 +92,9 @@ export default function ContactoSoporte() {
   const [cargandoDatosUsuario, setCargandoDatosUsuario] = useState(true);
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
+
+  // --- NUEVO ESTADO PARA MODAL ---
+  const [mostrarModalTerminos, setMostrarModalTerminos] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -57,7 +134,7 @@ export default function ContactoSoporte() {
     fetchUserData();
   }, [navigate]);
 
-  // --- NUEVA FUNCIÓN DE VALIDACIÓN ---
+  // --- FUNCIÓN DE VALIDACIÓN ---
   const validarMensaje = (texto) => {
     const textoLimpio = texto.trim();
 
@@ -140,6 +217,11 @@ export default function ContactoSoporte() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans flex flex-col">
+      {/* --- MODAL DE TÉRMINOS --- */}
+      {mostrarModalTerminos && (
+        <ModalTerminos onClose={() => setMostrarModalTerminos(false)} />
+      )}
+
       {/* Fondo Decorativo */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
@@ -194,7 +276,7 @@ export default function ContactoSoporte() {
       </nav>
 
       {/* CONTENIDO PRINCIPAL - FORMULARIO */}
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+      <main className="flex-grow flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden relative">
           {/* Header de la tarjeta */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
@@ -349,6 +431,22 @@ export default function ContactoSoporte() {
               </form>
             )}
           </div>
+        </div>
+
+        {/* --- NUEVO BOTÓN PARA CONSULTAR TÉRMINOS --- */}
+        <div
+          className="mt-8 text-center animate-fade-in-up"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <p className="text-slate-500 text-sm mb-2 font-medium">
+            ¿Dudas sobre nuestras políticas?
+          </p>
+          <button
+            onClick={() => setMostrarModalTerminos(true)}
+            className="text-blue-600 font-bold hover:underline hover:text-blue-800 transition-colors text-sm bg-white/50 px-4 py-2 rounded-full hover:bg-white border border-transparent hover:border-blue-100"
+          >
+            Consultar Términos y Condiciones
+          </button>
         </div>
       </main>
     </div>
