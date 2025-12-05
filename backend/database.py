@@ -15,7 +15,7 @@ DB_HOST = os.getenv("DB_HOST").strip()
 DB_PORT = os.getenv("DB_PORT").strip()
 DB_NAME = os.getenv("DB_NAME").strip()
 
-# 🔥 DEBUG: imprimir variables
+# DEBUG: imprimir variables
 print("Variables cargadas:")
 print([DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME])
 
