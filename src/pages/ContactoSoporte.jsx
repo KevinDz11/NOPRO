@@ -3,6 +3,74 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+// --- 1. TEXTO DE TÉRMINOS Y CONDICIONES (ESPECÍFICO PARA SOPORTE) ---
+const TERMINOS_LEGALES = (
+  <div className="space-y-4 text-left text-slate-600 text-sm overflow-y-auto max-h-[60vh] p-2">
+    <p>
+      <strong>Última actualización: Diciembre 2025</strong>
+    </p>
+
+    <h4 className="font-bold text-slate-800">1. Descripción del Servicio</h4>
+    <p>
+      El servicio de Soporte Técnico de NOPRO tiene como finalidad asistir a los
+      usuarios en la resolución de incidencias relacionadas con el uso de la
+      plataforma de análisis normativo.
+    </p>
+
+    <h4 className="font-bold text-slate-800">2. Uso de la Información</h4>
+    <p>
+      La información proporcionada en este formulario (nombre, correo,
+      descripción del problema) será utilizada únicamente para contactarlo y
+      resolver su solicitud. No compartiremos estos datos con terceros salvo
+      obligación legal.
+    </p>
+
+    <h4 className="font-bold text-slate-800">3. Tiempos de Respuesta</h4>
+    <p>
+      Nuestro equipo se esfuerza por responder todas las solicitudes en un plazo
+      máximo de 48 horas hábiles. La prioridad se asignará según la gravedad de
+      la incidencia técnica.
+    </p>
+
+    <h4 className="font-bold text-slate-800">4. Conducta del Usuario</h4>
+    <p>
+      Al contactar a soporte, usted se compromete a mantener un lenguaje
+      respetuoso. NOPRO se reserva el derecho de no atender solicitudes que
+      contengan lenguaje ofensivo o amenazante.
+    </p>
+  </div>
+);
+
+// --- 2. COMPONENTE MODAL DE TÉRMINOS ---
+const ModalTerminos = ({ onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 flex flex-col max-h-[90vh]">
+      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 className="text-xl font-bold text-slate-800">
+          Términos del Soporte
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-red-500 text-2xl font-bold transition-colors"
+        >
+          &times;
+        </button>
+      </div>
+      <div className="p-6 overflow-y-auto custom-scrollbar">
+        {TERMINOS_LEGALES}
+      </div>
+      <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl text-right">
+        <button
+          onClick={onClose}
+          className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition-all shadow-lg hover:shadow-slate-500/30"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ContactoSoporte() {
   useAuthListener();
   const navigate = useNavigate();
@@ -18,6 +86,9 @@ export default function ContactoSoporte() {
   const [cargandoDatosUsuario, setCargandoDatosUsuario] = useState(true);
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
+
+  // --- ESTADO PARA EL MODAL ---
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -140,6 +211,9 @@ export default function ContactoSoporte() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans flex flex-col">
+      {/* --- RENDERIZADO DEL MODAL --- */}
+      {mostrarModal && <ModalTerminos onClose={() => setMostrarModal(false)} />}
+
       {/* Fondo Decorativo */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
@@ -346,6 +420,19 @@ export default function ContactoSoporte() {
                     "Enviar Mensaje"
                   )}
                 </button>
+
+                {/* --- LINK PARA ABRIR EL MODAL --- */}
+                <div className="mt-4 pt-2 text-center text-xs text-slate-400 border-t border-slate-100">
+                  Al enviar este formulario aceptas nuestros{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMostrarModal(true)}
+                    className="text-blue-600 font-bold hover:text-blue-700 hover:underline transition-all"
+                  >
+                    Términos y Condiciones de Soporte
+                  </button>
+                  .
+                </div>
               </form>
             )}
           </div>

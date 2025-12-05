@@ -2,6 +2,80 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+// --- TEXTO DE TÉRMINOS Y CONDICIONES ---
+const TERMINOS_LEGALES = (
+  <div className="space-y-4 text-left text-slate-600 text-sm overflow-y-auto max-h-[60vh] p-2">
+    <p>
+      <strong>Última actualización: Diciembre 2025</strong>
+    </p>
+
+    <h4 className="font-bold text-slate-800">1. Aceptación de los Términos</h4>
+    <p>
+      Al registrarse y utilizar los servicios de NOPRO, usted acepta cumplir con
+      estos términos y condiciones. Si no está de acuerdo, por favor no utilice
+      la plataforma.
+    </p>
+
+    <h4 className="font-bold text-slate-800">2. Uso del Servicio</h4>
+    <p>
+      NOPRO proporciona herramientas de análisis normativo mediante IA. El
+      usuario se compromete a utilizar la plataforma únicamente con fines
+      legales y relacionados con la conformidad de productos electrónicos.
+    </p>
+
+    <h4 className="font-bold text-slate-800">3. Privacidad y Datos</h4>
+    <p>
+      Respetamos su privacidad. Sus datos personales (nombre, correo) y los
+      documentos subidos se utilizan exclusivamente para el funcionamiento del
+      servicio y el análisis solicitado. No compartimos información con terceros
+      sin su consentimiento explícito.
+    </p>
+
+    <h4 className="font-bold text-slate-800">4. Responsabilidades</h4>
+    <p>
+      Aunque nuestra IA ofrece un alto grado de precisión, NOPRO no se hace
+      responsable de errores en la interpretación normativa. Los resultados son
+      herramientas de apoyo y no sustituyen el juicio de un experto legal o
+      certificador oficial.
+    </p>
+
+    <h4 className="font-bold text-slate-800">5. Cancelación</h4>
+    <p>
+      Usted puede dar de baja su cuenta en cualquier momento contactando a
+      soporte. NOPRO se reserva el derecho de suspender cuentas que violen estas
+      normas.
+    </p>
+  </div>
+);
+
+// --- COMPONENTE MODAL DE TÉRMINOS ---
+const ModalTerminos = ({ onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 flex flex-col max-h-[90vh]">
+      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 className="text-xl font-bold text-slate-800">
+          Términos y Condiciones
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-red-500 text-2xl font-bold"
+        >
+          &times;
+        </button>
+      </div>
+      <div className="p-6 overflow-y-auto">{TERMINOS_LEGALES}</div>
+      <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl text-right">
+        <button
+          onClick={onClose}
+          className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition-all"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function Registro() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
@@ -9,6 +83,11 @@ export default function Registro() {
   const [verificaContrasena, setVerificaContrasena] = useState("");
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarVerifica, setMostrarVerifica] = useState(false);
+
+  // --- NUEVOS ESTADOS PARA TÉRMINOS ---
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
+
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
@@ -20,19 +99,24 @@ export default function Registro() {
   const coinciden =
     contrasena === verificaContrasena && verificaContrasena.length > 0;
   const esCorreoValido = /\S+@\S+\.\S+/.test(correo);
+
+  // --- VALIDACIÓN ACTUALIZADA CON TÉRMINOS ---
   const formularioValido =
     nombre.trim() &&
     esCorreoValido &&
     longitudValida &&
     tieneMayuscula &&
     tieneNumero &&
-    coinciden;
+    coinciden &&
+    aceptaTerminos;
 
   const handleRegistro = async (e) => {
     e.preventDefault();
     setError("");
     if (!formularioValido) {
-      setError("Por favor, completa todos los campos correctamente.");
+      setError(
+        "Por favor, completa todos los campos correctamente y acepta los términos."
+      );
       return;
     }
     setCargando(true);
@@ -56,6 +140,9 @@ export default function Registro() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+      {/* --- MODAL DE TÉRMINOS --- */}
+      {mostrarModal && <ModalTerminos onClose={() => setMostrarModal(false)} />}
+
       {/* Fondo Decorativo Animado */}
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
       <div
@@ -245,6 +332,28 @@ export default function Registro() {
               </span>
             </div>
 
+            {/* --- CHECKBOX DE TÉRMINOS Y CONDICIONES --- */}
+            <div className="flex items-start gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="terminos"
+                checked={aceptaTerminos}
+                onChange={(e) => setAceptaTerminos(e.target.checked)}
+                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="terminos" className="text-sm text-slate-600">
+                He leído y acepto los{" "}
+                <button
+                  type="button"
+                  onClick={() => setMostrarModal(true)}
+                  className="text-blue-600 font-bold hover:underline"
+                >
+                  Términos y Condiciones
+                </button>{" "}
+                de NOPRO.
+              </label>
+            </div>
+
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
                 {error}
@@ -276,7 +385,7 @@ export default function Registro() {
           </form>
         </div>
 
-        {/* SECCIÓN DERECHA (Decorativa) - Oculta en móvil para ahorrar espacio vertical */}
+        {/* SECCIÓN DERECHA (Decorativa) */}
         <div className="hidden md:flex w-1/2 bg-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black opacity-90"></div>
           <div className="relative z-10 text-center">
