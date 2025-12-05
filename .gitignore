@@ -3,4 +3,5 @@ node_modules/
 __pycache__/
 *.pyc
 google_creds.json
-.env
+.env 
+*.pdf
