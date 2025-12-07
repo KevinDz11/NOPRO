@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import html2pdf from "html2pdf.js";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- ESTILOS MANUALES (PARA REEMPLAZAR TAILWIND EN EL PDF) ---
+// --- ESTILOS MANUALES (PARA MANTENER LA VISTA PREVIA IGUAL) ---
 const S = {
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
@@ -321,6 +320,9 @@ function ResultadosAnalisis() {
   useAuthListener();
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);
+
+  // Ref eliminado del botón pero mantenido para el contenedor si fuera necesario
+  // aunque ya no se usa para generar el PDF
   const contentRef = useRef(null);
 
   useEffect(() => {
@@ -330,43 +332,54 @@ function ResultadosAnalisis() {
     }
   }, []);
 
+  // --- NUEVA FUNCIÓN DE DESCARGA (CONECTADA AL BACKEND) ---
   const descargarPDF = async () => {
     if (generando) return;
     setGenerando(true);
 
-    const safetyTimeout = setTimeout(() => {
-      setGenerando(false);
-      alert("El proceso tardó demasiado.");
-    }, 20000);
-
-    const element = contentRef.current;
-
-    const opt = {
-      margin: 10,
-      filename: `Reporte_${datos?.categoria_producto || "Analisis"}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2, // Mejor calidad
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        onclone: (clonedDoc) => {
-          const styles = clonedDoc.querySelectorAll(
-            'style, link[rel="stylesheet"]'
-          );
-          styles.forEach((s) => s.remove());
-        },
-      },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    };
-
     try {
-      await html2pdf().set(opt).from(element).save();
+      // 1. Obtenemos el ID y el Token
+      const idDocumento = datos.id_documento;
+      const token = localStorage.getItem("authToken");
+
+      if (!idDocumento) {
+        alert("Error: No se encontró el ID del documento para descargar.");
+        setGenerando(false);
+        return;
+      }
+
+      // 2. Hacemos la petición al endpoint nuevo
+      // Ajusta la URL si tu backend no está en localhost:8000
+      const response = await fetch(
+        `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al generar el reporte en el servidor");
+      }
+
+      // 3. Convertimos la respuesta en un Blob (archivo binario)
+      const blob = await response.blob();
+
+      // 4. Creamos un link invisible para forzar la descarga
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Reporte_Oficial_${datos.nombre || "Analisis"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(error);
-      alert("Error al generar PDF.");
+      console.error("Error descargando PDF:", error);
+      alert("Hubo un error al descargar el reporte oficial.");
     } finally {
-      clearTimeout(safetyTimeout);
       setGenerando(false);
     }
   };
@@ -403,14 +416,14 @@ function ResultadosAnalisis() {
               generando ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {generando ? "Generando..." : "⬇ Descargar PDF"}
+            {generando ? "Generando..." : "⬇ Descargar Reporte Oficial"}
           </button>
         </div>
       </nav>
 
       {/* CONTENEDOR PRINCIPAL */}
       <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-2xl">
-        {/* === ÁREA IMPRIMIBLE === */}
+        {/* === ÁREA IMPRIMIBLE (SOLO VISUAL AHORA) === */}
         <div ref={contentRef} style={S.container} id="pdf-content">
           {/* HEADER */}
           <header style={S.header}>
