@@ -1,48 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- COMPONENTE VISUAL: MODAL DE CARGA ---
-const ModalCarga = ({ tipo, mensaje }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
-    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full animate-fade-in-up border border-white/50">
-      <div className="relative w-20 h-20 mx-auto mb-6">
-        <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-        <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-        <div className="absolute inset-0 flex items-center justify-center text-2xl">
-          {tipo === "Manual" ? "" : tipo === "Etiqueta" ? "" : ""}
-        </div>
-      </div>
-      <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
-        Analizando {tipo}
-      </h3>
-      <p className="text-slate-500 text-sm font-medium">{mensaje}</p>
+// --- PERSISTENCIA POR PRODUCTO ---
+const ALMACENAMIENTO = {};
 
-      {tipo === "Manual" && (
-        <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left">
-          <span className="text-xl">⏳</span>
-          <div>
-            <p className="text-orange-800 font-bold text-xs uppercase tracking-wider mb-1">
-              Proceso Extenso
-            </p>
-            <p className="text-orange-600 text-xs leading-relaxed">
-              Esto puede tardar hasta 5 minutos. Por favor,{" "}
-              <strong>no cierres esta pestaña</strong>.
-            </p>
+// Función para obtener el estado inicial limpio
+const getDefaultState = () => ({
+  marca: "",
+  modelo: "",
+  manual: null,
+  ficha: null,
+  etiqueta: null,
+  progreso: { manual: 0, ficha: 0, etiqueta: 0 },
+  resultadoFicha: null,
+  resultadoManual: null,
+  resultadoEtiqueta: null,
+  inputKeys: { manual: 0, ficha: 0, etiqueta: 0 },
+});
+
+// --- COMPONENTE VISUAL: MODAL DE CARGA CON PROGRESO ---
+const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
+  const porcentajeVisual = Number.isFinite(porcentaje)
+    ? Math.round(porcentaje)
+    : 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
+      <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center max-w-md w-full animate-fade-in-up border border-white/50">
+        {/* Spinner y Porcentaje */}
+        <div className="relative w-24 h-24 mx-auto mb-6">
+          <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-700">
+            {porcentajeVisual}%
           </div>
         </div>
-      )}
+
+        <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
+          Analizando {tipo}
+        </h3>
+        <p className="text-slate-500 text-sm font-medium mb-6">{mensaje}</p>
+
+        {/* BARRA DE PROGRESO VISUAL */}
+        <div className="w-full bg-slate-200 rounded-full h-4 mb-4 overflow-hidden border border-slate-300 relative">
+          <div
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${porcentajeVisual}%` }}
+          ></div>
+          <div
+            className="absolute inset-0 bg-white/20 animate-pulse"
+            style={{ width: `${porcentajeVisual}%` }}
+          ></div>
+        </div>
+
+        {tipo === "Manual" && (
+          <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left animate-pulse">
+            <span className="text-xl">⏳</span>
+            <div>
+              <p className="text-orange-800 font-bold text-xs uppercase tracking-wider mb-1">
+                Proceso Extenso
+              </p>
+              <p className="text-orange-600 text-xs leading-relaxed">
+                Esto puede tardar hasta 5 minutos. Por favor,{" "}
+                <strong>no cierres esta pestaña</strong>.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- COMPONENTE VISUAL: MODAL DE ÉXITO ---
 const ModalFeedback = ({ tipo, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
     <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full animate-bounce-in border border-slate-100">
-      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"></div>
+      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
+        ✅
+      </div>
       <h3 className="text-xl font-bold text-slate-800 mb-2">
         ¡Análisis Completado!
       </h3>
@@ -64,21 +103,36 @@ export default function SubirArchivos() {
   const { producto } = useParams();
   const navigate = useNavigate();
 
-  // Estados del formulario
-  const [marca, setMarca] = useState("");
-  const [modelo, setModelo] = useState("");
+  // --- HELPER PARA CARGAR ESTADO ---
+  const getStoredState = (prodKey) => {
+    if (!ALMACENAMIENTO[prodKey]) {
+      ALMACENAMIENTO[prodKey] = getDefaultState();
+    }
+    return ALMACENAMIENTO[prodKey];
+  };
 
-  // Estados de archivos
-  const [manual, setManual] = useState(null);
-  const [ficha, setFicha] = useState(null);
-  const [etiqueta, setEtiqueta] = useState(null);
+  const initialState = getStoredState(producto);
 
-  // Claves para reiniciar inputs de archivo
-  const [inputKeys, setInputKeys] = useState({
-    manual: 0,
-    ficha: 0,
-    etiqueta: 0,
-  });
+  // Estados locales
+  const [marca, setMarca] = useState(initialState.marca);
+  const [modelo, setModelo] = useState(initialState.modelo);
+
+  const [manual, setManual] = useState(initialState.manual);
+  const [ficha, setFicha] = useState(initialState.ficha);
+  const [etiqueta, setEtiqueta] = useState(initialState.etiqueta);
+
+  const [inputKeys, setInputKeys] = useState(initialState.inputKeys);
+  const [progreso, setProgreso] = useState(initialState.progreso);
+
+  const [resultadoFicha, setResultadoFicha] = useState(
+    initialState.resultadoFicha
+  );
+  const [resultadoManual, setResultadoManual] = useState(
+    initialState.resultadoManual
+  );
+  const [resultadoEtiqueta, setResultadoEtiqueta] = useState(
+    initialState.resultadoEtiqueta
+  );
 
   // UI States
   const [loading, setLoading] = useState(false);
@@ -87,59 +141,109 @@ export default function SubirArchivos() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successType, setSuccessType] = useState("");
 
-  const [progreso, setProgreso] = useState({
-    manual: 0,
-    ficha: 0,
-    etiqueta: 0,
-  });
+  // --- EFECTO: CAMBIO DE PRODUCTO ---
+  useEffect(() => {
+    const saved = getStoredState(producto);
+    setMarca(saved.marca);
+    setModelo(saved.modelo);
+    setManual(saved.manual);
+    setFicha(saved.ficha);
+    setEtiqueta(saved.etiqueta);
+    setProgreso(saved.progreso);
+    setInputKeys(saved.inputKeys);
+    setResultadoFicha(saved.resultadoFicha);
+    setResultadoManual(saved.resultadoManual);
+    setResultadoEtiqueta(saved.resultadoEtiqueta);
+  }, [producto]);
 
-  // Resultados
-  const [resultadoFicha, setResultadoFicha] = useState(null);
-  const [resultadoManual, setResultadoManual] = useState(null);
-  const [resultadoEtiqueta, setResultadoEtiqueta] = useState(null);
+  // --- WRAPPERS DE ACTUALIZACIÓN ---
+  const updateMarca = (val) => {
+    setMarca(val);
+    ALMACENAMIENTO[producto].marca = val;
+  };
+  const updateModelo = (val) => {
+    setModelo(val);
+    ALMACENAMIENTO[producto].modelo = val;
+  };
 
-  // --- FUNCIONES ---
+  const updateArchivo = (tipo, file) => {
+    if (tipo === "manual") {
+      setManual(file);
+      ALMACENAMIENTO[producto].manual = file;
+    }
+    if (tipo === "ficha") {
+      setFicha(file);
+      ALMACENAMIENTO[producto].ficha = file;
+    }
+    if (tipo === "etiqueta") {
+      setEtiqueta(file);
+      ALMACENAMIENTO[producto].etiqueta = file;
+    }
+  };
+
+  const updateResultado = (tipo, data) => {
+    if (tipo === "manual") {
+      setResultadoManual(data);
+      ALMACENAMIENTO[producto].resultadoManual = data;
+    } else if (tipo === "etiqueta") {
+      setResultadoEtiqueta(data);
+      ALMACENAMIENTO[producto].resultadoEtiqueta = data;
+    } else {
+      setResultadoFicha(data);
+      ALMACENAMIENTO[producto].resultadoFicha = data;
+    }
+  };
+
+  const updateProgreso = (tipo, valor) => {
+    setProgreso((prev) => {
+      const nuevo = { ...prev, [tipo]: valor };
+      ALMACENAMIENTO[producto].progreso = nuevo;
+      return nuevo;
+    });
+  };
 
   const iniciarCarga = (e, tipo) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
-
     if (archivo.type !== "application/pdf") {
       alert("Solo se permiten archivos PDF.");
       return;
     }
 
-    if (tipo === "manual") setManual(archivo);
-    if (tipo === "ficha") setFicha(archivo);
-    if (tipo === "etiqueta") setEtiqueta(archivo);
+    updateArchivo(tipo, archivo);
 
-    // Animación barra
     let p = 0;
     const interval = setInterval(() => {
-      p += 15;
-      setProgreso((prev) => ({ ...prev, [tipo]: p > 100 ? 100 : p }));
+      p += 20;
+      updateProgreso(tipo, p > 100 ? 100 : p);
       if (p >= 100) clearInterval(interval);
-    }, 80);
+    }, 50);
   };
 
   const limpiarArchivo = (tipo) => {
-    // 1. Resetear estado del archivo
     if (tipo === "manual") {
       setManual(null);
       setResultadoManual(null);
+      ALMACENAMIENTO[producto].manual = null;
+      ALMACENAMIENTO[producto].resultadoManual = null;
     } else if (tipo === "ficha") {
       setFicha(null);
       setResultadoFicha(null);
+      ALMACENAMIENTO[producto].ficha = null;
+      ALMACENAMIENTO[producto].resultadoFicha = null;
     } else if (tipo === "etiqueta") {
       setEtiqueta(null);
       setResultadoEtiqueta(null);
+      ALMACENAMIENTO[producto].etiqueta = null;
+      ALMACENAMIENTO[producto].resultadoEtiqueta = null;
     }
 
-    // 2. Resetear progreso
-    setProgreso((prev) => ({ ...prev, [tipo]: 0 }));
-
-    // 3. Forzar re-render del input file cambiando su key
-    setInputKeys((prev) => ({ ...prev, [tipo]: prev[tipo] + 1 }));
+    updateProgreso(tipo, 0);
+    setInputKeys((prev) => {
+      const keys = { ...prev, [tipo]: prev[tipo] + 1 };
+      ALMACENAMIENTO[producto].inputKeys = keys;
+      return keys;
+    });
   };
 
   const asegurarProducto = async (token) => {
@@ -157,26 +261,33 @@ export default function SubirArchivos() {
   };
 
   const procesarArchivo = async (tipoArchivo) => {
-    if (!marca.trim() || !modelo.trim()) {
-      return alert("Por favor, completa Marca y Modelo antes de iniciar.");
-    }
+    if (!marca.trim() || !modelo.trim())
+      return alert("Completa Marca y Modelo.");
 
     let archivo;
     if (tipoArchivo === "manual") archivo = manual;
     else if (tipoArchivo === "ficha") archivo = ficha;
     else if (tipoArchivo === "etiqueta") archivo = etiqueta;
 
-    if (!archivo) {
-      return alert(
-        `Debes seleccionar el archivo PDF del ${tipoArchivo} primero.`
-      );
-    }
+    if (!archivo) return alert(`Selecciona el archivo PDF de ${tipoArchivo}.`);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
-      alert("Tu sesión expiró.");
+      alert("Sesión expirada");
       return navigate("/login");
     }
+
+    updateProgreso(tipoArchivo, 0);
+
+    // Intervalo de simulación fluido
+    const simulationInterval = setInterval(() => {
+      setProgreso((prev) => {
+        const current = prev[tipoArchivo] || 0;
+        if (current >= 90) return prev;
+        const incremento = current < 50 ? 2 : 0.5;
+        return { ...prev, [tipoArchivo]: current + incremento };
+      });
+    }, 150);
 
     try {
       let nombreUI = "Ficha Técnica";
@@ -184,10 +295,11 @@ export default function SubirArchivos() {
 
       if (tipoArchivo === "manual") {
         nombreUI = "Manual";
-        mensajeUI = "Analizando documento extenso...";
+        mensajeUI =
+          "Analizando documento extenso (Seguridad y Mantenimiento)...";
       } else if (tipoArchivo === "etiqueta") {
         nombreUI = "Etiqueta";
-        mensajeUI = "Analizando documento, buscando logos...";
+        mensajeUI = "Buscando logos NOM y advertencias...";
       }
 
       setLoadingType(nombreUI);
@@ -217,47 +329,42 @@ export default function SubirArchivos() {
         }
       );
 
-      // Guardar resultados
-      if (tipoArchivo === "manual") setResultadoManual(response.data);
-      else if (tipoArchivo === "etiqueta") setResultadoEtiqueta(response.data);
-      else setResultadoFicha(response.data);
-
-      // Mostrar modal de éxito en lugar de alert
+      clearInterval(simulationInterval);
+      updateProgreso(tipoArchivo, 100);
+      updateResultado(tipoArchivo, response.data);
       setSuccessType(nombreUI);
-      setShowSuccessModal(true);
+
+      setTimeout(() => {
+        setLoading(false);
+        setShowSuccessModal(true);
+      }, 600);
     } catch (error) {
+      clearInterval(simulationInterval);
+      updateProgreso(tipoArchivo, 0);
       console.error(error);
       const msg =
         error.response?.data?.detail || "Ocurrió un error de conexión.";
       alert(`Error: ${msg}`);
-    } finally {
       setLoading(false);
     }
   };
 
-  const verReportePDF = (dataResultados, tituloReporte) => {
-    const datosParaReporte = {
-      ...dataResultados,
-      titulo_reporte: tituloReporte,
+  const verReportePDF = (data, titulo) => {
+    const reporte = {
+      ...data,
+      titulo_reporte: titulo,
       categoria_producto: producto,
       marca_producto: marca,
       modelo_producto: modelo,
-      tipo_vista: "individual", // Flag para saber cómo renderizar
+      tipo_vista: "individual",
     };
-    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
+    localStorage.setItem("ultimoAnalisis", JSON.stringify(reporte));
     window.open("/resultados-analisis", "_blank");
   };
 
-  // --- LÓGICA REPORTE GENERAL ---
   const verReporteGeneral = () => {
-    // Validar que haya al menos un resultado
-    if (!resultadoFicha && !resultadoManual && !resultadoEtiqueta) {
-      return alert(
-        "Debes analizar al menos un documento para generar el reporte general."
-      );
-    }
-
-    // Estructurar datos combinados
+    if (!resultadoFicha && !resultadoManual && !resultadoEtiqueta)
+      return alert("Sin resultados para reporte general.");
     const subReportes = [];
     if (resultadoFicha)
       subReportes.push({ titulo: "Ficha Técnica", data: resultadoFicha });
@@ -266,20 +373,26 @@ export default function SubirArchivos() {
     if (resultadoEtiqueta)
       subReportes.push({ titulo: "Etiquetado", data: resultadoEtiqueta });
 
-    const datosGeneral = {
+    const general = {
       titulo_reporte: "Reporte General de Conformidad",
       categoria_producto: producto,
       marca_producto: marca,
       modelo_producto: modelo,
-      tipo_vista: "general", // Flag importante
+      tipo_vista: "general",
       sub_reportes: subReportes,
     };
-
-    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosGeneral));
+    localStorage.setItem("ultimoAnalisis", JSON.stringify(general));
     window.open("/resultados-analisis", "_blank");
   };
 
-  // --- HELPER RENDER CARD ---
+  const getPorcentajeActual = () => {
+    if (loadingType === "Manual") return progreso.manual || 0;
+    if (loadingType === "Etiqueta") return progreso.etiqueta || 0;
+    return progreso.ficha || 0;
+  };
+
+  // --- COMPONENTE TARJETA ---
+  // Se eliminó la prop 'typeLabel' que no se usaba
   const RenderCard = ({
     tipoKey,
     titulo,
@@ -289,36 +402,30 @@ export default function SubirArchivos() {
     result,
     setFileFn,
     progress,
-    typeLabel,
   }) => {
-    // Clases de colores dinámicas
     const grad =
       color === "blue"
         ? "from-blue-600 to-indigo-600"
         : color === "orange"
         ? "from-orange-500 to-red-500"
         : "from-purple-600 to-pink-600";
-
     const bgLight =
       color === "blue"
         ? "bg-blue-50"
         : color === "orange"
         ? "bg-orange-50"
         : "bg-purple-50";
-
     const textDark =
       color === "blue"
         ? "text-blue-700"
         : color === "orange"
         ? "text-orange-700"
         : "text-purple-700";
-
     const fileValue =
       tipoKey === "ficha" ? ficha : tipoKey === "manual" ? manual : etiqueta;
 
     return (
       <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col relative">
-        {/* Header Card */}
         <div
           className={`bg-gradient-to-r ${grad} px-6 py-4 relative overflow-hidden`}
         >
@@ -331,11 +438,10 @@ export default function SubirArchivos() {
         <div className="p-6 flex-grow flex flex-col">
           <p className="text-slate-500 mb-4 text-xs flex-grow">{desc}</p>
 
-          {/* Input File o Info Archivo */}
           <div className="mb-4">
             {!fileValue ? (
               <input
-                key={inputKeys[tipoKey]} // KEY para resetear
+                key={inputKeys[tipoKey]}
                 type="file"
                 accept=".pdf"
                 onChange={(e) => setFileFn(e, tipoKey)}
@@ -352,12 +458,10 @@ export default function SubirArchivos() {
                     {fileValue.name}
                   </span>
                 </div>
-                {/* Botón Eliminar */}
                 <button
                   onClick={() => limpiarArchivo(tipoKey)}
                   disabled={loading}
                   className="p-1 hover:bg-white rounded-full text-slate-400 hover:text-red-500 transition-colors"
-                  title="Eliminar archivo y resultados"
                 >
                   🗑️
                 </button>
@@ -365,7 +469,6 @@ export default function SubirArchivos() {
             )}
           </div>
 
-          {/* Barra de Progreso */}
           <div className="h-1 w-full bg-slate-100 rounded-full mb-4 overflow-hidden">
             <div
               className={`${
@@ -375,28 +478,25 @@ export default function SubirArchivos() {
                   ? "bg-orange-500"
                   : "bg-purple-600"
               } h-full rounded-full transition-all duration-300`}
-              style={{ width: `${progress}%`, opacity: progress > 0 ? 1 : 0 }}
+              style={{
+                width: `${progress || 0}%`,
+                opacity: progress > 0 ? 1 : 0,
+              }}
             ></div>
           </div>
 
-          {/* Botones de Acción */}
           <div className="flex gap-2 mt-auto">
             <button
               onClick={() => procesarArchivo(tipoKey)}
-              disabled={!fileValue || loading || result} // Deshabilitar si ya hay resultado
+              disabled={!fileValue || loading || result}
               className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
                 !fileValue || loading || result
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : `bg-gradient-to-r ${grad} text-white transform hover:scale-105`
               }`}
             >
-              {result
-                ? "ANALIZADO"
-                : loading && loadingType === typeLabel
-                ? "..."
-                : "ANALIZAR"}
+              {result ? "ANALIZADO" : "ANALIZAR"}
             </button>
-
             {result && (
               <button
                 onClick={() => verReportePDF(result, `Reporte ${titulo}`)}
@@ -414,8 +514,13 @@ export default function SubirArchivos() {
   return (
     <div className="min-h-screen bg-slate-50 pb-24 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
-
-      {loading && <ModalCarga tipo={loadingType} mensaje={loadingMessage} />}
+      {loading && (
+        <ModalCarga
+          tipo={loadingType}
+          mensaje={loadingMessage}
+          porcentaje={getPorcentajeActual()}
+        />
+      )}
       {showSuccessModal && (
         <ModalFeedback
           tipo={successType}
@@ -423,7 +528,6 @@ export default function SubirArchivos() {
         />
       )}
 
-      {/* NAVBAR (Igual que antes) */}
       <nav className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm navbar px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between">
           <Link
@@ -489,13 +593,12 @@ export default function SubirArchivos() {
           </p>
         </div>
 
-        {/* Formulario Marca/Modelo */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-10 relative overflow-hidden max-w-4xl mx-auto">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm font-extrabold">
               1
-            </span>
+            </span>{" "}
             Información del Producto
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -508,7 +611,7 @@ export default function SubirArchivos() {
                 placeholder="Ej. Samsung..."
                 className="w-full border border-slate-200 bg-slate-50 rounded-xl px-5 py-3.5 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                 value={marca}
-                onChange={(e) => setMarca(e.target.value)}
+                onChange={(e) => updateMarca(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -521,7 +624,7 @@ export default function SubirArchivos() {
                 placeholder="Ej. UN55AU7000..."
                 className="w-full border border-slate-200 bg-slate-50 rounded-xl px-5 py-3.5 text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                 value={modelo}
-                onChange={(e) => setModelo(e.target.value)}
+                onChange={(e) => updateModelo(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -531,11 +634,10 @@ export default function SubirArchivos() {
         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3 px-2 max-w-4xl mx-auto">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-extrabold">
             2
-          </span>
+          </span>{" "}
           Carga y Análisis de Documentos
         </h2>
 
-        {/* GRID DE TARJETAS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
           <RenderCard
             tipoKey="ficha"
@@ -545,38 +647,34 @@ export default function SubirArchivos() {
             result={resultadoFicha}
             setFileFn={iniciarCarga}
             progress={progreso.ficha}
-            typeLabel="Ficha Técnica"
           />
           <RenderCard
             tipoKey="manual"
             titulo="Manual"
-            desc="Instrucciones de seguridad y mantenimiento."
+            desc="Instrucciones de seguridad."
             color="orange"
             result={resultadoManual}
             setFileFn={iniciarCarga}
             progress={progreso.manual}
-            typeLabel="Manual"
           />
           <RenderCard
             tipoKey="etiqueta"
             titulo="Etiqueta"
-            desc="Detección de logos normativos y advertencias."
+            desc="Detección de logos normativos."
             color="purple"
             result={resultadoEtiqueta}
             setFileFn={iniciarCarga}
             progress={progreso.etiqueta}
-            typeLabel="Etiqueta"
           />
         </div>
 
-        {/* BOTÓN REPORTE GENERAL - MODIFICADO AQUÍ */}
         {resultadoFicha && resultadoManual && resultadoEtiqueta && (
           <div className="flex justify-center mt-10 mb-8 animate-fade-in-up">
             <button
               onClick={verReporteGeneral}
               className="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl hover:bg-slate-800 hover:scale-105 transition-all font-bold flex items-center gap-3 border border-slate-700 transform"
             >
-              <span className="text-xl"></span> Ver Reporte General Unificado
+              <span className="text-xl">📊</span> Ver Reporte General Unificado
             </button>
           </div>
         )}
