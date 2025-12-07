@@ -9,10 +9,52 @@ export default function Registro() {
   const [verificaContrasena, setVerificaContrasena] = useState("");
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarVerifica, setMostrarVerifica] = useState(false);
+  const [aceptarTerminos, setAceptarTerminos] = useState(false); // Nuevo estado checkbox
+  const [mostrarTerminosModal, setMostrarTerminosModal] = useState(false); // Estado para ver los términos
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
   const navigate = useNavigate();
+
+  // Texto de Términos y Condiciones
+  const terminosTexto = (
+    <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
+      <h4 className="font-bold text-lg text-slate-900">
+        Términos y Condiciones de Uso de NOPRO
+      </h4>
+      <p>
+        <strong>1. Aceptación de los Términos:</strong> Al registrarse y
+        utilizar los servicios de NOPRO, usted acepta cumplir con estos términos
+        y condiciones. Si no está de acuerdo con alguna parte de los términos,
+        no podrá utilizar nuestros servicios de análisis de normas.
+      </p>
+      <p>
+        <strong>2. Descripción del Servicio:</strong> NOPRO proporciona
+        herramientas basadas en inteligencia artificial para el análisis,
+        interpretación y gestión de normativas y documentos técnicos.
+      </p>
+      <p>
+        <strong>3. Responsabilidad del Usuario:</strong> El usuario es
+        responsable de mantener la confidencialidad de su cuenta y contraseña.
+        El análisis proporcionado por nuestra IA es una herramienta de apoyo y
+        no sustituye el juicio profesional o legal definitivo. NOPRO no se hace
+        responsable por decisiones tomadas basándose únicamente en los análisis
+        automáticos.
+      </p>
+      <p>
+        <strong>4. Privacidad y Datos:</strong> Nos comprometemos a proteger su
+        privacidad. Los documentos subidos serán utilizados únicamente para el
+        propósito del análisis solicitado y no serán compartidos con terceros
+        sin su consentimiento explícito, salvo requerimiento legal.
+      </p>
+      <p>
+        <strong>5. Modificaciones:</strong> NOPRO se reserva el derecho de
+        modificar estos términos en cualquier momento. Las modificaciones
+        entrarán en vigor inmediatamente después de su publicación en la
+        plataforma.
+      </p>
+    </div>
+  );
 
   const longitudValida = contrasena.length >= 8;
   const tieneMayuscula = /[A-Z]/.test(contrasena);
@@ -26,7 +68,8 @@ export default function Registro() {
     longitudValida &&
     tieneMayuscula &&
     tieneNumero &&
-    coinciden;
+    coinciden &&
+    aceptarTerminos; // Agregada validación del checkbox
 
   const handleRegistro = async (e) => {
     e.preventDefault();
@@ -245,6 +288,28 @@ export default function Registro() {
               </span>
             </div>
 
+            {/* Checkbox Términos y Condiciones */}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="checkbox"
+                id="terminos"
+                checked={aceptarTerminos}
+                onChange={(e) => setAceptarTerminos(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                disabled={cargando}
+              />
+              <label htmlFor="terminos" className="text-sm text-slate-600">
+                Acepto los{" "}
+                <button
+                  type="button"
+                  onClick={() => setMostrarTerminosModal(true)}
+                  className="text-blue-600 font-bold hover:underline focus:outline-none"
+                >
+                  Términos y Condiciones
+                </button>
+              </label>
+            </div>
+
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
                 {error}
@@ -287,6 +352,50 @@ export default function Registro() {
           </div>
         </div>
       </div>
+
+      {/* MODAL TÉRMINOS Y CONDICIONES */}
+      {mostrarTerminosModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-xl font-bold text-slate-800">
+                Términos y Condiciones
+              </h3>
+              <button
+                onClick={() => setMostrarTerminosModal(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">{terminosTexto}</div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => {
+                  setMostrarTerminosModal(false);
+                  setAceptarTerminos(true);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+              >
+                Entendido y Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
