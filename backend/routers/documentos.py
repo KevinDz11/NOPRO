@@ -3,12 +3,19 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from .. import crud, schemas, database, auth, models
+# IMPORTANTE: Asegúrate de importar pdf_report
 from ..services import ia_analisis, pdf_report 
+from typing import List
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/documentos", tags=["Documentos"])
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Schema para el reporte general
+class ReporteGeneralRequest(BaseModel):
+    ids_documentos: List[int]
 
 @router.post("/subir-analizar", response_model=schemas.DocumentoAnalisisOut)
 def subir_y_analizar(
@@ -60,11 +67,12 @@ def subir_y_analizar(
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-# --- CAMBIO IMPORTANTE AQUÍ: Usamos DocumentoAnalisisOut para incluir los resultados en el listado ---
+# --- CAMBIO IMPORTANTE: response_model con análisis incluido para el Historial ---
 @router.get("/", response_model=list[schemas.DocumentoAnalisisOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
 
+# --- REPORTE INDIVIDUAL ---
 @router.get("/{id_documento}/reporte-pdf")
 def descargar_reporte_pdf(
     id_documento: int,
@@ -92,11 +100,7 @@ def descargar_reporte_pdf(
         marca_prod = producto.marca if producto.marca else "Genérico"
         modelo_prod = producto.descripcion if producto.descripcion else "Sin Modelo"
 
-    cat_map = {
-        "laptop": "Laptop", 
-        "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", 
-        "luminaria": "Luminaria"
-    }
+    cat_map = {"laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", "luminaria": "Luminaria"}
     categoria_clean = cat_map.get(categoria_prod.lower(), "Laptop")
 
     tipo_clean = "Ficha"
@@ -129,3 +133,61 @@ def descargar_reporte_pdf(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando el PDF: {str(e)}")
+
+# --- NUEVO ENDPOINT PARA PDF GENERAL ---
+@router.post("/reporte-general-pdf")
+def descargar_reporte_general_pdf(
+    payload: ReporteGeneralRequest,
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    ids = payload.ids_documentos
+    if not ids:
+        raise HTTPException(status_code=400, detail="No se enviaron documentos")
+
+    # Obtener documentos
+    docs = db.query(models.Documento).filter(models.Documento.id_documento.in_(ids)).all()
+    if not docs:
+        raise HTTPException(status_code=404, detail="No se encontraron los documentos")
+
+    # Datos del producto (tomamos del primero)
+    first_doc = docs[0]
+    producto = db.query(models.Producto).filter(models.Producto.id_producto == first_doc.id_producto).first()
+    
+    marca_prod = producto.marca if producto and producto.marca else "Genérico"
+    modelo_prod = producto.descripcion if producto and producto.descripcion else "Sin Modelo"
+    categoria_prod = producto.nombre if producto else "Laptop"
+    
+    # Mapa de categorías
+    cat_map = {"laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", "luminaria": "Luminaria"}
+    categoria_clean = cat_map.get(categoria_prod.lower(), "Laptop")
+
+    # Preparar lista para el servicio PDF
+    lista_para_pdf = []
+    for d in docs:
+        if d.analisis_ia: # Solo incluir si tienen análisis
+            lista_para_pdf.append({
+                'doc': d,
+                'resultados': d.analisis_ia
+            })
+
+    if not lista_para_pdf:
+        raise HTTPException(status_code=400, detail="Ninguno de los documentos seleccionados tiene análisis IA")
+
+    try:
+        pdf_buffer = pdf_report.generar_pdf_reporte_general(
+            lista_docs=lista_para_pdf,
+            categoria_producto=categoria_clean,
+            marca_producto=marca_prod,
+            modelo_producto=modelo_prod
+        )
+        
+        filename = f"Reporte_General_{marca_prod}.pdf"
+        return StreamingResponse(
+            pdf_buffer, 
+            media_type="application/pdf", 
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        print(f"Error PDF General: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

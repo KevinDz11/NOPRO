@@ -551,41 +551,69 @@ function ResultadosAnalisis() {
     }
   }, []);
 
+  const esGeneral = datos?.tipo_vista === "general";
+
   const descargarPDF = async () => {
     if (generando) return;
     setGenerando(true);
-    try {
-      const idDocumento = datos.id_documento;
-      const token = localStorage.getItem("authToken");
-      if (!idDocumento) throw new Error("ID no encontrado");
 
-      const response = await fetch(
-        `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    try {
+      const token = localStorage.getItem("authToken");
+      let response;
+
+      // LÓGICA DIFERENCIADA PARA PDF
+      if (esGeneral) {
+        // Si es general, usamos el nuevo endpoint POST enviando los IDs
+        response = await fetch(
+          "http://localhost:8000/documentos/reporte-general-pdf",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
+          }
+        );
+      } else {
+        // Si es individual, usamos el endpoint GET de siempre
+        const idDocumento = datos.id_documento;
+        response = await fetch(
+          `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
 
       if (!response.ok) throw new Error("Error en servidor");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Reporte_${datos.nombre || "Analisis"}.pdf`;
+      a.download = `Reporte_${esGeneral ? "General" : datos.nombre}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
-      alert("Error al descargar PDF. Verifica tu sesión.");
+      alert("Error al descargar PDF.");
     } finally {
       setGenerando(false);
     }
   };
 
   if (!datos) return <div className="p-10 text-center">Cargando datos...</div>;
+
+  const totalHallazgos = esGeneral
+    ? datos.sub_reportes.reduce(
+        (acc, curr) => acc + (curr.data.analisis_ia?.length || 0),
+        0
+      )
+    : datos.analisis_ia?.length || 0;
 
   return (
     <div className="min-h-screen bg-slate-50 relative">
@@ -623,11 +651,12 @@ function ResultadosAnalisis() {
                 />
                 Reporte Oficial
               </div>
-              <h1 style={S.mainTitle}>
-                Reporte{" "}
-                {datos.nombre?.includes("manual") ? "Manual" : "Ficha Técnica"}
-              </h1>
-              <p style={S.subTitle}>Análisis Automatizado por IA</p>
+              <h1 style={S.mainTitle}>{datos.titulo_reporte}</h1>
+              <p style={S.subTitle}>
+                {esGeneral
+                  ? "Análisis Unificado de Producto"
+                  : "Análisis Automatizado por IA"}
+              </p>
             </div>
             <div style={S.headerRight}>
               <p
@@ -652,15 +681,13 @@ function ResultadosAnalisis() {
               <p style={S.cardValue}>{datos.categoria_producto || "N/A"}</p>
             </div>
             <div style={S.card}>
-              <p style={S.cardLabel}>Tipo Doc</p>
-              <p style={S.cardValue}>
-                {datos.nombre?.includes("manual") ? "Manual" : "Ficha"}
-              </p>
+              <p style={S.cardLabel}>Tipo Reporte</p>
+              <p style={S.cardValue}>{esGeneral ? "Completo" : "Individual"}</p>
             </div>
             <div style={S.card}>
               <p style={S.cardLabel}>Hallazgos</p>
               <p style={{ ...S.cardValue, color: "#2563eb" }}>
-                {datos.analisis_ia?.length || 0}
+                {totalHallazgos}
               </p>
             </div>
             <div style={S.card}>
@@ -669,16 +696,88 @@ function ResultadosAnalisis() {
             </div>
           </section>
 
-          {/* AQUÍ ESTÁ LA NUEVA SECCIÓN DE CHECKLIST */}
-          <h3 style={S.sectionTitle}>1. Checklist de Cumplimiento Normativo</h3>
-          <TablaChecklist
-            analisis={datos.analisis_ia || []}
-            categoria={datos.categoria_producto}
-            nombreDoc={datos.nombre}
-          />
+          {/* CONTENIDO DINÁMICO */}
+          {esGeneral ? (
+            <div>
+              {datos.sub_reportes.map((sub, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    pageBreakInside: "avoid",
+                    marginBottom: "50px",
+                    borderTop: "2px dashed #e2e8f0",
+                    paddingTop: "30px",
+                  }}
+                >
+                  <h3 style={S.sectionTitle}>
+                    <span
+                      style={{
+                        backgroundColor: "#1e293b",
+                        color: "white",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    Documento: {sub.data.nombre}
+                  </h3>
 
-          <h3 style={S.sectionTitle}>2. Detalle de Evidencias Encontradas</h3>
-          <TablaHallazgos analisis={datos.analisis_ia || []} />
+                  {/* CHECKLIST POR DOCUMENTO */}
+                  <h4
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: "#64748b",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    1. Checklist Normativo
+                  </h4>
+                  <TablaChecklist
+                    analisis={sub.data.analisis_ia}
+                    categoria={datos.categoria_producto}
+                    nombreDoc={sub.data.nombre}
+                  />
+
+                  {/* HALLAZGOS POR DOCUMENTO */}
+                  <h4
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: "#64748b",
+                      marginBottom: "10px",
+                      marginTop: "20px",
+                    }}
+                  >
+                    2. Evidencias
+                  </h4>
+                  <TablaHallazgos analisis={sub.data.analisis_ia} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <h3 style={S.sectionTitle}>
+                1. Checklist de Cumplimiento Normativo
+              </h3>
+              <TablaChecklist
+                analisis={datos.analisis_ia || []}
+                categoria={datos.categoria_producto}
+                nombreDoc={datos.nombre}
+              />
+
+              <h3 style={S.sectionTitle}>
+                2. Detalle de Evidencias Encontradas
+              </h3>
+              <TablaHallazgos analisis={datos.analisis_ia || []} />
+            </div>
+          )}
 
           <footer style={S.footer}>
             <span>Generado automáticamente por NOPRO AI Platform</span>

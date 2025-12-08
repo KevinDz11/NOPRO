@@ -79,9 +79,8 @@ export default function HistorialProductos() {
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
-  // --- FUNCIÓN CORREGIDA: Abre en nueva pestaña ---
+  // --- FUNCIÓN INDIVIDUAL: Abre en nueva pestaña ---
   const handleVerReporte = (doc, grupo) => {
-    // 1. Preparamos el objeto completo con datos del producto padre
     const datosParaReporte = {
       ...doc,
       titulo_reporte: `Reporte de ${doc.nombre}`,
@@ -92,10 +91,41 @@ export default function HistorialProductos() {
       modelo_producto: grupo.modelo,
     };
 
-    // 2. Guardamos en localStorage (Esto es compartido entre pestañas del mismo dominio)
     localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
+    window.open("/resultados-analisis", "_blank");
+  };
 
-    // 3. CAMBIO CRÍTICO: Usar la ruta exacta definida en App.jsx
+  // --- FUNCIÓN GENERAL: Abre reporte unificado ---
+  const handleVerReporteGeneral = (grupo) => {
+    // 1. Filtrar solo los documentos que tienen análisis
+    const docsConAnalisis = grupo.documentos.filter(
+      (d) => d.analisis_ia && d.analisis_ia.length > 0
+    );
+
+    if (docsConAnalisis.length === 0) {
+      alert("Este grupo no tiene documentos analizados.");
+      return;
+    }
+
+    // 2. Construir objeto de reporte general
+    const datosGeneral = {
+      titulo_reporte: `Reporte General Unificado - ${grupo.marca}`,
+      tipo_vista: "general", // FLAG IMPORTANTE
+      categoria_producto: grupo.tipo,
+      marca_producto: grupo.marca,
+      modelo_producto: grupo.modelo,
+
+      // IDs para el PDF backend
+      ids_documentos: docsConAnalisis.map((d) => d.id_documento),
+
+      // Sub-reportes para la vista frontend
+      sub_reportes: docsConAnalisis.map((doc) => ({
+        titulo: doc.nombre,
+        data: doc,
+      })),
+    };
+
+    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosGeneral));
     window.open("/resultados-analisis", "_blank");
   };
 
@@ -259,57 +289,76 @@ export default function HistorialProductos() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {productosAgrupados.length > 0 ? (
-                  productosAgrupados.map((grupo, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-blue-50/30 transition-colors"
-                    >
-                      <td className="p-5 align-top text-center">
-                        <span
-                          className={`inline-flex w-12 h-12 rounded-full items-center justify-center text-xl shadow-sm ${
-                            grupo.tipo === "Laptop"
-                              ? "bg-blue-100"
-                              : "bg-purple-100"
-                          }`}
-                        >
-                          {grupo.tipo === "Laptop" ? "💻" : "📦"}
-                        </span>
-                        <div className="mt-2 font-bold text-slate-700 text-xs">
-                          {grupo.tipo}
-                        </div>
-                      </td>
-                      <td className="p-5 align-top">
-                        <div className="font-bold text-slate-700 text-lg">
-                          {grupo.marca}
-                        </div>
-                        <div className="text-sm text-slate-500">
-                          {grupo.modelo}
-                        </div>
-                      </td>
-                      <td className="p-5 align-top">
-                        <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                          {/* Pasamos onVerReporte al componente hijo */}
-                          <ListaDocumentos
-                            documentos={grupo.documentos}
-                            grupo={grupo}
-                            onVerReporte={handleVerReporte}
-                          />
-                        </div>
-                      </td>
-                      <td className="p-5 text-right text-slate-500 text-sm font-mono align-top">
-                        {formatearFecha(grupo.fecha)}
-                      </td>
-                      <td className="p-5 text-center align-top">
-                        <button
-                          onClick={() => handleEliminar(grupo)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                          title="Eliminar historial"
-                        >
-                          <span className="text-xl">🗑️</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  productosAgrupados.map((grupo, index) => {
+                    // Verificamos si hay al menos un análisis en el grupo
+                    const tieneAnalisis = grupo.documentos.some(
+                      (d) => d.analisis_ia && d.analisis_ia.length > 0
+                    );
+
+                    return (
+                      <tr
+                        key={index}
+                        className="hover:bg-blue-50/30 transition-colors"
+                      >
+                        <td className="p-5 align-top text-center">
+                          <span
+                            className={`inline-flex w-12 h-12 rounded-full items-center justify-center text-xl shadow-sm ${
+                              grupo.tipo === "Laptop"
+                                ? "bg-blue-100"
+                                : "bg-purple-100"
+                            }`}
+                          >
+                            {grupo.tipo === "Laptop" ? "💻" : "📦"}
+                          </span>
+                          <div className="mt-2 font-bold text-slate-700 text-xs">
+                            {grupo.tipo}
+                          </div>
+                        </td>
+                        <td className="p-5 align-top">
+                          <div className="font-bold text-slate-700 text-lg">
+                            {grupo.marca}
+                          </div>
+                          <div className="text-sm text-slate-500">
+                            {grupo.modelo}
+                          </div>
+                        </td>
+                        <td className="p-5 align-top">
+                          <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                            {/* Pasamos onVerReporte al componente hijo */}
+                            <ListaDocumentos
+                              documentos={grupo.documentos}
+                              grupo={grupo}
+                              onVerReporte={handleVerReporte}
+                            />
+                          </div>
+                        </td>
+                        <td className="p-5 text-right text-slate-500 text-sm font-mono align-top">
+                          {formatearFecha(grupo.fecha)}
+                        </td>
+                        <td className="p-5 text-center align-top">
+                          <div className="flex flex-col gap-2 items-center">
+                            {/* BOTÓN REPORTE GENERAL */}
+                            {tieneAnalisis && (
+                              <button
+                                onClick={() => handleVerReporteGeneral(grupo)}
+                                className="px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow hover:bg-indigo-700 transition-all w-full mb-2"
+                              >
+                                📑 Reporte General
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleEliminar(grupo)}
+                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                              title="Eliminar historial"
+                            >
+                              <span className="text-xl">🗑️</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="5" className="p-12 text-center text-slate-400">
