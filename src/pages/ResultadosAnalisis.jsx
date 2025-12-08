@@ -1,8 +1,165 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- ESTILOS MANUALES (PARA MANTENER LA VISTA PREVIA IGUAL) ---
+// --- BASE DE DATOS DE CRITERIOS (Copiada del Backend para validación visual) ---
+const CRITERIOS_POR_PRODUCTO = {
+  Laptop: {
+    Ficha: {
+      "NMX-I-60950-1-NYCE-2015": { "Seguridad eléctrica y desempeño": [] },
+      "NOM-008-SCFI-2002": { "Unidades y etiquetado comercial": [] },
+      "NOM-024-SCFI-2013": { "Información técnica y comercial": [] },
+    },
+    Manual: {
+      "NOM-019-SE-2021": {
+        "Marcado de seguridad": [],
+        "Especificaciones eléctricas": [],
+        "Advertencias visibles": [],
+      },
+      "NMX-I-60950-1-NYCE-2015": {
+        "Instrucciones de seguridad": [],
+        "Especificaciones técnicas": [],
+        Mantenimiento: [],
+      },
+      "NOM-008-SCFI-2002": {
+        "Composición y vida útil": [],
+        "Instrucciones de uso seguro": [],
+        "Limitaciones de modificación": [],
+        "Información de homologación": [],
+      },
+      "Información complementaria requerida": {
+        "Especificaciones técnicas": [],
+        "Condiciones de garantía": [],
+        "Instrucciones de uso y seguridad": [],
+      },
+    },
+    Etiqueta: {
+      "NOM-024-SCFI-2013": { "Información comercial": [] },
+    },
+  },
+  SmartTV: {
+    Ficha: {
+      "NOM-001-SCFI-2018": { "Seguridad eléctrica": [] },
+      "NMX-I-60065-NYCE-2015": { "Seguridad térmica y ventilación": [] },
+      "NMX-I-60950-1-NYCE-2015": {
+        "Conexión de periféricos": [],
+        "Seguridad en interfaces": [],
+      },
+      "NOM-032-ENER-2013": { "Eficiencia energética": [] },
+      "NOM-192-SCFI/SCT1-2013": {
+        "Conectividad inalámbrica": [],
+        "Advertencias RF": [],
+      },
+      "NMX-J-606-ANCE-2008": { "Componentes y fusibles": [] },
+      "NMX-J-640-ANCE-2010": {
+        "Identificación y etiquetas": [],
+        "Durabilidad de marcaje": [],
+      },
+      "NMX-J-551-ANCE-2012": {
+        "Cableado y alimentación": [],
+        "Recomendaciones de seguridad": [],
+      },
+    },
+    Manual: {
+      "NOM-001-SCFI-2018": {
+        "Seguridad eléctrica": [],
+        "Advertencias al usuario": [],
+        "Servicio y soporte": [],
+      },
+      "NMX-I-60065-NYCE-2015": {
+        "Seguridad térmica y ventilación": [],
+        "Conexión y operación segura": [],
+        "Mantenimiento preventivo": [],
+      },
+      "NMX-I-60950-1-NYCE-2015": {
+        "Conexión de periféricos": [],
+        "Seguridad en interfaces": [],
+        "Instrucciones generales": [],
+      },
+      "NOM-032-ENER-2013": {
+        "Eficiencia energética": [],
+        "Consejos al usuario": [],
+      },
+      "NOM-192-SCFI/SCT1-2013": {
+        "Conectividad inalámbrica": [],
+        "Advertencias RF": [],
+      },
+      "NMX-J-606-ANCE-2008": {
+        "Componentes y fusibles": [],
+        "Compatibilidad y accesorios": [],
+      },
+      "NMX-J-640-ANCE-2010": {
+        "Identificación y etiquetas": [],
+        "Durabilidad de marcaje": [],
+      },
+      "NMX-J-551-ANCE-2012": {
+        "Cableado y alimentación": [],
+        "Recomendaciones de seguridad": [],
+      },
+    },
+  },
+  Luminaria: {
+    Ficha: {
+      "NMX-J-038/1-ANCE-2005": {
+        "Verificación de desempeño y seguridad eléctrica": [],
+        "Condiciones térmicas y de tensión nacional": [],
+      },
+      "NOM-031-ENER-2019": {
+        "Eficacia luminosa (lm/w)": [],
+        "Factor de potencia y pérdidas": [],
+        "Flujo luminoso y distribución": [],
+        "Curvas fotométricas (.ies o .ldt)": [],
+        "Temperatura de color y CRI": [],
+      },
+      "NMX-J-507/2-ANCE-2013": {
+        "Parámetros eléctricos": [],
+        "Ciclos de encendido": [],
+      },
+      "NMX-J-543-ANCE-2013": {
+        "Ensayos eléctricos": [],
+        "Compatibilidad y vida útil": [],
+      },
+      "NMX-J-610/4-5-ANCE-2013": {
+        "Aislamiento eléctrico y térmico": [],
+        "Prueba de envejecimiento": [],
+        "Evaluación fotobiológica": [],
+        "Grado de protección IP": [],
+      },
+      "NOM-030-ENER-2016": { "Eficiencia energética y pérdidas totales": [] },
+      "NOM-024-ENER-2016": { "Compatibilidad y control inteligente": [] },
+    },
+    Manual: {
+      "NMX-J-507/2-ANCE-2013": {
+        "Métodos de prueba fotométricos": [],
+        "Instalación y montaje": [],
+        "Advertencias y mantenimiento": [],
+      },
+      "NMX-J-543-ANCE-2013": {
+        "Conectadores eléctricos": [],
+        "Seguridad eléctrica": [],
+        "Documentación de instalación": [],
+      },
+      "NMX-J-610/4-5-ANCE-2013": {
+        "Compatibilidad electromagnética (EMC)": [],
+        "Instalación del luminario eléctrico": [],
+      },
+      "NOM-030-ENER-2016": {
+        "Eficiencia energética lámparas LED integradas": [],
+        "Marcado e información del producto": [],
+        "Pruebas y procedimientos de conformidad": [],
+      },
+      "NOM-024-ENER-2016": {
+        "Instalación eficiente de luminarios exteriores": [],
+        "Mantenimiento y reemplazo": [],
+        "Advertencias de uso e instalación": [],
+      },
+      "Información complementaria requerida": {
+        "Especificaciones técnicas": [],
+      },
+    },
+  },
+};
+
 const S = {
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
@@ -21,11 +178,7 @@ const S = {
     paddingBottom: "20px",
     marginBottom: "30px",
   },
-  headerLeft: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
-  },
+  headerLeft: { display: "flex", flexDirection: "column", gap: "5px" },
   brandTitle: {
     fontSize: "10px",
     fontWeight: "bold",
@@ -49,11 +202,7 @@ const S = {
     color: "#2563eb",
     margin: "0",
   },
-  headerRight: {
-    textAlign: "right",
-    fontSize: "12px",
-    color: "#64748b",
-  },
+  headerRight: { textAlign: "right", fontSize: "12px", color: "#64748b" },
   summaryBox: {
     backgroundColor: "#f8fafc",
     border: "1px solid #e2e8f0",
@@ -80,11 +229,7 @@ const S = {
     textTransform: "uppercase",
     fontWeight: "bold",
   },
-  cardValue: {
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "#1e293b",
-  },
+  cardValue: { fontSize: "16px", fontWeight: "bold", color: "#1e293b" },
   sectionTitle: {
     fontSize: "18px",
     fontWeight: "bold",
@@ -104,11 +249,7 @@ const S = {
     backgroundColor: "#ffffff",
     pageBreakInside: "avoid",
   },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: "12px",
-  },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: "12px" },
   th: {
     backgroundColor: "#f1f5f9",
     color: "#475569",
@@ -153,9 +294,102 @@ const S = {
     fontSize: "10px",
     color: "#94a3b8",
   },
+  // Estilos Checklist
+  tdCheck: {
+    padding: "10px 15px",
+    borderBottom: "1px solid #e2e8f0",
+    verticalAlign: "middle",
+  },
+  statusBadge: {
+    display: "inline-block",
+    padding: "4px 8px",
+    borderRadius: "99px",
+    fontSize: "10px",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
+  statusOk: { backgroundColor: "#dcfce7", color: "#166534" },
+  statusFail: { backgroundColor: "#fee2e2", color: "#991b1b" },
 };
 
-// --- COMPONENTE TABLA (Maneja Texto e Imagen) ---
+// --- COMPONENTE CHECKLIST ---
+const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
+  // 1. Determinar Tipo de Doc (Ficha, Manual, Etiqueta) igual que en backend
+  let tipoDoc = "Ficha";
+  const nombre = nombreDoc ? nombreDoc.toLowerCase() : "";
+  if (nombre.includes("manual")) tipoDoc = "Manual";
+  else if (nombre.includes("etiqueta")) tipoDoc = "Etiqueta";
+
+  // 2. Mapear Categoría
+  const catMap = {
+    laptop: "Laptop",
+    smarttv: "SmartTV",
+    "smart tv": "SmartTV",
+    tv: "SmartTV",
+    luminaria: "Luminaria",
+  };
+  const categoriaClean =
+    catMap[categoria ? categoria.toLowerCase() : ""] || "Laptop";
+
+  // 3. Obtener Criterios
+  const criterios = CRITERIOS_POR_PRODUCTO[categoriaClean]?.[tipoDoc] || {};
+
+  // 4. Construir filas
+  const filas = [];
+  Object.entries(criterios).forEach(([norma, requisitos]) => {
+    Object.keys(requisitos).forEach((req) => {
+      // Buscar si cumple
+      const encontrado = analisis.some(
+        (item) => item.Norma === norma && item.Categoria === req
+      );
+      filas.push({ norma, requisito: req, cumple: encontrado });
+    });
+  });
+
+  if (filas.length === 0)
+    return (
+      <div style={{ ...S.card, marginBottom: 20 }}>
+        No hay criterios definidos para {categoriaClean} - {tipoDoc}
+      </div>
+    );
+
+  return (
+    <div style={S.tableContainer}>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
+            <th style={{ ...S.th, width: "50%" }}>Requisito Evaluado</th>
+            <th style={{ ...S.th, width: "20%", textAlign: "center" }}>
+              Estatus
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((fila, idx) => (
+            <tr key={idx}>
+              <td style={S.tdCheck}>
+                <strong>{fila.norma}</strong>
+              </td>
+              <td style={S.tdCheck}>{fila.requisito}</td>
+              <td style={{ ...S.tdCheck, textAlign: "center" }}>
+                <span
+                  style={{
+                    ...S.statusBadge,
+                    ...(fila.cumple ? S.statusOk : S.statusFail),
+                  }}
+                >
+                  {fila.cumple ? "✅ CUMPLE" : "❌ NO DETECTADO"}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const TablaHallazgos = ({ analisis }) => {
   if (!analisis || analisis.length === 0) {
     return (
@@ -187,7 +421,6 @@ const TablaHallazgos = ({ analisis }) => {
         </thead>
         <tbody>
           {analisis.map((item, index) => {
-            // --- BLOQUE ESPECIAL: SI HAY IMAGEN ---
             if (item.ImagenBase64) {
               return (
                 <tr key={index}>
@@ -216,23 +449,19 @@ const TablaHallazgos = ({ analisis }) => {
                             fontSize: "12px",
                           }}
                         >
-                          📸 EVIDENCIA VISUAL DEL ANÁLISIS
+                          📸 EVIDENCIA VISUAL
                         </span>
                       </div>
-
-                      {/* Imagen con borde y sombra */}
                       <img
                         src={`data:image/jpeg;base64,${item.ImagenBase64}`}
-                        alt="Evidencia Analizada"
+                        alt="Evidencia"
                         style={{
                           maxWidth: "90%",
-                          maxHeight: "600px",
+                          maxHeight: "400px",
                           border: "4px solid white",
-                          borderRadius: "4px",
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
                         }}
                       />
-
                       <p
                         style={{
                           fontSize: "11px",
@@ -248,15 +477,9 @@ const TablaHallazgos = ({ analisis }) => {
                 </tr>
               );
             }
-            // --------------------------------------
-
             const esVisual =
               item.Norma &&
-              (item.Norma.includes("Visual") ||
-                item.Norma.includes("Inspección Visual") ||
-                item.Norma.includes("Gráfica"));
-
-            // Colores dinámicos
+              (item.Norma.includes("Visual") || item.Norma.includes("Gráfica"));
             const colorNorma = esVisual ? "#9333ea" : "#1d4ed8";
             const bgContext = esVisual ? "#faf5ff" : "#fefce8";
             const borderContext = esVisual ? "#c084fc" : "#facc15";
@@ -321,10 +544,6 @@ function ResultadosAnalisis() {
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);
 
-  // Ref eliminado del botón pero mantenido para el contenedor si fuera necesario
-  // aunque ya no se usa para generar el PDF
-  const contentRef = useRef(null);
-
   useEffect(() => {
     const data = localStorage.getItem("ultimoAnalisis");
     if (data) {
@@ -332,53 +551,35 @@ function ResultadosAnalisis() {
     }
   }, []);
 
-  // --- NUEVA FUNCIÓN DE DESCARGA (CONECTADA AL BACKEND) ---
   const descargarPDF = async () => {
     if (generando) return;
     setGenerando(true);
-
     try {
-      // 1. Obtenemos el ID y el Token
       const idDocumento = datos.id_documento;
       const token = localStorage.getItem("authToken");
+      if (!idDocumento) throw new Error("ID no encontrado");
 
-      if (!idDocumento) {
-        alert("Error: No se encontró el ID del documento para descargar.");
-        setGenerando(false);
-        return;
-      }
-
-      // 2. Hacemos la petición al endpoint nuevo
-      // Ajusta la URL si tu backend no está en localhost:8000
       const response = await fetch(
         `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Error al generar el reporte en el servidor");
-      }
-
-      // 3. Convertimos la respuesta en un Blob (archivo binario)
+      if (!response.ok) throw new Error("Error en servidor");
       const blob = await response.blob();
-
-      // 4. Creamos un link invisible para forzar la descarga
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Reporte_Oficial_${datos.nombre || "Analisis"}.pdf`;
+      a.download = `Reporte_${datos.nombre || "Analisis"}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error descargando PDF:", error);
-      alert("Hubo un error al descargar el reporte oficial.");
+      console.error(error);
+      alert("Error al descargar PDF. Verifica tu sesión.");
     } finally {
       setGenerando(false);
     }
@@ -386,21 +587,12 @@ function ResultadosAnalisis() {
 
   if (!datos) return <div className="p-10 text-center">Cargando datos...</div>;
 
-  const esGeneral = datos.tipo_vista === "general";
-  const totalHallazgos = esGeneral
-    ? datos.sub_reportes.reduce(
-        (acc, curr) => acc + (curr.data.analisis_ia?.length || 0),
-        0
-      )
-    : datos.analisis_ia?.length || 0;
-
   return (
     <div className="min-h-screen bg-slate-50 relative">
-      {/* NAVBAR */}
       <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <img src={logo} alt="NOPRO" className="h-8" />
-          <span className="font-bold text-slate-700">Vista Previa</span>
+          <span className="font-bold text-slate-700">Reporte Digital</span>
         </div>
         <div className="flex gap-3">
           <button
@@ -412,20 +604,15 @@ function ResultadosAnalisis() {
           <button
             onClick={descargarPDF}
             disabled={generando}
-            className={`px-5 py-2 text-white font-bold rounded-lg text-sm shadow-lg transition-all ${
-              generando ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className="px-5 py-2 text-white font-bold rounded-lg text-sm bg-blue-600 hover:bg-blue-700 transition-all shadow-lg"
           >
-            {generando ? "Generando..." : "⬇ Descargar Reporte Oficial"}
+            {generando ? "Generando..." : "⬇ PDF Oficial"}
           </button>
         </div>
       </nav>
 
-      {/* CONTENEDOR PRINCIPAL */}
       <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-2xl">
-        {/* === ÁREA IMPRIMIBLE (SOLO VISUAL AHORA) === */}
-        <div ref={contentRef} style={S.container} id="pdf-content">
-          {/* HEADER */}
+        <div style={S.container}>
           <header style={S.header}>
             <div style={S.headerLeft}>
               <div style={S.brandTitle}>
@@ -436,12 +623,11 @@ function ResultadosAnalisis() {
                 />
                 Reporte Oficial
               </div>
-              <h1 style={S.mainTitle}>{datos.titulo_reporte}</h1>
-              <p style={S.subTitle}>
-                {esGeneral
-                  ? "Análisis Integral Multi-Documento"
-                  : "Análisis Automatizado por IA"}
-              </p>
+              <h1 style={S.mainTitle}>
+                Reporte{" "}
+                {datos.nombre?.includes("manual") ? "Manual" : "Ficha Técnica"}
+              </h1>
+              <p style={S.subTitle}>Análisis Automatizado por IA</p>
             </div>
             <div style={S.headerRight}>
               <p
@@ -451,29 +637,30 @@ function ResultadosAnalisis() {
                   color: "#334155",
                 }}
               >
-                {datos.marca_producto}
+                {datos.marca_producto || "Marca Desconocida"}
               </p>
-              <p>{datos.modelo_producto}</p>
+              <p>{datos.modelo_producto || "Modelo no esp."}</p>
               <p style={{ marginTop: "5px", textTransform: "uppercase" }}>
                 {new Date().toLocaleDateString()}
               </p>
             </div>
           </header>
 
-          {/* RESUMEN (GRID MANUAL) */}
           <section style={S.summaryBox}>
             <div style={S.card}>
               <p style={S.cardLabel}>Categoría</p>
-              <p style={S.cardValue}>{datos.categoria_producto}</p>
+              <p style={S.cardValue}>{datos.categoria_producto || "N/A"}</p>
             </div>
             <div style={S.card}>
-              <p style={S.cardLabel}>Tipo Reporte</p>
-              <p style={S.cardValue}>{esGeneral ? "Completo" : "Individual"}</p>
+              <p style={S.cardLabel}>Tipo Doc</p>
+              <p style={S.cardValue}>
+                {datos.nombre?.includes("manual") ? "Manual" : "Ficha"}
+              </p>
             </div>
             <div style={S.card}>
               <p style={S.cardLabel}>Hallazgos</p>
               <p style={{ ...S.cardValue, color: "#2563eb" }}>
-                {totalHallazgos}
+                {datos.analisis_ia?.length || 0}
               </p>
             </div>
             <div style={S.card}>
@@ -482,54 +669,17 @@ function ResultadosAnalisis() {
             </div>
           </section>
 
-          {/* CONTENIDO PRINCIPAL */}
-          {esGeneral ? (
-            <div>
-              {datos.sub_reportes.map((sub, idx) => (
-                <div
-                  key={idx}
-                  style={{ pageBreakInside: "avoid", marginBottom: "40px" }}
-                >
-                  <h3 style={S.sectionTitle}>
-                    <span
-                      style={{
-                        backgroundColor: "#1e293b",
-                        color: "white",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                      }}
-                    >
-                      {idx + 1}
-                    </span>
-                    Resultados: {sub.titulo}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: "#94a3b8",
-                      paddingLeft: "35px",
-                      marginBottom: "15px",
-                    }}
-                  >
-                    Archivo fuente: {sub.data.nombre || "N/A"}
-                  </p>
-                  <TablaHallazgos analisis={sub.data.analisis_ia} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div>
-              <h3 style={S.sectionTitle}>Detalle de Cumplimiento Normativo</h3>
-              <TablaHallazgos analisis={datos.analisis_ia} />
-            </div>
-          )}
+          {/* AQUÍ ESTÁ LA NUEVA SECCIÓN DE CHECKLIST */}
+          <h3 style={S.sectionTitle}>1. Checklist de Cumplimiento Normativo</h3>
+          <TablaChecklist
+            analisis={datos.analisis_ia || []}
+            categoria={datos.categoria_producto}
+            nombreDoc={datos.nombre}
+          />
 
-          {/* FOOTER */}
+          <h3 style={S.sectionTitle}>2. Detalle de Evidencias Encontradas</h3>
+          <TablaHallazgos analisis={datos.analisis_ia || []} />
+
           <footer style={S.footer}>
             <span>Generado automáticamente por NOPRO AI Platform</span>
             <span>Documento confidencial - Uso interno</span>
