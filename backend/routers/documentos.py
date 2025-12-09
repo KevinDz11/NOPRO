@@ -143,38 +143,44 @@ def descargar_reporte_general_pdf(
 ):
     ids = payload.ids_documentos
     if not ids:
-        raise HTTPException(status_code=400, detail="No se enviaron documentos")
+        raise HTTPException(status_code=400, detail="No se seleccionaron documentos para el reporte.")
 
     # Obtener documentos
     docs = db.query(models.Documento).filter(models.Documento.id_documento.in_(ids)).all()
     if not docs:
-        raise HTTPException(status_code=404, detail="No se encontraron los documentos")
+        raise HTTPException(status_code=404, detail="No se encontraron los documentos solicitados.")
 
-    # Datos del producto (tomamos del primero)
+    # Validación de seguridad: Pertenecen al usuario
+    if any(d.id_cliente != current_user.id_cliente for d in docs):
+         raise HTTPException(status_code=403, detail="No tiene permiso para acceder a uno o más documentos.")
+
+    # Datos del producto (tomamos del primero para el encabezado global)
     first_doc = docs[0]
     producto = db.query(models.Producto).filter(models.Producto.id_producto == first_doc.id_producto).first()
     
-    marca_prod = producto.marca if producto and producto.marca else "Genérico"
-    modelo_prod = producto.descripcion if producto and producto.descripcion else "Sin Modelo"
+    marca_prod = producto.marca if (producto and producto.marca) else "Marca no especificada"
+    modelo_prod = producto.descripcion if (producto and producto.descripcion) else "Modelo no especificado"
     categoria_prod = producto.nombre if producto else "Laptop"
     
-    # Mapa de categorías
+    # Mapa de categorías (Normalización)
     cat_map = {"laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", "luminaria": "Luminaria"}
     categoria_clean = cat_map.get(categoria_prod.lower(), "Laptop")
 
     # Preparar lista para el servicio PDF
     lista_para_pdf = []
     for d in docs:
-        if d.analisis_ia: # Solo incluir si tienen análisis
+        # Solo incluimos documentos que ya tengan análisis
+        if d.analisis_ia: 
             lista_para_pdf.append({
                 'doc': d,
                 'resultados': d.analisis_ia
             })
 
     if not lista_para_pdf:
-        raise HTTPException(status_code=400, detail="Ninguno de los documentos seleccionados tiene análisis IA")
+        raise HTTPException(status_code=400, detail="Ninguno de los documentos seleccionados ha sido analizado por la IA aún.")
 
     try:
+        # Llamada a la función corregida en pdf_report.py
         pdf_buffer = pdf_report.generar_pdf_reporte_general(
             lista_docs=lista_para_pdf,
             categoria_producto=categoria_clean,
@@ -183,11 +189,16 @@ def descargar_reporte_general_pdf(
         )
         
         filename = f"Reporte_General_{marca_prod}.pdf"
+        # Limpieza simple del nombre de archivo
+        filename = "".join([c for c in filename if c.isalnum() or c in (' ', '.', '_', '-')]).strip()
+        
         return StreamingResponse(
             pdf_buffer, 
             media_type="application/pdf", 
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
-        print(f"Error PDF General: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error generando PDF General: {e}")
+        import traceback
+        traceback.print_exc() # Esto ayudará a ver el error real en la consola del backend
+        raise HTTPException(status_code=500, detail="Ocurrió un error interno al generar el PDF unificado.")

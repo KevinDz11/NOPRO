@@ -61,7 +61,7 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
             <span className="text-xl">⏳</span>
             <div>
               <p className="text-orange-800 font-bold text-xs tracking-wider mb-1">
-                Proceso extenso
+                Proceso extenso.
               </p>
               <p className="text-orange-600 text-xs leading-relaxed">
                 Esto puede tardar hasta 5 minutos. Por favor,{" "}
@@ -298,7 +298,7 @@ export default function SubirArchivos() {
         mensajeUI = "Analizando documento extenso...";
       } else if (tipoArchivo === "etiqueta") {
         nombreUI = "Etiqueta";
-        mensajeUI = "Buscando logos NOM y advertencias...";
+        mensajeUI = "Buscando logos y simbologías...";
       }
 
       setLoadingType(nombreUI);
