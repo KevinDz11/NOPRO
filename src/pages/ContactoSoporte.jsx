@@ -211,13 +211,13 @@ export default function ContactoSoporte() {
               to="/perfil"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              PERFIL
+              Perfil
             </Link>
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL PRODUCTOS
+              Historial
             </Link>
 
             <li
@@ -228,7 +228,7 @@ export default function ContactoSoporte() {
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -260,9 +260,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="name"
-                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                    className="block text-xs font-bold text-slate-400 tracking-wider mb-1 ml-1"
                   >
-                    Nombre (Registrado)
+                    Nombre (registrado):
                   </label>
                   <input
                     type="text"
@@ -279,9 +279,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="email"
-                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                    className="block text-xs font-bold text-slate-400 tracking-wider mb-1 ml-1"
                   >
-                    Correo Electrónico (Registrado)
+                    Correo electrónico (registrado):
                   </label>
                   <input
                     type="email"
@@ -298,9 +298,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="subject"
-                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                    className="block text-xs font-bold text-slate-500 tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
                   >
-                    Asunto
+                    Asunto:
                   </label>
                   <input
                     type="text"
@@ -319,9 +319,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="message"
-                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                    className="block text-xs font-bold text-slate-500 tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
                   >
-                    Mensaje
+                    Mensaje:
                   </label>
                   <textarea
                     id="message"
@@ -339,12 +339,12 @@ export default function ContactoSoporte() {
                 {/* Mensajes de Estado */}
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                    ⚠️ {error}
+                    {error}
                   </div>
                 )}
                 {mensajeExito && (
                   <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in flex items-center justify-center gap-2">
-                    ✅ {mensajeExito}
+                    {mensajeExito}
                   </div>
                 )}
 
@@ -384,7 +384,7 @@ export default function ContactoSoporte() {
                       Enviando...
                     </span>
                   ) : (
-                    "Enviar Mensaje"
+                    "Enviar mensaje"
                   )}
                 </button>
               </form>
@@ -396,7 +396,7 @@ export default function ContactoSoporte() {
                 onClick={() => setMostrarTerminosModal(true)}
                 className="text-xs text-slate-400 hover:text-blue-600 underline transition-colors"
               >
-                Consultar Términos y Condiciones
+                Consultar términos y condiciones.
               </button>
             </div>
           </div>

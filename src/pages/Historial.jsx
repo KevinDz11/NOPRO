@@ -238,10 +238,10 @@ export default function HistorialProductos() {
           </Link>
           <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
             <Link to="/perfil" className="px-4 py-2 hover:text-blue-600">
-              PERFIL
+              Perfil
             </Link>
             <Link to="/soporte" className="px-4 py-2 hover:text-blue-600">
-              SOPORTE
+              Soporte
             </Link>
             <li
               onClick={() => {
@@ -250,7 +250,7 @@ export default function HistorialProductos() {
               }}
               className="ml-4 px-5 py-2 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white cursor-pointer transition-all"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -259,11 +259,11 @@ export default function HistorialProductos() {
       <main className="p-6 md:p-10 max-w-7xl mx-auto animate-fade-in-up">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
-            Historial de Análisis
+            Historial de análisis.
           </h1>
           <p className="text-slate-500">
-            Consulta tus documentos originales y los reportes generados por el
-            sistema.
+            Consulta tus documentos originales y los reportes generados por la
+            aplicación web.
           </p>
         </div>
 
@@ -278,12 +278,12 @@ export default function HistorialProductos() {
         ) : (
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+              <thead className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 ">
                 <tr>
                   <th className="p-5 text-center">Tipo</th>
-                  <th className="p-5">Marca & Modelo</th>
-                  <th className="p-5 w-1/3">Documentos y Reportes</th>
-                  <th className="p-5 text-right">Último Análisis</th>
+                  <th className="p-5">Marca y modelo</th>
+                  <th className="p-5 w-1/3">Documentos y reportes</th>
+                  <th className="p-5 text-right">Último análisis</th>
                   <th className="p-5 text-center">Acciones</th>
                 </tr>
               </thead>

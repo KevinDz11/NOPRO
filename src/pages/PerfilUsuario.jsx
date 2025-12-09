@@ -132,13 +132,13 @@ const PerfilUsuario = () => {
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL PRODUCTOS
+              Historial
             </Link>
             <Link
               to="/soporte"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              CONTACTAR SOPORTE
+              Contactar soporte
             </Link>
 
             <li
@@ -149,7 +149,7 @@ const PerfilUsuario = () => {
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -174,20 +174,20 @@ const PerfilUsuario = () => {
             {/* Sección Datos */}
             <div className="space-y-5">
               <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">
-                Información Personal
+                Información personal
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-                    Nombre
+                  <label className="block text-xs font-bold text-slate-400 mb-2">
+                    Nombre:
                   </label>
                   <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium select-all">
                     {nombre}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-                    Correo electrónico
+                  <label className="block text-xs font-bold text-slate-400 mb-2">
+                    Correo electrónico:
                   </label>
                   <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium select-all">
                     {correo}
@@ -211,7 +211,7 @@ const PerfilUsuario = () => {
             {/* Acciones */}
             <div className="pt-4">
               <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">
-                Gestión de Cuenta
+                Gestión de cuenta
               </h3>
 
               <div className="flex flex-col sm:flex-row gap-4">

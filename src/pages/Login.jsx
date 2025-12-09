@@ -93,7 +93,7 @@ export default function Login() {
           </div>
 
           <h2 className="text-3xl font-bold text-slate-800 mb-2">
-            ¡Bienvenido de nuevo!
+            ¡Bienvenido!
           </h2>
           <p className="text-slate-500 mb-8">
             Ingresa tus credenciales para acceder.
@@ -102,8 +102,8 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Input Correo */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
-                Correo Electrónico
+              <label className="text-xs font-bold text-slate-500 tracking-wider ml-1">
+                Correo electrónico:
               </label>
               <input
                 type="email"
@@ -117,8 +117,8 @@ export default function Login() {
 
             {/* Input Contraseña con Ojito */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
-                Contraseña
+              <label className="text-xs font-bold text-slate-500 tracking-wider ml-1">
+                Contraseña:
               </label>
               <div className="relative">
                 <input
@@ -224,7 +224,7 @@ export default function Login() {
                   Accediendo...
                 </span>
               ) : (
-                "Iniciar Sesión"
+                "Iniciar sesión"
               )}
             </button>
 
@@ -248,7 +248,7 @@ export default function Login() {
                 to="/registro"
                 className="text-blue-600 font-bold hover:underline"
               >
-                Regístrate aquí
+                Regístrate aquí.
               </Link>
             </p>
           </div>
@@ -261,11 +261,10 @@ export default function Login() {
 
           <div className="relative z-10 text-center max-w-sm">
             <h3 className="text-3xl font-extrabold mb-4 tracking-tight">
-              Bienvenido a NOPRO
+              Bienvenido a NOPRO.
             </h3>
             <p className="text-blue-100 text-lg leading-relaxed">
-              Tu plataforma inteligente para el análisis de cumplimiento
-              normativo.
+              Tu aplicación web para el análisis de cumplimiento normativo.
             </p>
           </div>
         </div>

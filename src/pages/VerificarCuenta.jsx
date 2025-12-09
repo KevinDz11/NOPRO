@@ -144,7 +144,7 @@ export default function VerificarCuenta() {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                ¡Verificación Exitosa!
+                ¡Verificación exitosa!
               </h3>
               <p className="text-slate-500 mb-6">
                 Tu cuenta ha sido activada. Redirigiendo...
@@ -165,14 +165,14 @@ export default function VerificarCuenta() {
             // --- VISTA DEL FORMULARIO (Original) ---
             <div className="animate-fade-in">
               <h3 className="text-2xl font-extrabold text-slate-900 mb-2">
-                Verificar Cuenta
+                Verificar cuenta.
               </h3>
               <p className="text-slate-500 text-sm mb-6 leading-relaxed">
                 Hemos enviado un código de verificación a tu correo electrónico.
               </p>
 
               <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
-                <p className="text-xs text-blue-500 uppercase font-bold mb-1">
+                <p className="text-xs text-blue-500 font-bold mb-1">
                   Enviado a:
                 </p>
                 <p className="text-slate-700 font-medium break-all">
@@ -183,8 +183,8 @@ export default function VerificarCuenta() {
               <div className="space-y-5">
                 {/* Input Código */}
                 <div className="group">
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
-                    Código de 6 dígitos
+                  <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                    Código de 6 dígitos.
                   </label>
                   <input
                     type="text"
@@ -209,7 +209,7 @@ export default function VerificarCuenta() {
                             : "bg-slate-300 cursor-not-allowed shadow-none"
                         }`}
                   >
-                    {cargando ? "Verificando..." : "Verificar Código"}
+                    {cargando ? "Verificando..." : "Verificar código"}
                   </button>
 
                   <button
@@ -226,7 +226,7 @@ export default function VerificarCuenta() {
                 {/* Mensajes de Estado */}
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                    ⚠️ {error}
+                    {error}
                   </div>
                 )}
 
@@ -249,10 +249,10 @@ export default function VerificarCuenta() {
             <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
               <span className="text-4xl">📩</span>
             </div>
-            <h3 className="text-2xl font-bold mb-3">Revisa tu bandeja</h3>
+            <h3 className="text-2xl font-bold mb-3">Revisa tu bandeja.</h3>
             <p className="text-slate-300 text-lg leading-relaxed">
-              Busca un correo de NOPRO con el asunto "Verifica tu cuenta". Si no
-              lo ves, revisa la carpeta de Spam.
+              Busca un correo de NOPRO con el asunto "Verifica tu cuenta en
+              NOPRO". Si no lo ves, revisa la carpeta de spam.
             </p>
           </div>
         </div>

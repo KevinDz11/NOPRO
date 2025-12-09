@@ -40,7 +40,7 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
         </div>
 
         <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
-          Analizando {tipo}
+          Analizando {tipo}.
         </h3>
         <p className="text-slate-500 text-sm font-medium mb-6">{mensaje}</p>
 
@@ -60,8 +60,8 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
           <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left animate-pulse">
             <span className="text-xl">⏳</span>
             <div>
-              <p className="text-orange-800 font-bold text-xs uppercase tracking-wider mb-1">
-                Proceso Extenso
+              <p className="text-orange-800 font-bold text-xs tracking-wider mb-1">
+                Proceso extenso
               </p>
               <p className="text-orange-600 text-xs leading-relaxed">
                 Esto puede tardar hasta 5 minutos. Por favor,{" "}
@@ -295,8 +295,7 @@ export default function SubirArchivos() {
 
       if (tipoArchivo === "manual") {
         nombreUI = "Manual";
-        mensajeUI =
-          "Analizando documento extenso (Seguridad y Mantenimiento)...";
+        mensajeUI = "Analizando documento extenso...";
       } else if (tipoArchivo === "etiqueta") {
         nombreUI = "Etiqueta";
         mensajeUI = "Buscando logos NOM y advertencias...";
@@ -495,7 +494,7 @@ export default function SubirArchivos() {
                   : `bg-gradient-to-r ${grad} text-white transform hover:scale-105`
               }`}
             >
-              {result ? "ANALIZADO" : "ANALIZAR"}
+              {result ? "Analizado" : "Analizar"}
             </button>
             {result && (
               <button
@@ -548,19 +547,19 @@ export default function SubirArchivos() {
               to="/perfil"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              PERFIL
+              Perfil
             </Link>
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL
+              Historial
             </Link>
             <Link
               to="/soporte"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              SOPORTE
+              Soporte
             </Link>
             <li
               onClick={() => {
@@ -570,7 +569,7 @@ export default function SubirArchivos() {
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -578,11 +577,11 @@ export default function SubirArchivos() {
 
       <main className="max-w-7xl mx-auto p-6 md:p-10 animate-fade-in-up">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wide mb-3">
-            Nueva Solicitud
+          <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold tracking-wide mb-3">
+            Nueva solicitud.
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
-            Subir Documentos para{" "}
+            Subir documentos para{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
               {producto}
             </span>
@@ -599,12 +598,12 @@ export default function SubirArchivos() {
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm font-extrabold">
               1
             </span>{" "}
-            Información del Producto
+            Información del producto.
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="group">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                Marca
+              <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2 ml-1">
+                Marca:
               </label>
               <input
                 type="text"
@@ -616,8 +615,8 @@ export default function SubirArchivos() {
               />
             </div>
             <div className="group">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                Modelo
+              <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2 ml-1">
+                Modelo:
               </label>
               <input
                 type="text"
@@ -635,14 +634,14 @@ export default function SubirArchivos() {
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-extrabold">
             2
           </span>{" "}
-          Carga y Análisis de Documentos
+          Carga y análisis de documentos.
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
           <RenderCard
             tipoKey="ficha"
-            titulo="Ficha Técnica"
-            desc="Especificaciones de voltaje y potencia."
+            titulo="Ficha técnica"
+            desc="Validación de especificaciones técnicas."
             color="blue"
             result={resultadoFicha}
             setFileFn={iniciarCarga}
@@ -651,7 +650,7 @@ export default function SubirArchivos() {
           <RenderCard
             tipoKey="manual"
             titulo="Manual"
-            desc="Instrucciones de seguridad."
+            desc="Verificación de contenido normativo."
             color="orange"
             result={resultadoManual}
             setFileFn={iniciarCarga}
@@ -660,7 +659,7 @@ export default function SubirArchivos() {
           <RenderCard
             tipoKey="etiqueta"
             titulo="Etiqueta"
-            desc="Detección de logos normativos."
+            desc="Identificación de simbología."
             color="purple"
             result={resultadoEtiqueta}
             setFileFn={iniciarCarga}
@@ -674,7 +673,7 @@ export default function SubirArchivos() {
               onClick={verReporteGeneral}
               className="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl hover:bg-slate-800 hover:scale-105 transition-all font-bold flex items-center gap-3 border border-slate-700 transform"
             >
-              <span className="text-xl">📊</span> Ver Reporte General Unificado
+              <span className="text-xl"></span> Ver reporte general unificado
             </button>
           </div>
         )}
