@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, TIMESTAMP, JSON
 from sqlalchemy.orm import relationship
-from .database import Base
+from database import Base
 from sqlalchemy.sql import func
 
 class Cliente(Base):
