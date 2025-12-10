@@ -7,8 +7,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-# Importaciones relativas para que auth.py pueda encontrar los otros módulos
-from . import crud, schemas, database, models
+import crud
+import schemas
+import database
+import models
+
 
 # --- Configuración de Seguridad ---
 SECRET_KEY = "080361" 
