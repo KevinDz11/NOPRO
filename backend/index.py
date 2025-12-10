@@ -22,7 +22,8 @@ app = FastAPI(title="Backend NOPRO")
 # Configuración de CORS para permitir solicitudes desde el frontend
 origins = [
     "http://localhost:5173",  # La dirección de tu frontend en desarrollo
-    "http://localhost:3000",  # Otra posible dirección si usas create-react-app
+    "http://localhost:3000",
+    "https://nopro-frontend.onrender.com",
 ]
 
 app.add_middleware(
