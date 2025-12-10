@@ -6,11 +6,10 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-
-import crud
-import schemas
-import database
-import models
+from backend import crud
+from backend import schemas
+from backend import database
+from backend import models
 
 
 # --- Configuración de Seguridad ---
