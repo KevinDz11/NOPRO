@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 // --- COMPONENTE LISTA DE DOCUMENTOS ---
 const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
   if (!documentos || documentos.length === 0) {
@@ -20,7 +22,7 @@ const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
         const nombreArchivo = doc.archivo_url
           ? doc.archivo_url.split(/[\\/]/).pop()
           : "archivo.dat";
-        const urlPublica = `http://localhost:8000/uploads/${nombreArchivo}`;
+        const urlPublica = `${API_URL}/uploads/${nombreArchivo}`;
 
         // Verificamos si tiene análisis para habilitar el botón
         const tieneAnalisis = doc.analisis_ia && doc.analisis_ia.length > 0;
@@ -167,7 +169,7 @@ export default function HistorialProductos() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/productos/me", {
+        const response = await fetch(`${API_URL}/productos/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -194,7 +196,7 @@ export default function HistorialProductos() {
     try {
       await Promise.all(
         grupo.ids_productos.map((id) =>
-          fetch(`http://localhost:8000/productos/${id}`, {
+          fetch(`${API_URL}/productos/${id}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           })
@@ -221,7 +223,7 @@ export default function HistorialProductos() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">

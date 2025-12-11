@@ -2,6 +2,8 @@ import { useState } from "react";
 import logo from "../assets/logo.PNG";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +38,7 @@ export default function Login() {
       formData.append("username", email);
       formData.append("password", password);
 
-      const response = await fetch("http://localhost:8000/login", {
+      const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         body: formData,
       });
@@ -71,7 +73,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Fondo Decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 -z-20"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-blue-50 to-indigo-100 -z-20"></div>
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
       <div
         className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
@@ -195,7 +197,7 @@ export default function Login() {
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 hover:shadow-blue-500/30 
                 ${
                   esFormularioValido() && !cargando
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
+                    ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
                     : "bg-slate-300 cursor-not-allowed shadow-none"
                 }`}
             >
@@ -255,7 +257,7 @@ export default function Login() {
         </div>
 
         {/* SECCIÓN DERECHA (Decorativa) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-blue-600 to-indigo-900 p-12 text-white items-center justify-center relative overflow-hidden">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-blue-600 to-indigo-900 p-12 text-white items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/gplay.png')] opacity-10"></div>
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
 

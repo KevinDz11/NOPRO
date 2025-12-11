@@ -2,6 +2,8 @@ import { useState } from "react";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function NuevaContrasena() {
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -23,7 +25,7 @@ export default function NuevaContrasena() {
     setCargando(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/solicitar-reset-password",
+        `${API_URL}/clientes/solicitar-reset-password`,
         {
           method: "POST",
           headers: {
@@ -110,7 +112,7 @@ export default function NuevaContrasena() {
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                 ${
                   esCorreoValido(email) && !cargando
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                    ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                     : "bg-slate-300 cursor-not-allowed shadow-none"
                 }`}
             >
@@ -158,7 +160,7 @@ export default function NuevaContrasena() {
         </div>
 
         {/* DERECHA (Panel informativo) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-20 rounded-full blur-3xl"></div>
 

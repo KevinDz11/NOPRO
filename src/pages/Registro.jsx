@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function Registro() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
@@ -79,7 +81,7 @@ export default function Registro() {
     }
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/clientes/", {
+      const response = await fetch(`${API_URL}/clientes/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre, email: correo, contrasena }),
@@ -321,7 +323,7 @@ export default function Registro() {
               className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1
               ${
                 formularioValido && !cargando
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30"
+                  ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30"
                   : "bg-slate-300 cursor-not-allowed shadow-none"
               }`}
             >
@@ -342,7 +344,7 @@ export default function Registro() {
 
         {/* SECCIÓN DERECHA (Decorativa) - Oculta en móvil para ahorrar espacio vertical */}
         <div className="hidden md:flex w-1/2 bg-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black opacity-90"></div>
+          <div className="absolute inset-0 bg-linear-to-br from-slate-800 to-black opacity-90"></div>
           <div className="relative z-10 text-center">
             <h2 className="text-3xl font-bold mb-4">
               Únete a la aplicación web.

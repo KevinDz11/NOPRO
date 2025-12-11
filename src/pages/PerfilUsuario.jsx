@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const PerfilUsuario = () => {
   useAuthListener();
 
@@ -31,7 +33,7 @@ const PerfilUsuario = () => {
         return;
       }
       try {
-        const response = await fetch("http://localhost:8000/clientes/me", {
+        const response = await fetch(`${API_URL}/clientes/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.status === 401) {
@@ -70,7 +72,7 @@ const PerfilUsuario = () => {
     setCargando(true);
     try {
       // Nota: Asegúrate de que en tu backend la ruta /me esté ANTES que /{id}
-      const response = await fetch("http://localhost:8000/clientes/me", {
+      const response = await fetch(`${API_URL}/clientes/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -107,7 +109,7 @@ const PerfilUsuario = () => {
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Fondo Decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/50 -z-10"></div>
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
 
       {/* NAVBAR MODERNO */}
@@ -159,7 +161,7 @@ const PerfilUsuario = () => {
       <main className="p-4 md:p-10 max-w-3xl mx-auto animate-fade-in-up">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
           {/* Cabecera de Perfil Visual */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-10 text-center relative overflow-hidden">
+          <div className="bg-linear-to-r from-slate-800 to-slate-900 p-10 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
             <div className="relative z-10">
               <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl shadow-lg ring-4 ring-white/20">
@@ -286,7 +288,7 @@ const PerfilUsuario = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 transition-all duration-300">
           <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full animate-bounce-in border border-white/50 text-center relative overflow-hidden">
             {/* Confeti decorativo de fondo */}
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-green-50 to-transparent -z-10"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-green-50 to-transparent -z-10"></div>
 
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-green-50">
               <span className="text-4xl animate-pulse">👋</span>
