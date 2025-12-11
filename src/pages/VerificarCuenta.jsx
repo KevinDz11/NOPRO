@@ -79,13 +79,16 @@ export default function VerificarCuenta() {
 
     setCargandoReenvio(true);
     try {
-      const response = await fetch(`${API_URL}/clientes/reenvio-verificacion`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: correo }),
-      });
+      const response = await fetch(
+        `${API_URL}/clientes/reenviar-verificacion`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: correo }),
+        }
+      );
 
       const data = await response.json();
 
