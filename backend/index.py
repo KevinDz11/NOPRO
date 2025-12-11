@@ -23,12 +23,12 @@ app = FastAPI(title="Backend NOPRO")
 origins = [
     "http://localhost:5173",  # La dirección de tu frontend en desarrollo
     "http://localhost:3000",
-    "https://nopro-frontend.onrender.com",
+    "https://nopro-frontend.onrender.com"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
