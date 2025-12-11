@@ -1,15 +1,20 @@
 import os
 import resend
-from fastapi import APIRouter, status, BackgroundTasks
+from fastapi import APIRouter, status, BackgroundTasks, HTTPException
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/soporte", tags=["Soporte"])
 
-# Configuración
+# Configuración Resend
 resend.api_key = os.getenv("RESEND_API_KEY")
+
+# Correo desde donde sale el email (Resend)
 MAIL_FROM = "onboarding@resend.dev"
-# A este correo le llegarán las quejas (debe ser el tuyo)
-ADMIN_EMAIL = os.getenv("MAIL_USERNAME") 
+
+# Correo al que llegan las quejas (Admin)
+# Nota: En PedroCr se usa MAIL_FROM como admin por defecto si no existe MAIL_USERNAME.
+# Aquí usamos MAIL_USERNAME que definiste en tu .env
+ADMIN_EMAIL = os.getenv("MAIL_USERNAME", "sistema.nopro@gmail.com")
 
 class SupportRequest(BaseModel):
     name: str
@@ -19,21 +24,24 @@ class SupportRequest(BaseModel):
 
 def enviar_soporte_background(request: SupportRequest):
     try:
+        # Formato de cuerpo igual o mejorado para claridad
         cuerpo = f"""
-        NUEVO MENSAJE DE SOPORTE
-        ------------------------
-        De: {request.name} ({request.email})
+        Nuevo mensaje de soporte de NOPRO:
+
+        De: {request.name}
+        Email: {request.email}
         Asunto: {request.subject}
-        
-        MENSAJE:
+
+        Mensaje:
         {request.message}
         """
+        
         resend.Emails.send({
             "from": f"Soporte Web <{MAIL_FROM}>",
             "to": [ADMIN_EMAIL],
-            "subject": f"[Soporte] {request.subject}",
+            "subject": f"Soporte NOPRO: {request.subject}", # Asunto igualado a PedroCr
             "text": cuerpo,
-            "reply_to": request.email # Al responder, le respondes al cliente
+            "reply_to": request.email # Importante: permite al admin responder directo al cliente
         })
         print(f"Soporte enviado de {request.email}")
     except Exception as e:
@@ -44,5 +52,7 @@ async def enviar_mensaje_soporte(
     request: SupportRequest,
     background_tasks: BackgroundTasks
 ):
+    # Usamos background tasks igual que PedroCr
     background_tasks.add_task(enviar_soporte_background, request)
-    return {"mensaje": "Mensaje enviado."}
+    # Mensaje de retorno igualado
+    return {"mensaje": "Mensaje enviado correctamente. Nos pondremos en contacto contigo pronto."}
