@@ -1,4 +1,5 @@
 import os
+import shutil  # <--- IMPORTANTE: Necesario para guardar sin saturar la RAM
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -10,8 +11,10 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/documentos", tags=["Documentos"])
 
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Configuración robusta de la ruta para Render
+# Esto asegura que la carpeta 'uploads' esté dentro de 'backend' sin importar desde dónde se ejecute
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # Sube un nivel desde 'routers' a 'backend'
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
 # Schema para el reporte general
 class ReporteGeneralRequest(BaseModel):
@@ -30,20 +33,35 @@ def subir_y_analizar(
     current_user: models.Cliente = Depends(auth.get_current_user)
 ):
     try:
+        # 1. Crear directorio si no existe (Vital para Render/Sistemas Efímeros)
+        if not os.path.exists(UPLOAD_DIR):
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            print(f"Directorio creado en: {UPLOAD_DIR}")
+
         id_cliente = current_user.id_cliente
-        file_path = os.path.join(UPLOAD_DIR, archivo.filename)
-        with open(file_path, "wb") as f:
-            f.write(archivo.file.read())
+        
+        # Limpiar el nombre del archivo para evitar errores de ruta
+        filename_clean = os.path.basename(archivo.filename)
+        file_path = os.path.join(UPLOAD_DIR, filename_clean)
+        
+        # 2. GUARDAR USANDO SHUTIL (Esto evita el error de conexión por memoria llena)
+        # En lugar de leer todo a la RAM con archivo.file.read(), lo copiamos directo al disco.
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(archivo.file, buffer)
+            
+        print(f"Archivo guardado exitosamente en: {file_path}")
 
         documento_data = schemas.DocumentoCreate(
             id_cliente=id_cliente,
             id_producto=id_producto,
             nombre=nombre
         )
+        # Guardar referencia en DB
         doc_db = crud.create_documento(db, documento_data, archivo_url=file_path)
 
         resultados_ia = []
-        if analizar and archivo.filename.lower().endswith(".pdf"):
+        # Verificar que el archivo realmente existe antes de enviarlo a la IA
+        if analizar and archivo.filename.lower().endswith(".pdf") and os.path.exists(file_path):
             cat_map = {"laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV", "luminaria": "Luminaria"}
             categoria_clean = cat_map.get(categoria.lower(), "Laptop")
 
@@ -53,21 +71,27 @@ def subir_y_analizar(
 
             print(f"Analizando: {categoria_clean} - {tipo_clean}...")
             
-            resultados_ia = ia_analisis.analizar_documento(
-                file_path, tipo_clean, categoria_clean, marca_esperada=marca
-            )
+            try:
+                resultados_ia = ia_analisis.analizar_documento(
+                    file_path, tipo_clean, categoria_clean, marca_esperada=marca
+                )
 
-            if resultados_ia:
-                crud.update_documento_analisis(db, doc_db.id_documento, resultados_ia)
-                doc_db.analisis_ia = resultados_ia
+                if resultados_ia:
+                    crud.update_documento_analisis(db, doc_db.id_documento, resultados_ia)
+                    doc_db.analisis_ia = resultados_ia
+            except Exception as ia_error:
+                print(f"Error durante el análisis de IA (pero el archivo se subió): {ia_error}")
+                # No lanzamos error para no cancelar la subida, pero podrías manejarlo según tu lógica
 
         return doc_db
 
     except Exception as e:
-        print(f"Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        print(f"Error CRÍTICO subiendo archivo: {e}")
+        import traceback
+        traceback.print_exc() # Imprimir el error completo en los logs de Render
+        raise HTTPException(status_code=500, detail=f"Error al procesar el archivo: {str(e)}")
 
-# --- CAMBIO IMPORTANTE: response_model con análisis incluido para el Historial ---
+# --- ENDPOINT LISTAR ---
 @router.get("/", response_model=list[schemas.DocumentoAnalisisOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
@@ -134,7 +158,7 @@ def descargar_reporte_pdf(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando el PDF: {str(e)}")
 
-# --- NUEVO ENDPOINT PARA PDF GENERAL ---
+# --- REPORTE GENERAL ---
 @router.post("/reporte-general-pdf")
 def descargar_reporte_general_pdf(
     payload: ReporteGeneralRequest,
@@ -180,7 +204,7 @@ def descargar_reporte_general_pdf(
         raise HTTPException(status_code=400, detail="Ninguno de los documentos seleccionados ha sido analizado por la IA aún.")
 
     try:
-        # Llamada a la función corregida en pdf_report.py
+        # Llamada a la función en pdf_report.py
         pdf_buffer = pdf_report.generar_pdf_reporte_general(
             lista_docs=lista_para_pdf,
             categoria_producto=categoria_clean,
@@ -200,5 +224,5 @@ def descargar_reporte_general_pdf(
     except Exception as e:
         print(f"Error generando PDF General: {e}")
         import traceback
-        traceback.print_exc() # Esto ayudará a ver el error real en la consola del backend
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Ocurrió un error interno al generar el PDF unificado.")
