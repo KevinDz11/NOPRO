@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 // --- BASE DE DATOS DE CRITERIOS (Copiada del Backend para validación visual) ---
 const CRITERIOS_POR_PRODUCTO = {
   Laptop: {
@@ -590,21 +591,18 @@ function ResultadosAnalisis() {
       let response;
 
       if (esGeneral) {
-        response = await fetch(
-          "http://localhost:8000/documentos/reporte-general-pdf",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
-          }
-        );
+        response = await fetch(`${API_URL}/documentos/reporte-general-pdf`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
+        });
       } else {
         const idDocumento = datos.id_documento;
         response = await fetch(
-          `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
+          `${API_URL}/documentos/${idDocumento}/reporte-pdf`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
