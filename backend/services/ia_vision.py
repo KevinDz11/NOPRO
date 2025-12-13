@@ -14,80 +14,123 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best.pt")
 
-# --- VARIABLE GLOBAL PARA LAZY LOADING ---
-_model_instance = None
-
-def get_model():
-    """Carga el modelo YOLO solo cuando se necesita."""
-    global _model_instance
-    if _model_instance is None:
-        try:
-            print(f"🔄 Intentando cargar modelo desde: {MODEL_PATH}")
-            _model_instance = YOLO(MODEL_PATH)
-            print("✅ Modelo 'best.pt' cargado exitosamente.")
-        except Exception as e:
-            print(f"⚠️ Error cargando 'best.pt', usando fallback: {e}")
-            _model_instance = YOLO("yolov8n.pt")
-    return _model_instance
-
 # --- CONFIGURACIÓN DE COLORES ---
 COLOR_MAP = {
-    "Samsung": "#1d4ed8", "LG": "#c50f46", "Sony": "#000000", "Brand": "#1d4ed8",
-    "NOM": "#16a34a", "NOM-CE": "#16a34a", "Energy Star": "#eab308", "UL": "#dc2626",
-    "basura": "#f97316", "choque": "#dc2626", "choque electr": "#dc2626",
-    "doble aislamiento": "#9333ea", "reciclaje": "#22c55e",
+    "Samsung": "#1d4ed8",
+    "LG": "#c50f46",
+    "Sony": "#000000",
+    "Brand": "#1d4ed8",
+    "NOM": "#16a34a",
+    "NOM-CE": "#16a34a",
+    "Energy Star": "#eab308",
+    "UL": "#dc2626",
+    "basura": "#f97316",
+    "choque": "#dc2626",
+    "choque electr": "#dc2626",
+    "doble aislamiento": "#9333ea",
+    "reciclaje": "#22c55e",
 }
 
 def get_color_for_label(label):
-    """Devuelve un color específico o uno aleatorio basado en el nombre."""
     for key, color in COLOR_MAP.items():
         if key.lower() in label.lower():
             return color
+
     random.seed(label)
-    return f"#{random.randint(50, 200):02x}{random.randint(50, 200):02x}{random.randint(50, 200):02x}"
+    r = random.randint(50, 200)
+    g = random.randint(50, 200)
+    b = random.randint(50, 200)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
-# Configurar Credenciales Google si existen
-json_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-if json_path and not os.path.isabs(json_path):
-    possible_path = os.path.join(BASE_DIR, os.path.basename(json_path))
-    if os.path.exists(possible_path):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = possible_path
 
+# ---------------------------
+#    THRESHOLDS POR CLASE
+# ---------------------------
+THRESHOLDS = {
+    "NOM": 0.45,
+    "NOM-CE": 0.50,
+    "NOM-EAC": 0.40,
+    "NOM-NYCE": 0.45,
+    "NOM-UL": 0.30,  
+    "NOM-ANCE": 0.55,
+    "choque electr": 0.45,
+    "doble aislamiento": 0.40,
+    "cont. especial": 0.50,
+    "alto voltaje": 0.20,  
+}
+
+# ---------------------------
+#      Cargar Modelo YOLO
+# ---------------------------
+try:
+    print(f"🔄 Intentando cargar modelo desde: {MODEL_PATH}")
+    model = YOLO(MODEL_PATH)
+    print("✅ Modelo 'best.pt' cargado exitosamente.")
+except Exception as e:
+    print(f"⚠️ Error cargando 'best.pt', usando fallback: {e}")
+    model = YOLO("yolov8n.pt")
+
+
+# ---------------------------
+#    Google Vision Logos
+# ---------------------------
 def consultar_google_vision_avanzado(pil_image):
     detecciones = []
     nombres_simples = []
-    try:
-        # Si no hay credenciales, saltamos para evitar error
-        if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-            # Opcional: imprimir warning solo una vez
-            return [], []
 
+    try:
         img_byte_arr = io.BytesIO()
         pil_image.save(img_byte_arr, format='PNG')
         content = img_byte_arr.getvalue()
-        
+
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=content)
+
         response = client.logo_detection(image=image)
-        
+
         for logo in response.logo_annotations:
+            desc = logo.description
+            score = logo.score
+
             vertices = logo.bounding_poly.vertices
             if vertices:
                 x_coords = [v.x for v in vertices]
                 y_coords = [v.y for v in vertices]
+                x1, y1 = min(x_coords), min(y_coords)
+                x2, y2 = max(x_coords), max(y_coords)
+
                 detecciones.append({
-                    "label": logo.description,
-                    "score": logo.score,
-                    "box": [min(x_coords), min(y_coords), max(x_coords), max(y_coords)],
+                    "label": desc,
+                    "score": score,
+                    "box": [x1, y1, x2, y2],
                     "source": "Google"
                 })
-            nombres_simples.append(f"{logo.description} ({logo.score:.2f})")
-            
+
+            nombres_simples.append(f"{desc} ({score:.2f})")
+
         return detecciones, nombres_simples
+
     except Exception as e:
         print(f"❌ Error Google Vision: {e}")
         return [], []
 
+
+# ---------------------------
+#    APLICAR UMBRAL POR CLASE
+# ---------------------------
+def pasa_threshold(label, score):
+    # Si la clase está configurada
+    for key in THRESHOLDS:
+        if key.lower() in label.lower():
+            return score >= THRESHOLDS[key]
+
+    # Si la clase no está en el diccionario, usar 0.45 por defecto
+    return score >= 0.45
+
+
+# ---------------------------
+#      ANALIZAR PDF
+# ---------------------------
 def analizar_imagen_pdf(ruta_pdf):
     resultados = {
         "yolo_detections": [],
@@ -98,51 +141,61 @@ def analizar_imagen_pdf(ruta_pdf):
 
     try:
         print(f"📸 Procesando imagen del PDF: {os.path.basename(ruta_pdf)}")
-        
+
         # 1. Leer PDF
         doc = fitz.open(ruta_pdf)
-        if len(doc) < 1: return resultados
         page = doc.load_page(0)
-        pix = page.get_pixmap(dpi=200) 
+        pix = page.get_pixmap(dpi=200)
         doc.close()
-        
+
         # 2. Convertir a PIL
-        mode = "RGBA" if pix.alpha else "RGB"
-        img_data = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, len(mode)))
-        pil_image = Image.fromarray(img_data, mode).convert("RGB")
+        if pix.alpha:
+            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 4))
+            pil_image = Image.fromarray(img[:, :, :3], 'RGB')
+        else:
+            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 3))
+            pil_image = Image.fromarray(img, 'RGB')
 
         objetos_a_dibujar = []
 
-        # 3. Detección YOLO (USANDO LAZY LOADING)
-        model = get_model() # <--- Aquí se carga el modelo
-        results = model(pil_image, verbose=False)
+        # -------------------------------
+        # 3. YOLO - DETECCIÓN INTERNA
+        # -------------------------------
+        results = model(pil_image, conf=0.10, verbose=False)  # conf bajo para permitir thresholds por clase
         yolo_nombres = []
-        
+
         if results and results[0].boxes:
             for box in results[0].boxes:
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
                 cls_id = int(box.cls[0])
-                name = model.names[cls_id]
-                conf = float(box.conf[0])
-                
-                # Filtro simple de confianza
-                if conf > 0.4:
-                    yolo_nombres.append(name)
-                    objetos_a_dibujar.append({
-                        "label": name,
-                        "score": conf,
-                        "box": [x1, y1, x2, y2],
-                        "source": "YOLO"
-                    })
-        
+                label = model.names[cls_id]
+                score = float(box.conf[0])
+
+                # ✔ Aplicar threshold específico por clase
+                if not pasa_threshold(label, score):
+                    continue
+
+                yolo_nombres.append(f"{label} ({score:.2f})")
+
+                objetos_a_dibujar.append({
+                    "label": label,
+                    "score": score,
+                    "box": [x1, y1, x2, y2],
+                    "source": "YOLO"
+                })
+
         resultados["yolo_detections"] = yolo_nombres
 
-        # 4. Detección Google
+        # -------------------------------
+        # 4. GOOGLE VISION
+        # -------------------------------
         google_objs, google_nombres = consultar_google_vision_avanzado(pil_image)
         objetos_a_dibujar.extend(google_objs)
         resultados["google_detections"] = google_nombres
 
-        # 5. DIBUJAR TODO
+        # -------------------------------
+        # 5. DIBUJAR TODAS LAS CAJAS
+        # -------------------------------
         draw = ImageDraw.Draw(pil_image)
         try:
             font = ImageFont.truetype("arial.ttf", 30)
@@ -153,24 +206,30 @@ def analizar_imagen_pdf(ruta_pdf):
             label = obj["label"]
             score = obj["score"]
             box = obj["box"]
-            color = get_color_for_label(label)
-            
-            # Caja
-            draw.rectangle(box, outline=color, width=5)
-            
-            # Etiqueta
-            text = f"{label} {score:.2f}"
-            bbox = draw.textbbox((box[0], box[1]), text, font=font)
-            text_y = box[1] - 35 if box[1] > 35 else box[1]
-            
-            draw.rectangle([bbox[0]-5, text_y, bbox[2]+5, text_y+35], fill=color)
-            draw.text((bbox[0], text_y), text, fill="white", font=font)
 
-        # 6. Base64
+            color = get_color_for_label(label)
+
+            draw.rectangle(box, outline=color, width=5)
+            text = f"{label} {score:.2f}"
+
+            text_bbox = draw.textbbox((box[0], box[1]), text, font=font)
+            text_y = box[1] - 35 if box[1] > 35 else box[1]
+
+            draw.rectangle([text_bbox[0]-5, text_y, text_bbox[2]+5, text_y+35], fill=color)
+            draw.text((text_bbox[0], text_y), text, fill="white", font=font)
+
+        # -------------------------------
+        # 6. Base64 Output
+        # -------------------------------
+        base_width = 800
+        if pil_image.width > base_width:
+            w_percent = (base_width / float(pil_image.width))
+            h_size = int(pil_image.height * w_percent)
+            pil_image = pil_image.resize((base_width, h_size), Image.LANCZOS)
+
         buffered = io.BytesIO()
         pil_image.save(buffered, format="JPEG", quality=85)
-        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        resultados["image_base64"] = img_str
+        resultados["image_base64"] = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
         return resultados
 
