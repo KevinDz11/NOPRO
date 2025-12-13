@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 
 # --- 1. SCHEMAS DE RESULTADOS IA Y DOCUMENTOS ---
@@ -24,7 +24,8 @@ class DocumentoOut(BaseModel):
     id_documento: int
     nombre: str
     archivo_url: str
-    
+    analisis_ia: List[Any] = []  # 🔥 OBLIGATORIO
+
     class Config:
         from_attributes = True
 
@@ -80,3 +81,24 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+    
+class DocumentoBasicoOut(BaseModel):
+    id_documento: int
+    nombre: str
+    archivo_url: str
+
+    class Config:
+        from_attributes = True
+
+
+class DocumentoMeOut(BaseModel):
+    id_documento: int
+    nombre: str
+    archivo_url: str
+    analisis_ia: List[dict] = []   # 🔥 JAMÁS None
+
+    class Config:
+        from_attributes = True
+
+
+

@@ -33,17 +33,26 @@ CRITERIOS_POR_PRODUCTO = {
         "Ficha": {
 
             # ================= NOM-001 =====================
-            "NOM-001-SCFI-2018": {
+           "NOM-001-SCFI-2018": {
+    "Seguridad eléctrica": [
+        r"voltaje (nominal|de entrada).{0,10}\d+ ?v",
+        r"frecuencia.{0,10}(50|60) ?hz",
+        r"corriente.{0,10}\d+ ?a",
+        r"potencia.{0,10}\d+ ?w",
+        r"consumo el[eé]ctrico",
+        r"clase de protecci[oó]n",
+        r"aislamiento (clase i|clase ii|doble aislamiento)"
+    ]
+},
+           "NOM-019-SE-2021": {
+    "Marcado de seguridad": [
+        r"doble aislamiento",
+        r"s[ií]mbolo de tierra",
+        r"marcado ce",
+        r"riesgo el[eé]ctrico"
+    ]
+},
 
-                "Seguridad eléctrica": [
-                    r"voltaje\s*[:=]?\s*\d{2,3}\s*[-–]?\s*\d{2,3}?\s*v",
-                    r"frecuencia\s*[:=]?\s*\d{2,3}\s*(/|-)?\s*\d{2,3}?\s*hz",
-                    r"corriente\s*[:=]?\s*\d+(\.\d+)?\s*a",
-                    r"potencia\s*[:=]?\s*\d+(\.\d+)?\s*w",
-                    r"consumo\s*(eléctrico|de energía)\s*[:=]?\s*\d+(\.\d+)?\s*w",
-                    r"voltaje\s+de\s+entrada"
-                ]
-            },
 
             # ================= NOM-008 =====================
             "NOM-008-SCFI-2002": {
@@ -134,6 +143,17 @@ CRITERIOS_POR_PRODUCTO = {
                 ]
             }
         },
+        "NOM-024-SCFI-2013": {
+    "Información al consumidor": [
+        r"fabricante|importador",
+        r"raz[oó]n social",
+        r"domicilio",
+        r"manual de usuario",
+        r"condiciones de uso",
+        r"garant[ií]a"
+    ]
+},
+
         
         "Etiqueta": {
 
@@ -162,12 +182,12 @@ CRITERIOS_POR_PRODUCTO = {
 
     # ================= NOM-106 =====================
     "NOM-106-SCFI-2000": {
-        "Contraseña oficial NOM": [
-            r"\bnom\b",
-            r"contrase[nñ]a\s+oficial",
-            r"sello\s+nom"
-        ]
-    },
+    "Contraseña oficial NOM": [
+        r"logotipo nom",
+        r"sello nom",
+        r"contrase[ñn]a oficial"
+    ]
+},
 
     # ================= NOM-024 =====================
     "NOM-024-SCFI-2013": {
@@ -375,7 +395,7 @@ CRITERIOS_POR_PRODUCTO = {
 
     "NOM-106-SCFI-2000": {
         "Contraseña oficial": [
-            r"\bNOM\b",
+            r"\bnom\b",
             r"contrase[nñ]a\s+oficial"
         ]
     },
@@ -385,8 +405,8 @@ CRITERIOS_POR_PRODUCTO = {
             r"doble\s+aislamiento",
             r"clase\s+i",
             r"riesgo\s+el[eé]ctrico",
-            r"CE\b",
-            r"UL\b"
+            r"ce\b",
+            r"ul\b"
         ]
     },
 
@@ -400,8 +420,8 @@ CRITERIOS_POR_PRODUCTO = {
 
     "NOM-208-SCFI-2016": {
         "Telecomunicaciones": [
-            r"NYCE\b",
-            r"IFT\b",
+            r"nyce\b",
+            r"ift\b",
             r"identificaci[oó]n\s+de\s+la\s+norma"
         ]
     },

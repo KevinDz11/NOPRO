@@ -1,12 +1,15 @@
 import os
+from typing import List
+
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-# Importamos auth y models para el nuevo endpoint
-from backend import crud, schemas, database, auth, models 
+from typing import List, Optional
+from pydantic import BaseModel
+
+from backend import crud, schemas, database, auth, models
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
-# Carpeta de uploads relativa a la raíz del proyecto
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -15,6 +18,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def listar_productos(db: Session = Depends(database.get_db)):
     productos = crud.get_productos(db)
     return productos
+
+
 
 # --- NUEVO ENDPOINT PARA CREAR UN PRODUCTO ---
 @router.post("/", response_model=schemas.ProductoOut)

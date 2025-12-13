@@ -186,6 +186,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                     "Categoria": "Elementos Identificados",
                     "Hallazgo": hallazgos_str,
                     "NormasDetectadas": list(normas_detectadas),
+                    "tipo": "visual",
                     "Pagina": 1,
                     "Contexto": f"Elementos visuales detectados: {hallazgos_str}"
                 })
@@ -195,6 +196,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                     "Categoria": "Sin Hallazgos Textuales",
                     "Hallazgo": "N/A",
                     "NormasDetectadas": [],
+                    "tipo": "visual",
                     "Pagina": 1,
                     "Contexto": "No se detectaron textos legibles o logos conocidos."
                 })

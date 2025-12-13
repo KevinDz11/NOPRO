@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from backend import models, schemas, database
+
 import random
 from datetime import datetime
-
 
 
 def get_cliente(db: Session, cliente_id: int):
@@ -103,16 +103,34 @@ def update_password_and_clear_token(db: Session, user: models.Cliente, new_hashe
 # --- Productos ---
 
 def get_productos(db: Session, skip: int = 0, limit: int = 100):
-    """Obtiene una lista de todos los productos."""
-    return db.query(models.Producto).offset(skip).limit(limit).all()
+    productos = db.query(models.Producto).offset(skip).limit(limit).all()
+
+    for p in productos:
+        if p.documentos:
+            for d in p.documentos:
+                if d.analisis_ia is None:
+                    d.analisis_ia = []   # 🔥 FIX CLAVE
+
+    return productos
+
 
 def get_productos_by_cliente(db: Session, cliente_id: int, skip: int = 0, limit: int = 100):
-    """Obtiene una lista de productos para un cliente específico."""
-    return db.query(models.Producto)\
-             .filter(models.Producto.id_cliente == cliente_id)\
-             .offset(skip)\
-             .limit(limit)\
-             .all()
+    productos = (
+        db.query(models.Producto)
+        .filter(models.Producto.id_cliente == cliente_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    for p in productos:
+        if p.documentos:
+            for d in p.documentos:
+                if d.analisis_ia is None:
+                    d.analisis_ia = []   # 🔥 FIX CLAVE
+
+    return productos
+
 
 def create_producto(db: Session, producto: schemas.ProductoCreate, cliente_id: int):
     """Crea un nuevo producto asociado a un cliente."""

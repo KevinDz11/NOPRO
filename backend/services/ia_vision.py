@@ -210,6 +210,9 @@ def analizar_imagen_pdf(ruta_pdf):
                 })
 
         resultados["yolo_detections"] = yolo_nombres
+        # 🧠 MAPEAR DETECCIONES YOLO → NORMAS
+        resultados["normas_detectadas"] = normalizar_detecciones_yolo(yolo_nombres)
+
 
         # -------------------------------
         # 4. GOOGLE VISION
@@ -263,3 +266,22 @@ def analizar_imagen_pdf(ruta_pdf):
         resultados["status"] = "error"
         resultados["error"] = str(e)
         return resultados
+    
+def normalizar_detecciones_yolo(yolo_nombres):
+    """
+    Convierte:
+    ["nom (0.93)", "nom-nyce (0.86)"]
+    en:
+    ["NOM", "NOM-NYCE"]
+    """
+    normas = set()
+
+    for item in yolo_nombres:
+        label = item.lower()
+
+        if "nom-nyce" in label or "nyce" in label:
+            normas.add("NOM-NYCE")
+        elif "nom" in label:
+            normas.add("NOM")
+
+    return list(normas)
