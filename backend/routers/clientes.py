@@ -16,10 +16,9 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # Configuración del remitente
 MAIL_FROM_NAME = "NOPRO App"
-MAIL_FROM_EMAIL = "onboarding@resend.dev"  # Cambia esto si ya verificaste tu dominio en Resend
+MAIL_FROM_EMAIL = os.getenv("MAIL_FROM", "onboarding@resend.dev")
+EMAIL_ADMIN_VERIFICADO = os.getenv("MAIL_USERNAME", "kvndzfs@gmail.com")
 
-# --- FUNCIÓN AUXILIAR DE ENVÍO ---
-EMAIL_ADMIN_VERIFICADO = "kvndzfs@gmail.com" 
 
 def enviar_email_resend(destinatario: str, asunto: str, mensaje: str):
     """Envía el correo usando Resend."""
