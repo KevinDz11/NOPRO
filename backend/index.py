@@ -8,8 +8,6 @@ from fastapi.staticfiles import StaticFiles
 # IMPORTACIONES CORRECTAS (SIN PUNTOS)
 from backend.routers import clientes, productos, documentos, auth, soporte, health
 from backend.database import Base, engine
-from backend import models
-
 
 #Base.metadata.drop_all(bind=engine) 
 
@@ -26,17 +24,16 @@ app = FastAPI(
     openapi_url=None if ENV == "production" else "/openapi.json",
 )
 
-@app.on_event("startup")
-def startup_db():
-    print("Creando tablas si no existen...")
-    Base.metadata.create_all(bind=engine)
+#@app.on_event("startup")
+#def startup_db():
+#    print("Creando tablas si no existen...")
+#    Base.metadata.create_all(bind=engine)
 
 # Configuración de CORS para permitir solicitudes desde el frontend
 origins = [
     "http://localhost:5173",  # La dirección de tu frontend en desarrollo
     "http://localhost:3000",
     "https://nopro-frontend.onrender.com",
-    # Agrega aquí otras URL del frontend cuando esté
 ]
 
 app.add_middleware(
