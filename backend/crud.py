@@ -1,13 +1,8 @@
 from sqlalchemy.orm import Session
-<<<<<<< HEAD
 from backend import models, schemas, database
-from backend.database import Base
-=======
-from backend import models   
-from backend import schemas
->>>>>>> c907604d020e4ba21d77b53168c103d4956cb953
 import random
 from datetime import datetime
+
 
 
 def get_cliente(db: Session, cliente_id: int):
