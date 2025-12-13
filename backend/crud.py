@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-import models
-import schemas
+from backend import models, schemas, database
+from backend.database import Base
 import random
 from datetime import datetime
+
 
 def get_cliente(db: Session, cliente_id: int):
     """Obtiene un cliente por su ID."""
