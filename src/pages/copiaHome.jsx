@@ -109,9 +109,9 @@ export default function CopiaHome() {
           <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
             <button
               onClick={() => setTourOpen(true)}
-              className="text-blue-600 font-bold text-sm hover:text-blue-800 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors uppercase tracking-wide"
+              className="text-blue-600 font-bold text-sm hover:text-blue-800 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors tracking-wide"
             >
-              AYUDA
+              Ayuda
             </button>
           </div>
 
@@ -149,7 +149,7 @@ export default function CopiaHome() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="text-center mb-16 max-w-4xl mx-auto animate-fade-in-up">
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-6">
-            Aplicación web para identificar normas aplicables a productos
+            Aplicación web para identificar normas aplicables a productos.
           </h1>
           <p className="text-slate-500 text-lg leading-relaxed max-w-3xl mx-auto">
             Esta herramienta permite identificar las normas mexicanas aplicables
@@ -168,7 +168,7 @@ export default function CopiaHome() {
         >
           <div className="tarjeta-landing h-full">
             <TarjetaLanding
-              titulo="Laptop"
+              titulo="Laptop."
               icono="💻"
               descripcion="Realizar el análisis de normas para una Laptop."
               ruta="/subir/Laptop"
@@ -178,7 +178,7 @@ export default function CopiaHome() {
 
           <div className="tarjeta-landing h-full">
             <TarjetaLanding
-              titulo="Smart TV"
+              titulo="Smart TV."
               icono="📺"
               descripcion="Realizar el análisis de normas para una Smart TV."
               ruta="/subir/SmartTV"
@@ -188,7 +188,7 @@ export default function CopiaHome() {
 
           <div className="tarjeta-landing h-full">
             <TarjetaLanding
-              titulo="Luminaria para Exterior"
+              titulo="Luminaria para exterior."
               icono="💡"
               descripcion="Realizar el análisis de normas para una Luminaria para exterior."
               ruta="/subir/Luminaria"

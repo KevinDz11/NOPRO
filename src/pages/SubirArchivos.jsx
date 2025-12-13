@@ -4,6 +4,7 @@ import axios from "axios";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 // --- PERSISTENCIA POR PRODUCTO ---
 const ALMACENAMIENTO = {};
 
@@ -40,14 +41,14 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
         </div>
 
         <h3 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">
-          Analizando {tipo}
+          Analizando {tipo}.
         </h3>
         <p className="text-slate-500 text-sm font-medium mb-6">{mensaje}</p>
 
         {/* BARRA DE PROGRESO VISUAL */}
         <div className="w-full bg-slate-200 rounded-full h-4 mb-4 overflow-hidden border border-slate-300 relative">
           <div
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-300 ease-out"
+            className="bg-linear-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-300 ease-out"
             style={{ width: `${porcentajeVisual}%` }}
           ></div>
           <div
@@ -60,8 +61,8 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
           <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-left animate-pulse">
             <span className="text-xl">⏳</span>
             <div>
-              <p className="text-orange-800 font-bold text-xs uppercase tracking-wider mb-1">
-                Proceso Extenso
+              <p className="text-orange-800 font-bold text-xs tracking-wider mb-1">
+                Proceso extenso.
               </p>
               <p className="text-orange-600 text-xs leading-relaxed">
                 Esto puede tardar hasta 5 minutos. Por favor,{" "}
@@ -249,7 +250,7 @@ export default function SubirArchivos() {
   const asegurarProducto = async (token) => {
     try {
       const res = await axios.post(
-        "http://localhost:8000/productos/",
+        `${API_URL}/productos/`,
         { nombre: producto, marca: marca, descripcion: modelo },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -295,11 +296,10 @@ export default function SubirArchivos() {
 
       if (tipoArchivo === "manual") {
         nombreUI = "Manual";
-        mensajeUI =
-          "Analizando documento extenso (Seguridad y Mantenimiento)...";
+        mensajeUI = "Analizando documento extenso...";
       } else if (tipoArchivo === "etiqueta") {
         nombreUI = "Etiqueta";
-        mensajeUI = "Buscando logos NOM y advertencias...";
+        mensajeUI = "Buscando logos y simbologías...";
       }
 
       setLoadingType(nombreUI);
@@ -427,7 +427,7 @@ export default function SubirArchivos() {
     return (
       <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 group flex flex-col relative">
         <div
-          className={`bg-gradient-to-r ${grad} px-6 py-4 relative overflow-hidden`}
+          className={`bg-linear-to-r ${grad} px-6 py-4 relative overflow-hidden`}
         >
           <div className="absolute right-0 top-0 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform translate-x-6 -translate-y-6"></div>
           <h3 className="text-white font-bold text-lg flex items-center gap-2 relative z-10">
@@ -435,8 +435,8 @@ export default function SubirArchivos() {
           </h3>
         </div>
 
-        <div className="p-6 flex-grow flex flex-col">
-          <p className="text-slate-500 mb-4 text-xs flex-grow">{desc}</p>
+        <div className="p-6 grow flex flex-col">
+          <p className="text-slate-500 mb-4 text-xs grow">{desc}</p>
 
           <div className="mb-4">
             {!fileValue ? (
@@ -492,10 +492,10 @@ export default function SubirArchivos() {
               className={`flex-1 py-2 px-3 rounded-lg font-bold text-xs tracking-wide transition-all shadow-md ${
                 !fileValue || loading || result
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : `bg-gradient-to-r ${grad} text-white transform hover:scale-105`
+                  : `bg-linear-to-r ${grad} text-white transform hover:scale-105`
               }`}
             >
-              {result ? "ANALIZADO" : "ANALIZAR"}
+              {result ? "Analizado" : "Analizar"}
             </button>
             {result && (
               <button
@@ -513,7 +513,7 @@ export default function SubirArchivos() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/50 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/50 -z-10"></div>
       {loading && (
         <ModalCarga
           tipo={loadingType}
@@ -548,19 +548,19 @@ export default function SubirArchivos() {
               to="/perfil"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              PERFIL
+              Perfil
             </Link>
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL
+              Historial
             </Link>
             <Link
               to="/soporte"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              SOPORTE
+              Soporte
             </Link>
             <li
               onClick={() => {
@@ -570,7 +570,7 @@ export default function SubirArchivos() {
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -578,12 +578,12 @@ export default function SubirArchivos() {
 
       <main className="max-w-7xl mx-auto p-6 md:p-10 animate-fade-in-up">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wide mb-3">
-            Nueva Solicitud
+          <div className="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold tracking-wide mb-3">
+            Nueva solicitud.
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
-            Subir Documentos para{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            Subir documentos para{" "}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
               {producto}
             </span>
           </h1>
@@ -594,17 +594,17 @@ export default function SubirArchivos() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-10 relative overflow-hidden max-w-4xl mx-auto">
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-linear-to-b from-blue-500 to-indigo-500"></div>
           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm font-extrabold">
               1
             </span>{" "}
-            Información del Producto
+            Información del producto.
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="group">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                Marca
+              <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2 ml-1">
+                Marca:
               </label>
               <input
                 type="text"
@@ -616,8 +616,8 @@ export default function SubirArchivos() {
               />
             </div>
             <div className="group">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                Modelo
+              <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2 ml-1">
+                Modelo:
               </label>
               <input
                 type="text"
@@ -635,14 +635,14 @@ export default function SubirArchivos() {
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm font-extrabold">
             2
           </span>{" "}
-          Carga y Análisis de Documentos
+          Carga y análisis de documentos.
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
           <RenderCard
             tipoKey="ficha"
-            titulo="Ficha Técnica"
-            desc="Especificaciones de voltaje y potencia."
+            titulo="Ficha técnica"
+            desc="Validación de especificaciones técnicas."
             color="blue"
             result={resultadoFicha}
             setFileFn={iniciarCarga}
@@ -651,7 +651,7 @@ export default function SubirArchivos() {
           <RenderCard
             tipoKey="manual"
             titulo="Manual"
-            desc="Instrucciones de seguridad."
+            desc="Verificación de contenido normativo."
             color="orange"
             result={resultadoManual}
             setFileFn={iniciarCarga}
@@ -660,7 +660,7 @@ export default function SubirArchivos() {
           <RenderCard
             tipoKey="etiqueta"
             titulo="Etiqueta"
-            desc="Detección de logos normativos."
+            desc="Identificación de simbología."
             color="purple"
             result={resultadoEtiqueta}
             setFileFn={iniciarCarga}
@@ -674,7 +674,7 @@ export default function SubirArchivos() {
               onClick={verReporteGeneral}
               className="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl hover:bg-slate-800 hover:scale-105 transition-all font-bold flex items-center gap-3 border border-slate-700 transform"
             >
-              <span className="text-xl">📊</span> Ver Reporte General Unificado
+              <span className="text-xl"></span> Ver reporte general unificado
             </button>
           </div>
         )}

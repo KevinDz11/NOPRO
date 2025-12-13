@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function ContactoSoporte() {
   useAuthListener();
   const navigate = useNavigate();
@@ -71,7 +73,7 @@ export default function ContactoSoporte() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/clientes/me", {
+        const response = await fetch(`${API_URL}/clientes/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -155,7 +157,7 @@ export default function ContactoSoporte() {
 
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/soporte/", {
+      const response = await fetch(`${API_URL}/soporte/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +184,7 @@ export default function ContactoSoporte() {
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans flex flex-col">
       {/* Fondo Decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
       <div
         className="absolute bottom-20 left-0 w-72 h-72 bg-indigo-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
@@ -211,13 +213,13 @@ export default function ContactoSoporte() {
               to="/perfil"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              PERFIL
+              Perfil
             </Link>
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL PRODUCTOS
+              Historial
             </Link>
 
             <li
@@ -228,17 +230,17 @@ export default function ContactoSoporte() {
               }}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
       </nav>
 
       {/* CONTENIDO PRINCIPAL - FORMULARIO */}
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+      <main className="grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden relative">
           {/* Header de la tarjeta */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
+          <div className="bg-linear-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
             <h2 className="text-3xl font-extrabold text-white relative z-10 mb-2">
               ¿Necesitas ayuda?
@@ -260,9 +262,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="name"
-                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                    className="block text-xs font-bold text-slate-400 tracking-wider mb-1 ml-1"
                   >
-                    Nombre (Registrado)
+                    Nombre (registrado):
                   </label>
                   <input
                     type="text"
@@ -279,9 +281,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="email"
-                    className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1"
+                    className="block text-xs font-bold text-slate-400 tracking-wider mb-1 ml-1"
                   >
-                    Correo Electrónico (Registrado)
+                    Correo electrónico (registrado):
                   </label>
                   <input
                     type="email"
@@ -298,9 +300,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="subject"
-                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                    className="block text-xs font-bold text-slate-500 tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
                   >
-                    Asunto
+                    Asunto:
                   </label>
                   <input
                     type="text"
@@ -319,9 +321,9 @@ export default function ContactoSoporte() {
                 <div className="group">
                   <label
                     htmlFor="message"
-                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
+                    className="block text-xs font-bold text-slate-500 tracking-wider mb-1 ml-1 group-focus-within:text-blue-600 transition-colors"
                   >
-                    Mensaje
+                    Mensaje:
                   </label>
                   <textarea
                     id="message"
@@ -339,12 +341,12 @@ export default function ContactoSoporte() {
                 {/* Mensajes de Estado */}
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                    ⚠️ {error}
+                    {error}
                   </div>
                 )}
                 {mensajeExito && (
                   <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in flex items-center justify-center gap-2">
-                    ✅ {mensajeExito}
+                    {mensajeExito}
                   </div>
                 )}
 
@@ -355,7 +357,7 @@ export default function ContactoSoporte() {
                     ${
                       cargando
                         ? "bg-slate-300 cursor-not-allowed shadow-none"
-                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
+                        : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
                     }`}
                   disabled={cargando}
                 >
@@ -384,7 +386,7 @@ export default function ContactoSoporte() {
                       Enviando...
                     </span>
                   ) : (
-                    "Enviar Mensaje"
+                    "Enviar mensaje"
                   )}
                 </button>
               </form>
@@ -396,7 +398,7 @@ export default function ContactoSoporte() {
                 onClick={() => setMostrarTerminosModal(true)}
                 className="text-xs text-slate-400 hover:text-blue-600 underline transition-colors"
               >
-                Consultar Términos y Condiciones
+                Consultar términos y condiciones.
               </button>
             </div>
           </div>

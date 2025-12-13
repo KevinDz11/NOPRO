@@ -6,21 +6,26 @@ from backend.services import ia_vision
 import os
 
 # =========================================================================
-#  CONFIGURACIÓN SPACY
+#  CONFIGURACIÓN SPACY (LAZY LOADING)
 # =========================================================================
-# Cargamos el modelo una sola vez. Deshabilitamos NER y Tagger para velocidad
-# ya que tus criterios se basan en reglas y no en entidades pre-entrenadas.
-try:
-    print("⏳ Cargando modelo spaCy...")
-    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
-    nlp.add_pipe("sentencizer") # Vital para detectar oraciones completas
-    print("✅ Modelo spaCy cargado correctamente.")
-except OSError:
-    print("⚠️ Modelo Spacy no encontrado. Ejecutando descarga...")
-    from spacy.cli import download
-    download("es_core_news_md")
-    nlp = spacy.load("es_core_news_md", disable=["ner", "tagger"])
-    nlp.add_pipe("sentencizer")
+_nlp_instance = None
+
+def get_nlp():
+    """Carga el modelo spaCy solo cuando se necesita."""
+    global _nlp_instance
+    if _nlp_instance is None:
+        try:
+            print("⏳ Cargando modelo spaCy (Lazy Load)...")
+            _nlp_instance = spacy.load("es_core_news_md", disable=["ner", "tagger"])
+            _nlp_instance.add_pipe("sentencizer")
+            print("✅ Modelo spaCy cargado correctamente.")
+        except OSError:
+            print("⚠️ Modelo Spacy no encontrado. Descargando...")
+            from spacy.cli import download
+            download("es_core_news_md")
+            _nlp_instance = spacy.load("es_core_news_md", disable=["ner", "tagger"])
+            _nlp_instance.add_pipe("sentencizer")
+    return _nlp_instance
 
 # =========================================================================
 #  BASE DE DATOS DE CRITERIOS (CEREBRO MAESTRO)
@@ -654,25 +659,25 @@ CRITERIOS_POR_PRODUCTO = {
 def extraer_documento_spacy(ruta_pdf):
     """
     Extrae texto y genera un objeto DOC de spaCy por página.
-    Esto permite análisis semántico y detección de oraciones.
     """
     docs_paginas = []
+    nlp = get_nlp() # <--- LAZY LOADING: Aquí se carga Spacy
+    
     try:
         with pdfplumber.open(ruta_pdf) as pdf:
             for i, pagina in enumerate(pdf.pages):
                 txt = pagina.extract_text()
                 if txt:
                     # 1. Limpieza básica
-                    clean_text = unidecode(txt.lower()) # Normalización
+                    clean_text = unidecode(txt.lower()) 
                     clean_text = re.sub(r'\s+', ' ', clean_text).strip()
                     
-                    # 2. PROCESAMIENTO CON SPACY (El "Cerebro")
-                    # Creamos un objeto 'doc' que contiene tokens y oraciones
+                    # 2. PROCESAMIENTO CON SPACY
                     doc = nlp(clean_text)
                     
                     docs_paginas.append({
                         "pagina": i+1,
-                        "doc_spacy": doc, # Guardamos el objeto inteligente
+                        "doc_spacy": doc,
                         "original": txt
                     })
     except Exception as e:
@@ -696,56 +701,41 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
 
         if normas_a_buscar:
             # Obtenemos los objetos inteligentes de spaCy
+            # Esta función llamará a get_nlp() internamente
             docs_paginas = extraer_documento_spacy(ruta_pdf)
             
             for norma, categorias in normas_a_buscar.items():
                 for categoria, lista_patrones in categorias.items():
                     for patron_str in lista_patrones:
                         
-                        # Compilación del patrón (Necesario porque tus criterios son regex complejos)
                         try:
                             regex_compilado = re.compile(patron_str, re.IGNORECASE)
                         except re.error:
                             continue
 
-                        # Buscamos en cada página procesada por spaCy
                         for pag_data in docs_paginas:
-                            doc = pag_data["doc_spacy"] # Este es el objeto spaCy
+                            doc = pag_data["doc_spacy"]
                             
-                            # Usamos el texto completo del doc para buscar el patrón
-                            # (SpaCy no soporta regex multipalabra en Matcher nativo fácilmente,
-                            #  así que proyectamos el regex sobre el texto del doc)
                             match = regex_compilado.search(doc.text)
-                            
                             if match:
-                                # Obtenemos las posiciones exactas donde empieza y termina el hallazgo
                                 start_char, end_char = match.span()
                                 
-                                # --- CAMBIO CLAVE: VENTANA DE CONTEXTO ---
-                                # En lugar de buscar una "oración" (que falla en tablas),
-                                # recortamos 60 caracteres antes y después del hallazgo.
+                                # Ventana de contexto
                                 window_size = 60 
-                                
                                 start_ctx = max(0, start_char - window_size)
                                 end_ctx = min(len(doc.text), end_char + window_size)
                                 
-                                # Extraemos el recorte y limpiamos saltos de línea para que se vea bonitod en el reporte
                                 raw_context = doc.text[start_ctx:end_ctx]
                                 contexto_limpio = "..." + raw_context.replace("\n", " ").strip() + "..."
 
-                                # Guardamos el resultado limpio
                                 resultados.append({
                                     "Norma": norma,
                                     "Categoria": categoria,
                                     "Hallazgo": patron_str[:50] + "..." if len(patron_str)>50 else patron_str,
                                     "Pagina": pag_data["pagina"],
-                                    "Contexto": contexto_limpio  # <--- AHORA ES UN RECORTE LIMPIO
+                                    "Contexto": contexto_limpio
                                 })
-                                
-                                # Opcional: Break para no buscar el mismo patrón 2 veces en la misma página
-                                # Si quieres detectar TODAS las ocurrencias, quita este break.
                                 break
-
     else:
         print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
 

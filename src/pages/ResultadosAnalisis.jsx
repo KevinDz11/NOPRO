@@ -166,7 +166,7 @@ const S = {
     backgroundColor: "#ffffff",
     padding: "40px",
     minHeight: "297mm",
-    color: "#334155",
+    color: "#334155", // Slate-700
     width: "100%",
     boxSizing: "border-box",
   },
@@ -174,39 +174,40 @@ const S = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    borderBottom: "2px solid #1e293b",
-    paddingBottom: "20px",
+    borderBottom: "2px solid #1e293b", // Slate-800
+    paddingBottom: "15px",
     marginBottom: "30px",
   },
-  headerLeft: { display: "flex", flexDirection: "column", gap: "5px" },
+  headerLeft: { display: "flex", flexDirection: "column", gap: "2px" },
   brandTitle: {
     fontSize: "10px",
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: "2px",
-    color: "#94a3b8",
+    fontWeight: "600",
+    color: "#64748b", // Slate-500
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "6px",
+    marginBottom: "4px",
   },
   mainTitle: {
-    fontSize: "28px",
-    fontWeight: "800",
+    fontSize: "24px",
+    fontWeight: "bold",
     margin: "0",
-    color: "#0f172a",
+    color: "#1e293b", // Slate-800
     lineHeight: "1.2",
   },
   subTitle: {
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#2563eb",
+    fontSize: "13px",
+    fontWeight: "500",
+    color: "#2563eb", // Blue-600
     margin: "0",
   },
   headerRight: { textAlign: "right", fontSize: "12px", color: "#64748b" },
+
+  // Cards de resumen
   summaryBox: {
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "12px",
+    backgroundColor: "#f8fafc", // Slate-50
+    border: "1px solid #e2e8f0", // Slate-200
+    borderRadius: "8px",
     padding: "20px",
     marginBottom: "30px",
     display: "flex",
@@ -214,113 +215,144 @@ const S = {
     gap: "15px",
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: "8px",
-    padding: "15px",
-    textAlign: "center",
     flex: "1",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    border: "1px solid #f1f5f9",
+    textAlign: "center",
   },
   cardLabel: {
     fontSize: "10px",
     color: "#64748b",
-    marginBottom: "4px",
+    marginBottom: "2px",
+    fontWeight: "600",
     textTransform: "uppercase",
-    fontWeight: "bold",
   },
-  cardValue: { fontSize: "16px", fontWeight: "bold", color: "#1e293b" },
+  cardValue: { fontSize: "14px", fontWeight: "bold", color: "#1e293b" },
+
   sectionTitle: {
-    fontSize: "18px",
+    fontSize: "16px",
     fontWeight: "bold",
     color: "#1e293b",
-    marginBottom: "20px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
+    marginBottom: "15px",
+    marginTop: "30px",
     borderBottom: "1px solid #f1f5f9",
-    paddingBottom: "10px",
+    paddingBottom: "8px",
   },
+
+  // Tablas
   tableContainer: {
     border: "1px solid #e2e8f0",
-    borderRadius: "12px",
+    borderRadius: "8px",
     overflow: "hidden",
-    marginBottom: "30px",
+    marginBottom: "20px",
     backgroundColor: "#ffffff",
-    pageBreakInside: "avoid",
   },
   table: { width: "100%", borderCollapse: "collapse", fontSize: "12px" },
   th: {
-    backgroundColor: "#f1f5f9",
-    color: "#475569",
+    backgroundColor: "#f8fafc", // Slate-50
+    color: "#64748b",
     fontWeight: "bold",
-    textTransform: "uppercase",
-    padding: "12px 15px",
+    padding: "10px 12px",
     textAlign: "left",
     borderBottom: "1px solid #e2e8f0",
-    fontSize: "10px",
+    fontSize: "11px",
   },
   td: {
-    padding: "12px 15px",
+    padding: "10px 12px",
     verticalAlign: "top",
     borderBottom: "1px solid #e2e8f0",
     color: "#334155",
+    fontSize: "12px",
   },
+
+  // Elementos internos
   tag: {
     display: "inline-block",
     padding: "2px 6px",
     borderRadius: "4px",
     fontSize: "10px",
-    fontWeight: "600",
     backgroundColor: "#f1f5f9",
     color: "#64748b",
     marginTop: "4px",
   },
   contextBox: {
-    backgroundColor: "#fefce8",
-    borderLeft: "3px solid #facc15",
-    padding: "8px",
+    backgroundColor: "#fefce8", // Yellow-50
+    borderLeft: "3px solid #facc15", // Yellow-400
+    padding: "6px 10px",
     fontStyle: "italic",
-    borderRadius: "4px",
+    borderRadius: "0 4px 4px 0",
     marginBottom: "4px",
     color: "#1e293b",
+    fontSize: "11px",
+  },
+
+  // Legal Footer
+  legalContainer: {
+    marginTop: "60px",
+    paddingTop: "20px",
+    borderTop: "2px solid #e2e8f0",
+  },
+  legalTitle: {
+    fontSize: "11px",
+    fontWeight: "bold",
+    color: "#1e293b",
+    marginBottom: "8px",
+  },
+  legalText: {
+    fontSize: "9px",
+    color: "#64748b",
+    lineHeight: "1.5",
+    textAlign: "justify",
   },
   footer: {
-    marginTop: "50px",
-    paddingTop: "20px",
-    borderTop: "1px solid #e2e8f0",
+    marginTop: "20px",
     display: "flex",
     justifyContent: "space-between",
-    fontSize: "10px",
+    fontSize: "9px",
     color: "#94a3b8",
   },
-  // Estilos Checklist
-  tdCheck: {
-    padding: "10px 15px",
-    borderBottom: "1px solid #e2e8f0",
-    verticalAlign: "middle",
-  },
+
+  // Status Check
   statusBadge: {
     display: "inline-block",
-    padding: "4px 8px",
-    borderRadius: "99px",
+    padding: "3px 8px",
+    borderRadius: "4px",
     fontSize: "10px",
-    fontWeight: "bold",
-    textTransform: "uppercase",
+    fontWeight: "600",
   },
-  statusOk: { backgroundColor: "#dcfce7", color: "#166534" },
-  statusFail: { backgroundColor: "#fee2e2", color: "#991b1b" },
+  statusOk: { color: "#166534" }, // Green text only, more professional
+  statusFail: { color: "#991b1b" },
 };
 
-// --- COMPONENTE CHECKLIST ---
+const DisclaimerLegal = () => (
+  <div style={S.legalContainer}>
+    <h4 style={S.legalTitle}>Aviso Legal y Limitación de Responsabilidad</h4>
+    <p style={S.legalText}>
+      Este reporte ha sido generado automáticamente por un sistema de
+      Inteligencia Artificial (IA) propiedad de NOPRO. El contenido aquí
+      presentado tiene fines exclusivamente informativos y de referencia
+      preliminar.
+      <strong>
+        Este documento NO constituye una certificación oficial, dictamen
+        pericial ni validación legal
+      </strong>{" "}
+      ante organismos de normalización o autoridades competentes (como PROFECO,
+      NYCE, ANCE, IFT, etc.).
+      <br />
+      <br />
+      NOPRO no se hace responsable por decisiones tomadas basándose únicamente
+      en la información de este reporte. Se recomienda encarecidamente someter
+      los productos a pruebas de laboratorio certificadas y revisión por
+      expertos humanos cualificados para garantizar el cumplimiento normativo
+      estricto.
+    </p>
+  </div>
+);
+
 const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
-  // 1. Determinar Tipo de Doc (Ficha, Manual, Etiqueta) igual que en backend
   let tipoDoc = "Ficha";
   const nombre = nombreDoc ? nombreDoc.toLowerCase() : "";
   if (nombre.includes("manual")) tipoDoc = "Manual";
   else if (nombre.includes("etiqueta")) tipoDoc = "Etiqueta";
 
-  // 2. Mapear Categoría
   const catMap = {
     laptop: "Laptop",
     smarttv: "SmartTV",
@@ -331,14 +363,11 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
   const categoriaClean =
     catMap[categoria ? categoria.toLowerCase() : ""] || "Laptop";
 
-  // 3. Obtener Criterios
   const criterios = CRITERIOS_POR_PRODUCTO[categoriaClean]?.[tipoDoc] || {};
 
-  // 4. Construir filas
   const filas = [];
   Object.entries(criterios).forEach(([norma, requisitos]) => {
     Object.keys(requisitos).forEach((req) => {
-      // Buscar si cumple
       const encontrado = analisis.some(
         (item) => item.Norma === norma && item.Categoria === req
       );
@@ -348,7 +377,14 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
 
   if (filas.length === 0)
     return (
-      <div style={{ ...S.card, marginBottom: 20 }}>
+      <div
+        style={{
+          ...S.tableContainer,
+          padding: 15,
+          color: "#64748b",
+          fontSize: 12,
+        }}
+      >
         No hay criterios definidos para {categoriaClean} - {tipoDoc}
       </div>
     );
@@ -359,7 +395,7 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
         <thead>
           <tr>
             <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
-            <th style={{ ...S.th, width: "50%" }}>Requisito Evaluado</th>
+            <th style={{ ...S.th, width: "50%" }}>Requisito evaluado</th>
             <th style={{ ...S.th, width: "20%", textAlign: "center" }}>
               Estatus
             </th>
@@ -368,18 +404,18 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
         <tbody>
           {filas.map((fila, idx) => (
             <tr key={idx}>
-              <td style={S.tdCheck}>
+              <td style={S.td}>
                 <strong>{fila.norma}</strong>
               </td>
-              <td style={S.tdCheck}>{fila.requisito}</td>
-              <td style={{ ...S.tdCheck, textAlign: "center" }}>
+              <td style={S.td}>{fila.requisito}</td>
+              <td style={{ ...S.td, textAlign: "center" }}>
                 <span
                   style={{
                     ...S.statusBadge,
                     ...(fila.cumple ? S.statusOk : S.statusFail),
                   }}
                 >
-                  {fila.cumple ? "✅ CUMPLE" : "❌ NO DETECTADO"}
+                  {fila.cumple ? "✅ Cumple" : "❌ No detectado"}
                 </span>
               </td>
             </tr>
@@ -395,15 +431,17 @@ const TablaHallazgos = ({ analisis }) => {
     return (
       <div
         style={{
-          ...S.card,
+          ...S.tableContainer,
+          padding: 15,
           backgroundColor: "#fff7ed",
-          borderColor: "#ffedd5",
-          color: "#9a3412",
+          border: "1px solid #ffedd5",
         }}
       >
-        <strong>Sin coincidencias normativas</strong>
-        <p style={{ fontSize: "11px", margin: "5px 0 0 0" }}>
-          No se detectaron elementos clave.
+        <strong style={{ color: "#9a3412", fontSize: 12 }}>
+          Sin coincidencias normativas
+        </strong>
+        <p style={{ fontSize: "11px", margin: "5px 0 0 0", color: "#9a3412" }}>
+          No se detectaron elementos clave en el análisis de texto.
         </p>
       </div>
     );
@@ -414,8 +452,8 @@ const TablaHallazgos = ({ analisis }) => {
       <table style={S.table}>
         <thead>
           <tr>
-            <th style={{ ...S.th, width: "35%" }}>Norma y Categoría</th>
-            <th style={{ ...S.th, width: "55%" }}>Evidencia</th>
+            <th style={{ ...S.th, width: "35%" }}>Norma y categoría</th>
+            <th style={{ ...S.th, width: "55%" }}>Evidencia encontrada</th>
             <th style={{ ...S.th, width: "10%", textAlign: "center" }}>Pág.</th>
           </tr>
         </thead>
@@ -446,7 +484,7 @@ const TablaHallazgos = ({ analisis }) => {
                           style={{
                             fontWeight: "bold",
                             color: "#475569",
-                            fontSize: "12px",
+                            fontSize: "11px",
                           }}
                         >
                           📸 EVIDENCIA VISUAL
@@ -456,15 +494,15 @@ const TablaHallazgos = ({ analisis }) => {
                         src={`data:image/jpeg;base64,${item.ImagenBase64}`}
                         alt="Evidencia"
                         style={{
-                          maxWidth: "90%",
-                          maxHeight: "400px",
+                          maxWidth: "250px",
+                          maxHeight: "150px",
                           border: "4px solid white",
-                          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         }}
                       />
                       <p
                         style={{
-                          fontSize: "11px",
+                          fontSize: "10px",
                           marginTop: "10px",
                           color: "#64748b",
                           fontStyle: "italic",
@@ -480,7 +518,7 @@ const TablaHallazgos = ({ analisis }) => {
             const esVisual =
               item.Norma &&
               (item.Norma.includes("Visual") || item.Norma.includes("Gráfica"));
-            const colorNorma = esVisual ? "#9333ea" : "#1d4ed8";
+            const colorNorma = esVisual ? "#9333ea" : "#2563eb"; // Purple vs Blue
             const bgContext = esVisual ? "#faf5ff" : "#fefce8";
             const borderContext = esVisual ? "#c084fc" : "#facc15";
 
@@ -490,9 +528,9 @@ const TablaHallazgos = ({ analisis }) => {
                   <div
                     style={{
                       fontWeight: "bold",
-                      fontSize: "13px",
+                      fontSize: "12px",
                       color: colorNorma,
-                      marginBottom: "4px",
+                      marginBottom: "2px",
                     }}
                   >
                     {item.Norma}
@@ -509,27 +547,17 @@ const TablaHallazgos = ({ analisis }) => {
                   >
                     "{item.Contexto}"
                   </div>
-                  <div style={{ fontSize: "11px", color: "#64748b" }}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      color: "#64748b",
+                      marginTop: "4px",
+                    }}
+                  >
                     <strong>Patrón:</strong> {item.Hallazgo}
                   </div>
                 </td>
-                <td style={{ ...S.td, textAlign: "center" }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: "24px",
-                      height: "24px",
-                      lineHeight: "24px",
-                      borderRadius: "50%",
-                      backgroundColor: "#f1f5f9",
-                      color: "#334155",
-                      fontWeight: "bold",
-                      fontSize: "10px",
-                    }}
-                  >
-                    {item.Pagina}
-                  </span>
-                </td>
+                <td style={{ ...S.td, textAlign: "center" }}>{item.Pagina}</td>
               </tr>
             );
           })}
@@ -561,9 +589,7 @@ function ResultadosAnalisis() {
       const token = localStorage.getItem("authToken");
       let response;
 
-      // LÓGICA DIFERENCIADA PARA PDF
       if (esGeneral) {
-        // Si es general, usamos el nuevo endpoint POST enviando los IDs
         response = await fetch(
           "http://localhost:8000/documentos/reporte-general-pdf",
           {
@@ -576,7 +602,6 @@ function ResultadosAnalisis() {
           }
         );
       } else {
-        // Si es individual, usamos el endpoint GET de siempre
         const idDocumento = datos.id_documento;
         response = await fetch(
           `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
@@ -587,7 +612,10 @@ function ResultadosAnalisis() {
         );
       }
 
-      if (!response.ok) throw new Error("Error en servidor");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error en el servidor");
+      }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -600,13 +628,16 @@ function ResultadosAnalisis() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
-      alert("Error al descargar PDF.");
+      alert(`Error al descargar PDF: ${error.message}`);
     } finally {
       setGenerando(false);
     }
   };
 
-  if (!datos) return <div className="p-10 text-center">Cargando datos...</div>;
+  if (!datos)
+    return (
+      <div className="p-10 text-center text-slate-500">Cargando reporte...</div>
+    );
 
   const totalHallazgos = esGeneral
     ? datos.sub_reportes.reduce(
@@ -616,30 +647,32 @@ function ResultadosAnalisis() {
     : datos.analisis_ia?.length || 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 relative">
-      <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div className="min-h-screen bg-slate-100 relative pb-20">
+      <nav className="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="NOPRO" className="h-8" />
-          <span className="font-bold text-slate-700">Reporte Digital</span>
+          <img src={logo} alt="NOPRO" className="h-6" />
+          <span className="font-semibold text-slate-700 text-sm">
+            Visor de Reportes
+          </span>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => window.close()}
-            className="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-lg"
+            className="px-4 py-1.5 text-xs text-slate-500 hover:bg-slate-50 rounded border border-transparent hover:border-slate-200"
           >
-            Cerrar
+            Cerrar pestaña
           </button>
           <button
             onClick={descargarPDF}
             disabled={generando}
-            className="px-5 py-2 text-white font-bold rounded-lg text-sm bg-blue-600 hover:bg-blue-700 transition-all shadow-lg"
+            className="px-4 py-1.5 text-white font-medium rounded text-xs bg-blue-600 hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2"
           >
-            {generando ? "Generando..." : "⬇ PDF Oficial"}
+            {generando ? "Generando..." : "⬇ Descargar PDF"}
           </button>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-2xl">
+      <div className="max-w-4xl mx-auto mt-8 mb-20 shadow-xl bg-white">
         <div style={S.container}>
           <header style={S.header}>
             <div style={S.headerLeft}>
@@ -647,9 +680,9 @@ function ResultadosAnalisis() {
                 <img
                   src={logo}
                   alt="Logo"
-                  style={{ height: "14px", opacity: 0.6 }}
+                  style={{ height: "12px", opacity: 0.5 }}
                 />
-                Reporte Oficial
+                REPORTE DIGITAL NOPRO
               </div>
               <h1 style={S.mainTitle}>{datos.titulo_reporte}</h1>
               <p style={S.subTitle}>
@@ -661,15 +694,15 @@ function ResultadosAnalisis() {
             <div style={S.headerRight}>
               <p
                 style={{
-                  fontSize: "16px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   color: "#334155",
                 }}
               >
-                {datos.marca_producto || "Marca Desconocida"}
+                {datos.marca_producto || "Marca desconocida"}
               </p>
               <p>{datos.modelo_producto || "Modelo no esp."}</p>
-              <p style={{ marginTop: "5px", textTransform: "uppercase" }}>
+              <p style={{ marginTop: "4px" }}>
                 {new Date().toLocaleDateString()}
               </p>
             </div>
@@ -703,41 +736,24 @@ function ResultadosAnalisis() {
                 <div
                   key={idx}
                   style={{
-                    pageBreakInside: "avoid",
-                    marginBottom: "50px",
-                    borderTop: "2px dashed #e2e8f0",
-                    paddingTop: "30px",
+                    marginBottom: "40px",
+                    borderTop: "1px dashed #e2e8f0",
+                    paddingTop: "20px",
                   }}
                 >
                   <h3 style={S.sectionTitle}>
-                    <span
-                      style={{
-                        backgroundColor: "#1e293b",
-                        color: "white",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                      }}
-                    >
-                      {idx + 1}
-                    </span>
-                    Documento: {sub.data.nombre}
+                    {idx + 1}. Documento: {sub.data.nombre}
                   </h3>
 
-                  {/* CHECKLIST POR DOCUMENTO */}
                   <h4
                     style={{
-                      fontSize: "14px",
+                      fontSize: "13px",
                       fontWeight: "bold",
                       color: "#64748b",
                       marginBottom: "10px",
                     }}
                   >
-                    1. Checklist Normativo
+                    1. Checklist normativo
                   </h4>
                   <TablaChecklist
                     analisis={sub.data.analisis_ia}
@@ -745,17 +761,16 @@ function ResultadosAnalisis() {
                     nombreDoc={sub.data.nombre}
                   />
 
-                  {/* HALLAZGOS POR DOCUMENTO */}
                   <h4
                     style={{
-                      fontSize: "14px",
+                      fontSize: "13px",
                       fontWeight: "bold",
                       color: "#64748b",
                       marginBottom: "10px",
                       marginTop: "20px",
                     }}
                   >
-                    2. Evidencias
+                    2. Evidencias encontradas
                   </h4>
                   <TablaHallazgos analisis={sub.data.analisis_ia} />
                 </div>
@@ -764,7 +779,7 @@ function ResultadosAnalisis() {
           ) : (
             <div>
               <h3 style={S.sectionTitle}>
-                1. Checklist de Cumplimiento Normativo
+                1. Checklist de cumplimiento normativo
               </h3>
               <TablaChecklist
                 analisis={datos.analisis_ia || []}
@@ -773,14 +788,16 @@ function ResultadosAnalisis() {
               />
 
               <h3 style={S.sectionTitle}>
-                2. Detalle de Evidencias Encontradas
+                2. Detalle de evidencias encontradas
               </h3>
               <TablaHallazgos analisis={datos.analisis_ia || []} />
             </div>
           )}
 
+          <DisclaimerLegal />
+
           <footer style={S.footer}>
-            <span>Generado automáticamente por NOPRO AI Platform</span>
+            <span>Sistema NOPRO AI Platform v1.0</span>
             <span>Documento confidencial - Uso interno</span>
           </footer>
         </div>

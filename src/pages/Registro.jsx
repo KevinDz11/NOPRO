@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function Registro() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
@@ -20,21 +22,21 @@ export default function Registro() {
   const terminosTexto = (
     <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
       <h4 className="font-bold text-lg text-slate-900">
-        Términos y Condiciones de Uso de NOPRO
+        Términos y condiciones de uso de NOPRO
       </h4>
       <p>
-        <strong>1. Aceptación de los Términos:</strong> Al registrarse y
+        <strong>1. Aceptación de los términos:</strong> Al registrarse y
         utilizar los servicios de NOPRO, usted acepta cumplir con estos términos
         y condiciones. Si no está de acuerdo con alguna parte de los términos,
         no podrá utilizar nuestros servicios de análisis de normas.
       </p>
       <p>
-        <strong>2. Descripción del Servicio:</strong> NOPRO proporciona
+        <strong>2. Descripción del servicio:</strong> NOPRO proporciona
         herramientas basadas en inteligencia artificial para el análisis,
         interpretación y gestión de normativas y documentos técnicos.
       </p>
       <p>
-        <strong>3. Responsabilidad del Usuario:</strong> El usuario es
+        <strong>3. Responsabilidad del usuario:</strong> El usuario es
         responsable de mantener la confidencialidad de su cuenta y contraseña.
         El análisis proporcionado por nuestra IA es una herramienta de apoyo y
         no sustituye el juicio profesional o legal definitivo. NOPRO no se hace
@@ -42,10 +44,9 @@ export default function Registro() {
         automáticos.
       </p>
       <p>
-        <strong>4. Privacidad y Datos:</strong> Nos comprometemos a proteger su
+        <strong>4. Privacidad y datos:</strong> Nos comprometemos a proteger su
         privacidad. Los documentos subidos serán utilizados únicamente para el
-        propósito del análisis solicitado y no serán compartidos con terceros
-        sin su consentimiento explícito, salvo requerimiento legal.
+        propósito del análisis solicitado y no serán compartidos con terceros.
       </p>
       <p>
         <strong>5. Modificaciones:</strong> NOPRO se reserva el derecho de
@@ -80,7 +81,7 @@ export default function Registro() {
     }
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/clientes/", {
+      const response = await fetch(`${API_URL}/clientes/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre, email: correo, contrasena }),
@@ -115,10 +116,10 @@ export default function Registro() {
           </div>
 
           <h3 className="text-2xl md:text-3xl font-extrabold text-slate-800 mb-2">
-            Crea tu cuenta
+            Crea tu cuenta.
           </h3>
           <p className="text-slate-500 mb-6 text-sm">
-            Únete para gestionar tus análisis de normas.
+            Únete para usar nuestra aplicación web.
           </p>
 
           <form onSubmit={handleRegistro} className="space-y-4">
@@ -305,7 +306,7 @@ export default function Registro() {
                   onClick={() => setMostrarTerminosModal(true)}
                   className="text-blue-600 font-bold hover:underline focus:outline-none"
                 >
-                  Términos y Condiciones
+                  términos y condiciones
                 </button>
               </label>
             </div>
@@ -322,7 +323,7 @@ export default function Registro() {
               className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1
               ${
                 formularioValido && !cargando
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30"
+                  ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30"
                   : "bg-slate-300 cursor-not-allowed shadow-none"
               }`}
             >
@@ -343,11 +344,13 @@ export default function Registro() {
 
         {/* SECCIÓN DERECHA (Decorativa) - Oculta en móvil para ahorrar espacio vertical */}
         <div className="hidden md:flex w-1/2 bg-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black opacity-90"></div>
+          <div className="absolute inset-0 bg-linear-to-br from-slate-800 to-black opacity-90"></div>
           <div className="relative z-10 text-center">
-            <h2 className="text-3xl font-bold mb-4">Únete a la comunidad</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Únete a la aplicación web.
+            </h2>
             <p className="text-slate-300">
-              Accede a herramientas avanzadas de análisis normativo en segundos.
+              Accede a nuestra herramienta de análisis normativo.
             </p>
           </div>
         </div>
@@ -359,7 +362,7 @@ export default function Registro() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="text-xl font-bold text-slate-800">
-                Términos y Condiciones
+                Términos y condiciones
               </h3>
               <button
                 onClick={() => setMostrarTerminosModal(false)}
@@ -390,7 +393,7 @@ export default function Registro() {
                 }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
               >
-                Entendido y Aceptar
+                Entendido y aceptar
               </button>
             </div>
           </div>

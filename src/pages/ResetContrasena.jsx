@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function ResetContrasena() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ export default function ResetContrasena() {
     setCargando(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/ejecutar-reset-password",
+        `${API_URL}/clientes/ejecutar-reset-password`,
         {
           method: "POST",
           headers: {
@@ -112,7 +114,7 @@ export default function ResetContrasena() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
       {/* Fondos Decorativos Animados */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
 
       <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row border border-white/50 animate-fade-in-up">
@@ -124,7 +126,7 @@ export default function ResetContrasena() {
           </div>
 
           <h3 className="text-2xl font-extrabold text-slate-900 mb-2">
-            Nueva Contraseña
+            Nueva contraseña.
           </h3>
           <p className="text-slate-500 text-sm mb-6">
             Crea una contraseña segura para tu cuenta.
@@ -133,8 +135,8 @@ export default function ResetContrasena() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Input Contraseña */}
             <div className="group">
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
-                Nueva Contraseña
+              <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                Nueva contraseña:
               </label>
               <div className="relative">
                 <input
@@ -193,8 +195,8 @@ export default function ResetContrasena() {
 
             {/* Input Verifica Contraseña */}
             <div className="group">
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
-                Confirmar Contraseña
+              <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                Confirmar contraseña:
               </label>
               <div className="relative">
                 <input
@@ -253,25 +255,25 @@ export default function ResetContrasena() {
 
             {/* Lista de requisitos visualmente atractiva */}
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <p className="text-xs font-bold text-slate-500 uppercase mb-3">
+              <p className="text-xs font-bold text-slate-500 mb-3">
                 Requisitos de seguridad:
               </p>
               <ul className="space-y-2">
                 <RequisitoItem
                   valido={longitudValida}
-                  texto="Mínimo 8 caracteres"
+                  texto="Mínimo 8 caracteres."
                 />
                 <RequisitoItem
                   valido={tieneMayuscula}
-                  texto="Al menos una mayúscula"
+                  texto="Al menos una mayúscula."
                 />
                 <RequisitoItem
                   valido={tieneNumero}
-                  texto="Al menos un número"
+                  texto="Al menos un número."
                 />
                 <RequisitoItem
                   valido={coinciden}
-                  texto="Las contraseñas coinciden"
+                  texto="Las contraseñas coinciden."
                 />
               </ul>
             </div>
@@ -279,13 +281,13 @@ export default function ResetContrasena() {
             {/* Mensajes de Estado */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
             {mensaje && (
               <div className="p-3 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-bold text-center animate-fade-in">
-                ✅ {mensaje}
+                {mensaje}
               </div>
             )}
 
@@ -295,17 +297,17 @@ export default function ResetContrasena() {
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                 ${
                   formularioValido && !cargando && !mensaje
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                    ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                     : "bg-slate-300 cursor-not-allowed shadow-none"
                 }`}
             >
-              {cargando ? "Guardando..." : "Establecer Contraseña"}
+              {cargando ? "Guardando..." : "Establecer contraseña"}
             </button>
           </form>
         </div>
 
         {/* DERECHA (Panel informativo - Oculto en móvil) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-blue-600 to-indigo-800 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-blue-600 to-indigo-800 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform -translate-x-10 translate-y-10"></div>
 
@@ -313,10 +315,10 @@ export default function ResetContrasena() {
             <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
               <span className="text-4xl">🔐</span>
             </div>
-            <h3 className="text-2xl font-bold mb-3">Protege tu cuenta</h3>
+            <h3 className="text-2xl font-bold mb-3">Recupera tu acceso.</h3>
             <p className="text-blue-100 text-sm leading-relaxed">
-              Elige una contraseña única y segura para mantener tu información
-              protegida. Te redirigiremos al inicio de sesión automáticamente.
+              Define una nueva contraseña para volver a ingresar. Al finalizar,
+              te redirigiremos automáticamente al inicio de sesión.
             </p>
           </div>
         </div>

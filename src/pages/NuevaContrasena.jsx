@@ -2,6 +2,8 @@ import { useState } from "react";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function NuevaContrasena() {
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -23,7 +25,7 @@ export default function NuevaContrasena() {
     setCargando(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/solicitar-reset-password",
+        `${API_URL}/clientes/solicitar-reset-password`,
         {
           method: "POST",
           headers: {
@@ -67,7 +69,7 @@ export default function NuevaContrasena() {
           </div>
 
           <h2 className="text-3xl font-extrabold text-slate-900 mb-3 tracking-tight">
-            Recuperar Contraseña
+            Recuperar contraseña.
           </h2>
           <p className="text-slate-500 mb-8 text-sm leading-relaxed">
             Ingresa tu correo electrónico registrado y verificado, y te
@@ -78,8 +80,8 @@ export default function NuevaContrasena() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="group">
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
-                Correo Electrónico
+              <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                Correo electrónico:
               </label>
               <input
                 type="email"
@@ -94,7 +96,7 @@ export default function NuevaContrasena() {
             {/* Mensajes de Estado */}
             {mensaje && (
               <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-medium text-center animate-fade-in flex items-center justify-center gap-2">
-                ✅ {mensaje}
+                {mensaje}
               </div>
             )}
 
@@ -110,7 +112,7 @@ export default function NuevaContrasena() {
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                 ${
                   esCorreoValido(email) && !cargando
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                    ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                     : "bg-slate-300 cursor-not-allowed shadow-none"
                 }`}
             >
@@ -139,7 +141,7 @@ export default function NuevaContrasena() {
                   Enviando...
                 </span>
               ) : (
-                "Enviar Enlace"
+                "Enviar enlace"
               )}
             </button>
 
@@ -150,7 +152,7 @@ export default function NuevaContrasena() {
                   to="/login"
                   className="text-blue-600 font-bold hover:text-blue-800 transition-colors hover:underline"
                 >
-                  Iniciar Sesión
+                  Iniciar sesión.
                 </Link>
               </p>
             </div>
@@ -158,7 +160,7 @@ export default function NuevaContrasena() {
         </div>
 
         {/* DERECHA (Panel informativo) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-20 rounded-full blur-3xl"></div>
 
@@ -166,10 +168,10 @@ export default function NuevaContrasena() {
             <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
               <span className="text-4xl">🔒</span>
             </div>
-            <h3 className="text-2xl font-bold mb-4">Seguridad ante todo</h3>
+            <h3 className="text-2xl font-bold mb-4">Recupera tu acceso.</h3>
             <p className="text-slate-300 text-lg leading-relaxed">
-              No te preocupes si olvidaste tu contraseña. Nuestro proceso de
-              recuperación es rápido y seguro.
+              No te preocupes si olvidaste tu contraseña, te ayudamos a
+              restablecerla.
             </p>
           </div>
         </div>

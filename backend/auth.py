@@ -6,9 +6,11 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from backend import crud
+from backend import schemas
+from backend import database
+from backend import models
 
-# Importaciones relativas para que auth.py pueda encontrar los otros módulos
-from . import crud, schemas, database, models
 
 # --- Configuración de Seguridad ---
 SECRET_KEY = "080361" 

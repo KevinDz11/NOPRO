@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function VerificarCuenta() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function VerificarCuenta() {
 
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/clientes/verificar", {
+      const response = await fetch(`${API_URL}/clientes/verificar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +80,7 @@ export default function VerificarCuenta() {
     setCargandoReenvio(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/reenviar-verificacion",
+        `${API_URL}/clientes/reenviar-verificacion`,
         {
           method: "POST",
           headers: {
@@ -144,7 +146,7 @@ export default function VerificarCuenta() {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                ¡Verificación Exitosa!
+                ¡Verificación exitosa!
               </h3>
               <p className="text-slate-500 mb-6">
                 Tu cuenta ha sido activada. Redirigiendo...
@@ -165,14 +167,14 @@ export default function VerificarCuenta() {
             // --- VISTA DEL FORMULARIO (Original) ---
             <div className="animate-fade-in">
               <h3 className="text-2xl font-extrabold text-slate-900 mb-2">
-                Verificar Cuenta
+                Verificar cuenta.
               </h3>
               <p className="text-slate-500 text-sm mb-6 leading-relaxed">
                 Hemos enviado un código de verificación a tu correo electrónico.
               </p>
 
               <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
-                <p className="text-xs text-blue-500 uppercase font-bold mb-1">
+                <p className="text-xs text-blue-500 font-bold mb-1">
                   Enviado a:
                 </p>
                 <p className="text-slate-700 font-medium break-all">
@@ -183,8 +185,8 @@ export default function VerificarCuenta() {
               <div className="space-y-5">
                 {/* Input Código */}
                 <div className="group">
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
-                    Código de 6 dígitos
+                  <label className="block text-xs font-bold text-slate-400 mb-2 ml-1 group-focus-within:text-blue-600 transition-colors">
+                    Código de 6 dígitos.
                   </label>
                   <input
                     type="text"
@@ -205,11 +207,11 @@ export default function VerificarCuenta() {
                     className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                         ${
                           !cargando && !cargandoReenvio && codigo
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                            ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                             : "bg-slate-300 cursor-not-allowed shadow-none"
                         }`}
                   >
-                    {cargando ? "Verificando..." : "Verificar Código"}
+                    {cargando ? "Verificando..." : "Verificar código"}
                   </button>
 
                   <button
@@ -226,7 +228,7 @@ export default function VerificarCuenta() {
                 {/* Mensajes de Estado */}
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center animate-fade-in">
-                    ⚠️ {error}
+                    {error}
                   </div>
                 )}
 
@@ -241,7 +243,7 @@ export default function VerificarCuenta() {
         </div>
 
         {/* DERECHA (Panel informativo - Mantenido igual) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-500 opacity-20 rounded-full blur-3xl transform -translate-x-10 translate-y-10"></div>
 
@@ -249,10 +251,10 @@ export default function VerificarCuenta() {
             <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
               <span className="text-4xl">📩</span>
             </div>
-            <h3 className="text-2xl font-bold mb-3">Revisa tu bandeja</h3>
+            <h3 className="text-2xl font-bold mb-3">Revisa tu bandeja.</h3>
             <p className="text-slate-300 text-lg leading-relaxed">
-              Busca un correo de NOPRO con el asunto "Verifica tu cuenta". Si no
-              lo ves, revisa la carpeta de Spam.
+              Busca un correo de NOPRO con el asunto "Verifica tu cuenta en
+              NOPRO". Si no lo ves, revisa la carpeta de spam.
             </p>
           </div>
         </div>

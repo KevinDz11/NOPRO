@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
+from backend import models   
+from backend import schemas
 import random
 from datetime import datetime
 

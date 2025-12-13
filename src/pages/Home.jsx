@@ -120,25 +120,25 @@ export default function Home() {
               onClick={() => setTourOpen(true)}
               className="help-button cursor-pointer px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              AYUDA
+              Ayuda
             </li>
             <Link
               to="/perfil"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              PERFIL
+              Perfil
             </Link>
             <Link
               to="/historial"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              HISTORIAL
+              Historial
             </Link>
             <Link
               to="/soporte"
               className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all"
             >
-              SOPORTE
+              Soporte
             </Link>
 
             {/* --- BOTÓN CORREGIDO --- */}
@@ -147,7 +147,7 @@ export default function Home() {
               onClick={handleLogout}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </button>
           </ul>
         </div>
@@ -155,26 +155,26 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
         <header className="text-center mb-16 max-w-3xl mx-auto">
-          <div className="inline-block mb-4 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold tracking-wide uppercase">
-            Herramienta de Análisis
+          <div className="inline-block mb-4 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold tracking-wide">
+            Herramienta de análisis.
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-            Identificación de Normas <br />
+            Identificación de normas <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
-              Simple y Rápida
+              simple y rápida.
             </span>
           </h1>
           <p className="text-lg text-slate-500 leading-relaxed">
-            Analiza fichas técnicas, manuales de usuario y etiquetas de forma
-            automática. Detecta el cumplimiento de normas NOM/NMX para Laptops,
-            Smart TV's y Luminarias.
+            Analiza fichas técnicas, manuales de usuario y etiquetas. Detecta el
+            cumplimiento de normas NOM/NMX para laptops, Smart TV's y
+            luminarias.
           </p>
         </header>
 
         <section className="grid-productos grid gap-8 grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto">
           <div className="tarjeta-laptop h-full">
             <TarjetaProducto
-              titulo="Laptop"
+              titulo="Laptop."
               icono="💻"
               descripcion="Realizar el análisis de normas para una Laptop."
               ruta="/subir/Laptop"
@@ -183,7 +183,7 @@ export default function Home() {
           </div>
           <div className="tarjeta-smarttv h-full">
             <TarjetaProducto
-              titulo="Smart TV"
+              titulo="Smart TV."
               icono="📺"
               descripcion="Realizar el análisis de normas para una Smart TV."
               ruta="/subir/SmartTV"
@@ -192,7 +192,7 @@ export default function Home() {
           </div>
           <div className="tarjeta-luminaria h-full">
             <TarjetaProducto
-              titulo="Luminaria Exterior"
+              titulo="Luminaria Exterior."
               icono="💡"
               descripcion="Realizar el análisis de normas para una Luminaria para exterior."
               ruta="/subir/Luminaria"

@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 // --- COMPONENTE LISTA DE DOCUMENTOS ---
 const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
   if (!documentos || documentos.length === 0) {
@@ -20,7 +22,7 @@ const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
         const nombreArchivo = doc.archivo_url
           ? doc.archivo_url.split(/[\\/]/).pop()
           : "archivo.dat";
-        const urlPublica = `http://localhost:8000/uploads/${nombreArchivo}`;
+        const urlPublica = `${API_URL}/uploads/${nombreArchivo}`;
 
         // Verificamos si tiene análisis para habilitar el botón
         const tieneAnalisis = doc.analisis_ia && doc.analisis_ia.length > 0;
@@ -167,7 +169,7 @@ export default function HistorialProductos() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/productos/me", {
+        const response = await fetch(`${API_URL}/productos/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -194,7 +196,7 @@ export default function HistorialProductos() {
     try {
       await Promise.all(
         grupo.ids_productos.map((id) =>
-          fetch(`http://localhost:8000/productos/${id}`, {
+          fetch(`${API_URL}/productos/${id}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           })
@@ -221,7 +223,7 @@ export default function HistorialProductos() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-6 py-4">
@@ -238,10 +240,10 @@ export default function HistorialProductos() {
           </Link>
           <ul className="hidden md:flex items-center space-x-1 font-medium text-sm text-slate-600">
             <Link to="/perfil" className="px-4 py-2 hover:text-blue-600">
-              PERFIL
+              Perfil
             </Link>
             <Link to="/soporte" className="px-4 py-2 hover:text-blue-600">
-              SOPORTE
+              Soporte
             </Link>
             <li
               onClick={() => {
@@ -250,7 +252,7 @@ export default function HistorialProductos() {
               }}
               className="ml-4 px-5 py-2 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white cursor-pointer transition-all"
             >
-              CERRAR SESIÓN
+              Cerrar sesión
             </li>
           </ul>
         </div>
@@ -259,11 +261,11 @@ export default function HistorialProductos() {
       <main className="p-6 md:p-10 max-w-7xl mx-auto animate-fade-in-up">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
-            Historial de Análisis
+            Historial de análisis.
           </h1>
           <p className="text-slate-500">
-            Consulta tus documentos originales y los reportes generados por el
-            sistema.
+            Consulta tus documentos originales y los reportes generados por la
+            aplicación web.
           </p>
         </div>
 
@@ -278,12 +280,12 @@ export default function HistorialProductos() {
         ) : (
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+              <thead className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 ">
                 <tr>
                   <th className="p-5 text-center">Tipo</th>
-                  <th className="p-5">Marca & Modelo</th>
-                  <th className="p-5 w-1/3">Documentos y Reportes</th>
-                  <th className="p-5 text-right">Último Análisis</th>
+                  <th className="p-5">Marca y modelo</th>
+                  <th className="p-5 w-1/3">Documentos y reportes</th>
+                  <th className="p-5 text-right">Último análisis</th>
                   <th className="p-5 text-center">Acciones</th>
                 </tr>
               </thead>
