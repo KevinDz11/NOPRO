@@ -30,10 +30,9 @@ class DocumentoOut(BaseModel):
 
 # Schema extendido que INCLUYE el análisis
 class DocumentoAnalisisOut(DocumentoOut):
-    analisis_ia: List[ResultadoIA] = []
-    
-    class Config:
-        from_attributes = True
+    analisis_ia: list
+    resultado_normativo: list | None = None
+
 
 # --- 2. SCHEMAS DE PRODUCTO ---
 class ProductoBase(BaseModel):

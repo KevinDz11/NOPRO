@@ -12,7 +12,10 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
 
 # Importamos criterios
-from backend.services.ia_analisis import CRITERIOS_POR_PRODUCTO
+from reportlab.platypus import Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+styles = getSampleStyleSheet()
 
 # --- CONFIGURACIÓN DE COLORES (Igual a React) ---
 COLOR_TEXT_MAIN = HexColor('#1e293b')  # Slate-800
@@ -201,30 +204,121 @@ def _crear_disclaimer_legal():
     elementos.append(Paragraph(texto_legal, style_legal_text))
     return elementos
 
-# --- FUNCIÓN REPORTE INDIVIDUAL (Sin cambios mayores, solo estilos) ---
-def generar_pdf_reporte(documento_db, resultados_ia, categoria_producto, tipo_documento, marca_producto, modelo_producto):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
-    story = []
-    
-    # Determinar texto para display (ej: "Manual" -> "Manual de Usuario")
-    tipo_display = tipo_documento
-    if tipo_documento == "Manual": tipo_display = "Manual de Usuario"
-    elif tipo_documento == "Etiqueta": tipo_display = "Etiquetado"
-    elif tipo_documento == "Ficha": tipo_display = "Ficha Técnica"
+def _render_valores_tecnicos(valores: dict):
+    elementos = []
 
-    story.append(_crear_header(f"Reporte {tipo_display}", marca_producto, modelo_producto))
+    if not valores:
+        elementos.append(
+            Paragraph("No se detectaron valores técnicos explícitos.", styles["Italic"])
+        )
+        return elementos
+
+    for k, v in valores.items():
+        elementos.append(
+            Paragraph(f"• <b>{k.capitalize()}</b>: {v}", styles["Normal"])
+        )
+
+    return elementos
+# --- FUNCIÓN REPORTE INDIVIDUAL (Sin cambios mayores, solo estilos) ---
+def generar_pdf_reporte(
+    documento_db,
+    resultados_ia,
+    resultado_normativo,   # 🆕
+    categoria_producto,
+    tipo_documento,
+    marca_producto,
+    modelo_producto
+):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=15*mm,
+        leftMargin=15*mm,
+        topMargin=15*mm,
+        bottomMargin=15*mm
+    )
+
+    story = []
+    styles = getSampleStyleSheet()
+
+    # --------------------------------------------------
+    # Encabezado
+    # --------------------------------------------------
+    tipo_display = tipo_documento
+    if tipo_documento == "Manual":
+        tipo_display = "Manual de Usuario"
+    elif tipo_documento == "Etiqueta":
+        tipo_display = "Etiquetado"
+    elif tipo_documento == "Ficha":
+        tipo_display = "Ficha Técnica"
+
+    story.append(_crear_header(
+        f"Reporte {tipo_display}",
+        marca_producto,
+        modelo_producto
+    ))
     story.append(Spacer(1, 8*mm))
-    
+
+    # --------------------------------------------------
+    # Checklist (SE QUEDA IGUAL)
+    # --------------------------------------------------
     story.extend(_crear_checklist(resultados_ia, categoria_producto, tipo_documento))
     story.append(Spacer(1, 8*mm))
-    
+
+    # --------------------------------------------------
+    # 🆕 RESULTADO NORMATIVO (PASO 4)
+    # --------------------------------------------------
+    story.append(Paragraph("<b>Resultado del Análisis Normativo</b>", styles["Heading2"]))
+    story.append(Spacer(1, 6*mm))
+
+    for norma in resultado_normativo:
+
+        titulo = f"{norma['norma']} — {norma['nombre']}"
+        story.append(Paragraph(f"<b>{titulo}</b>", styles["Heading3"]))
+
+        story.append(Paragraph(
+            f"<b>¿Qué evalúa?</b> {norma['descripcion']}",
+            styles["Normal"]
+        ))
+
+        estado = norma["estado"]
+        estado_txt = "✅ CUMPLE" if estado == "CUMPLE" else "❌ NO DETECTADO"
+
+        story.append(Paragraph(
+            f"<b>Estado:</b> {estado_txt}",
+            styles["Normal"]
+        ))
+
+        story.append(Spacer(1, 4*mm))
+
+        if norma["evidencias"]:
+            story.append(Paragraph("<b>Evidencia encontrada:</b>", styles["Normal"]))
+            for ev in norma["evidencias"]:
+                texto_ev = f"• Página {ev['pagina']} — “{ev['contexto']}”"
+                story.append(Paragraph(texto_ev, styles["Normal"]))
+        else:
+            story.append(Paragraph(
+                "No se encontró evidencia en el documento analizado.",
+                styles["Italic"]
+            ))
+
+        story.append(Spacer(1, 8*mm))
+
+    # --------------------------------------------------
+    # Tabla de hallazgos IA (SE QUEDA IGUAL)
+    # --------------------------------------------------
     story.extend(_crear_tabla_hallazgos(resultados_ia))
+
+    # --------------------------------------------------
+    # Disclaimer legal (SE QUEDA IGUAL)
+    # --------------------------------------------------
     story.extend(_crear_disclaimer_legal())
-    
+
     doc.build(story)
     buffer.seek(0)
     return buffer
+
 
 # --- FUNCIÓN REPORTE GENERAL (Modificada: Sin portada, con orden específico) ---
 def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, modelo_producto):

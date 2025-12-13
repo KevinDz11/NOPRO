@@ -2,163 +2,6 @@ import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-// --- BASE DE DATOS DE CRITERIOS (Copiada del Backend para validación visual) ---
-const CRITERIOS_POR_PRODUCTO = {
-  Laptop: {
-    Ficha: {
-      "NMX-I-60950-1-NYCE-2015": { "Seguridad eléctrica y desempeño": [] },
-      "NOM-008-SCFI-2002": { "Unidades y etiquetado comercial": [] },
-      "NOM-024-SCFI-2013": { "Información técnica y comercial": [] },
-    },
-    Manual: {
-      "NOM-019-SE-2021": {
-        "Marcado de seguridad": [],
-        "Especificaciones eléctricas": [],
-        "Advertencias visibles": [],
-      },
-      "NMX-I-60950-1-NYCE-2015": {
-        "Instrucciones de seguridad": [],
-        "Especificaciones técnicas": [],
-        Mantenimiento: [],
-      },
-      "NOM-008-SCFI-2002": {
-        "Composición y vida útil": [],
-        "Instrucciones de uso seguro": [],
-        "Limitaciones de modificación": [],
-        "Información de homologación": [],
-      },
-      "Información complementaria requerida": {
-        "Especificaciones técnicas": [],
-        "Condiciones de garantía": [],
-        "Instrucciones de uso y seguridad": [],
-      },
-    },
-    Etiqueta: {
-      "NOM-024-SCFI-2013": { "Información comercial": [] },
-    },
-  },
-  SmartTV: {
-    Ficha: {
-      "NOM-001-SCFI-2018": { "Seguridad eléctrica": [] },
-      "NMX-I-60065-NYCE-2015": { "Seguridad térmica y ventilación": [] },
-      "NMX-I-60950-1-NYCE-2015": {
-        "Conexión de periféricos": [],
-        "Seguridad en interfaces": [],
-      },
-      "NOM-032-ENER-2013": { "Eficiencia energética": [] },
-      "NOM-192-SCFI/SCT1-2013": {
-        "Conectividad inalámbrica": [],
-        "Advertencias RF": [],
-      },
-      "NMX-J-606-ANCE-2008": { "Componentes y fusibles": [] },
-      "NMX-J-640-ANCE-2010": {
-        "Identificación y etiquetas": [],
-        "Durabilidad de marcaje": [],
-      },
-      "NMX-J-551-ANCE-2012": {
-        "Cableado y alimentación": [],
-        "Recomendaciones de seguridad": [],
-      },
-    },
-    Manual: {
-      "NOM-001-SCFI-2018": {
-        "Seguridad eléctrica": [],
-        "Advertencias al usuario": [],
-        "Servicio y soporte": [],
-      },
-      "NMX-I-60065-NYCE-2015": {
-        "Seguridad térmica y ventilación": [],
-        "Conexión y operación segura": [],
-        "Mantenimiento preventivo": [],
-      },
-      "NMX-I-60950-1-NYCE-2015": {
-        "Conexión de periféricos": [],
-        "Seguridad en interfaces": [],
-        "Instrucciones generales": [],
-      },
-      "NOM-032-ENER-2013": {
-        "Eficiencia energética": [],
-        "Consejos al usuario": [],
-      },
-      "NOM-192-SCFI/SCT1-2013": {
-        "Conectividad inalámbrica": [],
-        "Advertencias RF": [],
-      },
-      "NMX-J-606-ANCE-2008": {
-        "Componentes y fusibles": [],
-        "Compatibilidad y accesorios": [],
-      },
-      "NMX-J-640-ANCE-2010": {
-        "Identificación y etiquetas": [],
-        "Durabilidad de marcaje": [],
-      },
-      "NMX-J-551-ANCE-2012": {
-        "Cableado y alimentación": [],
-        "Recomendaciones de seguridad": [],
-      },
-    },
-  },
-  Luminaria: {
-    Ficha: {
-      "NMX-J-038/1-ANCE-2005": {
-        "Verificación de desempeño y seguridad eléctrica": [],
-        "Condiciones térmicas y de tensión nacional": [],
-      },
-      "NOM-031-ENER-2019": {
-        "Eficacia luminosa (lm/w)": [],
-        "Factor de potencia y pérdidas": [],
-        "Flujo luminoso y distribución": [],
-        "Curvas fotométricas (.ies o .ldt)": [],
-        "Temperatura de color y CRI": [],
-      },
-      "NMX-J-507/2-ANCE-2013": {
-        "Parámetros eléctricos": [],
-        "Ciclos de encendido": [],
-      },
-      "NMX-J-543-ANCE-2013": {
-        "Ensayos eléctricos": [],
-        "Compatibilidad y vida útil": [],
-      },
-      "NMX-J-610/4-5-ANCE-2013": {
-        "Aislamiento eléctrico y térmico": [],
-        "Prueba de envejecimiento": [],
-        "Evaluación fotobiológica": [],
-        "Grado de protección IP": [],
-      },
-      "NOM-030-ENER-2016": { "Eficiencia energética y pérdidas totales": [] },
-      "NOM-024-ENER-2016": { "Compatibilidad y control inteligente": [] },
-    },
-    Manual: {
-      "NMX-J-507/2-ANCE-2013": {
-        "Métodos de prueba fotométricos": [],
-        "Instalación y montaje": [],
-        "Advertencias y mantenimiento": [],
-      },
-      "NMX-J-543-ANCE-2013": {
-        "Conectadores eléctricos": [],
-        "Seguridad eléctrica": [],
-        "Documentación de instalación": [],
-      },
-      "NMX-J-610/4-5-ANCE-2013": {
-        "Compatibilidad electromagnética (EMC)": [],
-        "Instalación del luminario eléctrico": [],
-      },
-      "NOM-030-ENER-2016": {
-        "Eficiencia energética lámparas LED integradas": [],
-        "Marcado e información del producto": [],
-        "Pruebas y procedimientos de conformidad": [],
-      },
-      "NOM-024-ENER-2016": {
-        "Instalación eficiente de luminarios exteriores": [],
-        "Mantenimiento y reemplazo": [],
-        "Advertencias de uso e instalación": [],
-      },
-      "Información complementaria requerida": {
-        "Especificaciones técnicas": [],
-      },
-    },
-  },
-};
 
 const S = {
   container: {
@@ -347,35 +190,8 @@ const DisclaimerLegal = () => (
   </div>
 );
 
-const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
-  let tipoDoc = "Ficha";
-  const nombre = nombreDoc ? nombreDoc.toLowerCase() : "";
-  if (nombre.includes("manual")) tipoDoc = "Manual";
-  else if (nombre.includes("etiqueta")) tipoDoc = "Etiqueta";
-
-  const catMap = {
-    laptop: "Laptop",
-    smarttv: "SmartTV",
-    "smart tv": "SmartTV",
-    tv: "SmartTV",
-    luminaria: "Luminaria",
-  };
-  const categoriaClean =
-    catMap[categoria ? categoria.toLowerCase() : ""] || "Laptop";
-
-  const criterios = CRITERIOS_POR_PRODUCTO[categoriaClean]?.[tipoDoc] || {};
-
-  const filas = [];
-  Object.entries(criterios).forEach(([norma, requisitos]) => {
-    Object.keys(requisitos).forEach((req) => {
-      const encontrado = analisis.some(
-        (item) => item.Norma === norma && item.Categoria === req
-      );
-      filas.push({ norma, requisito: req, cumple: encontrado });
-    });
-  });
-
-  if (filas.length === 0)
+const TablaChecklist = ({ resultadoNormativo }) => {
+  if (!resultadoNormativo || resultadoNormativo.length === 0) {
     return (
       <div
         style={{
@@ -385,9 +201,10 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
           fontSize: 12,
         }}
       >
-        No hay criterios definidos para {categoriaClean} - {tipoDoc}
+        No hay normas evaluadas para este documento.
       </div>
     );
+  }
 
   return (
     <div style={S.tableContainer}>
@@ -395,28 +212,38 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
         <thead>
           <tr>
             <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
-            <th style={{ ...S.th, width: "50%" }}>Requisito evaluado</th>
-            <th style={{ ...S.th, width: "20%", textAlign: "center" }}>
-              Estatus
+            <th style={{ ...S.th, width: "40%" }}>Requisito evaluado</th>
+            <th style={{ ...S.th, width: "15%", textAlign: "center" }}>
+              Estado
+            </th>
+            <th style={{ ...S.th, width: "15%", textAlign: "center" }}>
+              Score
             </th>
           </tr>
         </thead>
         <tbody>
-          {filas.map((fila, idx) => (
+          {resultadoNormativo.map((norma, idx) => (
             <tr key={idx}>
               <td style={S.td}>
-                <strong>{fila.norma}</strong>
+                <strong>{norma.norma}</strong>
               </td>
-              <td style={S.td}>{fila.requisito}</td>
+              <td style={S.td}>{norma.nombre}</td>
               <td style={{ ...S.td, textAlign: "center" }}>
                 <span
                   style={{
                     ...S.statusBadge,
-                    ...(fila.cumple ? S.statusOk : S.statusFail),
+                    ...(norma.estado === "CUMPLE"
+                      ? S.statusOk
+                      : S.statusFail),
                   }}
                 >
-                  {fila.cumple ? "✅ Cumple" : "❌ No detectado"}
+                  {norma.estado === "CUMPLE"
+                    ? "✅ Cumple"
+                    : "❌ No detectado"}
                 </span>
+              </td>
+              <td style={{ ...S.td, textAlign: "center" }}>
+                {norma.score_confianza}%
               </td>
             </tr>
           ))}
@@ -425,6 +252,7 @@ const TablaChecklist = ({ analisis, categoria, nombreDoc }) => {
     </div>
   );
 };
+
 
 const TablaHallazgos = ({ analisis }) => {
   if (!analisis || analisis.length === 0) {
@@ -756,9 +584,8 @@ function ResultadosAnalisis() {
                     1. Checklist normativo
                   </h4>
                   <TablaChecklist
-                    analisis={sub.data.analisis_ia}
-                    categoria={datos.categoria_producto}
-                    nombreDoc={sub.data.nombre}
+                      resultadoNormativo={sub.data.resultado_normativo}
+
                   />
 
                   <h4
@@ -782,9 +609,8 @@ function ResultadosAnalisis() {
                 1. Checklist de cumplimiento normativo
               </h3>
               <TablaChecklist
-                analisis={datos.analisis_ia || []}
-                categoria={datos.categoria_producto}
-                nombreDoc={datos.nombre}
+              resultadoNormativo={datos.resultado_normativo}
+
               />
 
               <h3 style={S.sectionTitle}>

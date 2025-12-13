@@ -14,6 +14,31 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best.pt")
 
+# ==========================================================
+# MAPEO YOLO → NORMA OFICIAL
+# ==========================================================
+
+YOLO_A_NORMA = {
+    # 🔴 ESPECÍFICOS PRIMERO
+    "nom-nyce": "NMX-I-60950-1-NYCE-2015",
+    "nyce": "NMX-I-60950-1-NYCE-2015",
+    "ce": "NMX-I-60950-1-NYCE-2015",
+    "ul": "NMX-I-60950-1-NYCE-2015",
+
+    "doble aislamiento": "NMX-I-60950-1-NYCE-2015",
+    "choque electr": "NMX-I-60950-1-NYCE-2015",
+    "alto voltaje": "NMX-I-60950-1-NYCE-2015",
+
+    # ♻️ RECICLADO
+    "raee": "NOM-024-SCFI-2013",
+    "reciclado": "NOM-024-SCFI-2013",
+
+    # 🟢 GENÉRICO AL FINAL
+    "nom (": "NOM-106-SCFI-2000",
+}
+
+
+
 # --- CONFIGURACIÓN DE COLORES ---
 COLOR_MAP = {
     "Samsung": "#1d4ed8",
@@ -47,16 +72,16 @@ def get_color_for_label(label):
 #    THRESHOLDS POR CLASE
 # ---------------------------
 THRESHOLDS = {
-    "NOM": 0.45,
-    "NOM-CE": 0.50,
-    "NOM-EAC": 0.40,
-    "NOM-NYCE": 0.45,
-    "NOM-UL": 0.30,  
-    "NOM-ANCE": 0.55,
+    "nom": 0.45,
+    "nom-ce": 0.50,
+    "nom-eac": 0.40,
+    "nom-nyce": 0.45,
+    "nom-ul": 0.30,
+    "nom-ance": 0.55,
     "choque electr": 0.45,
     "doble aislamiento": 0.40,
     "cont. especial": 0.50,
-    "alto voltaje": 0.20,  
+    "alto voltaje": 0.20,
 }
 
 # ---------------------------
@@ -111,7 +136,7 @@ def consultar_google_vision_avanzado(pil_image):
         return detecciones, nombres_simples
 
     except Exception as e:
-        print(f"❌ Error Google Vision: {e}")
+        print(f"⚠️ Error Google Vision: {e}")
         return [], []
 
 
