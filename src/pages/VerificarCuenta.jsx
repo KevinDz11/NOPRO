@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function VerificarCuenta() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function VerificarCuenta() {
 
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/clientes/verificar", {
+      const response = await fetch(`${API_URL}/clientes/verificar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +80,7 @@ export default function VerificarCuenta() {
     setCargandoReenvio(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/reenviar-verificacion",
+        `${API_URL}/clientes/reenviar-verificacion`,
         {
           method: "POST",
           headers: {
@@ -205,7 +207,7 @@ export default function VerificarCuenta() {
                     className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                         ${
                           !cargando && !cargandoReenvio && codigo
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                            ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                             : "bg-slate-300 cursor-not-allowed shadow-none"
                         }`}
                   >
@@ -241,7 +243,7 @@ export default function VerificarCuenta() {
         </div>
 
         {/* DERECHA (Panel informativo - Mantenido igual) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-slate-800 to-slate-900 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-500 opacity-20 rounded-full blur-3xl transform -translate-x-10 translate-y-10"></div>
 

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function ResetContrasena() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ export default function ResetContrasena() {
     setCargando(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/clientes/ejecutar-reset-password",
+        `${API_URL}/clientes/ejecutar-reset-password`,
         {
           method: "POST",
           headers: {
@@ -112,7 +114,7 @@ export default function ResetContrasena() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
       {/* Fondos Decorativos Animados */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
 
       <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row border border-white/50 animate-fade-in-up">
@@ -295,7 +297,7 @@ export default function ResetContrasena() {
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5
                 ${
                   formularioValido && !cargando && !mensaje
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
+                    ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/30 cursor-pointer"
                     : "bg-slate-300 cursor-not-allowed shadow-none"
                 }`}
             >
@@ -305,7 +307,7 @@ export default function ResetContrasena() {
         </div>
 
         {/* DERECHA (Panel informativo - Oculto en móvil) */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-blue-600 to-indigo-800 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
+        <div className="hidden md:flex w-1/2 bg-linear-to-br from-blue-600 to-indigo-800 p-12 text-white flex-col justify-center items-center relative overflow-hidden order-1 md:order-2">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform -translate-x-10 translate-y-10"></div>
 

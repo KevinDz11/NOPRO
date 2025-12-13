@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export default function ContactoSoporte() {
   useAuthListener();
   const navigate = useNavigate();
@@ -71,7 +73,7 @@ export default function ContactoSoporte() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/clientes/me", {
+        const response = await fetch(`${API_URL}/clientes/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -155,7 +157,7 @@ export default function ContactoSoporte() {
 
     setCargando(true);
     try {
-      const response = await fetch("http://localhost:8000/soporte/", {
+      const response = await fetch(`${API_URL}/soporte/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +184,7 @@ export default function ContactoSoporte() {
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans flex flex-col">
       {/* Fondo Decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-50 to-blue-50/40 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-slate-50 to-blue-50/40 -z-10"></div>
       <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
       <div
         className="absolute bottom-20 left-0 w-72 h-72 bg-indigo-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
@@ -235,10 +237,10 @@ export default function ContactoSoporte() {
       </nav>
 
       {/* CONTENIDO PRINCIPAL - FORMULARIO */}
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+      <main className="grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden relative">
           {/* Header de la tarjeta */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
+          <div className="bg-linear-to-r from-blue-600 to-indigo-700 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
             <h2 className="text-3xl font-extrabold text-white relative z-10 mb-2">
               ¿Necesitas ayuda?
@@ -355,7 +357,7 @@ export default function ContactoSoporte() {
                     ${
                       cargando
                         ? "bg-slate-300 cursor-not-allowed shadow-none"
-                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
+                        : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
                     }`}
                   disabled={cargando}
                 >

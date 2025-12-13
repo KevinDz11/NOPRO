@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 from .. import crud, schemas, database, auth, models
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
 conf = ConnectionConfig(
@@ -54,7 +56,7 @@ async def solicitar_reset_password(
         expires = datetime.now(timezone.utc) + timedelta(hours=1) 
         crud.set_reset_token(db, user, token, expires)
 
-        reset_link = f"http://localhost:5173/reset-password?token={token}"
+        reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
 
         message = MessageSchema(
             subject="Restablece tu contraseña en NOPRO",
