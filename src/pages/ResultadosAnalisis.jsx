@@ -447,25 +447,40 @@ function ResultadosAnalisis() {
 
     const parsed = JSON.parse(data);
 
-    // 🟢 Caso REPORTE GENERAL (unificado)
-    if (parsed.bloques_documentos) {
-      const bloques = parsed.bloques_documentos || [];
+    // 🟢 CASO REPORTE GENERAL (UNIFICADO)
+    if (parsed.sub_reportes && Array.isArray(parsed.sub_reportes)) {
+      const subReportes = parsed.sub_reportes;
 
-      const analisisUnificado = bloques.flatMap((b) =>
-        Array.isArray(b.analisis) ? b.analisis : []
+      // 🔥 DOCUMENTOS (ESTO ES LO CRÍTICO)
+      const documentos = subReportes
+        .map((sub) => sub?.data)
+        .filter(Boolean)
+        .map((d) => ({
+          id_documento: d.id_documento,
+          nombre: d.nombre,
+        }));
+
+      console.log("DOCUMENTOS DEL REPORTE:", documentos);
+
+      // Análisis y checklist unificado (solo visual)
+      const analisisUnificado = subReportes.flatMap((sub) =>
+        Array.isArray(sub?.data?.analisis_ia) ? sub.data.analisis_ia : []
       );
 
-      const resultadoNormativoUnificado = bloques.flatMap((b) =>
-        Array.isArray(b.resultado_normativo) ? b.resultado_normativo : []
+      const resultadoNormativoUnificado = subReportes.flatMap((sub) =>
+        Array.isArray(sub?.data?.resultado_normativo)
+          ? sub.data.resultado_normativo
+          : []
       );
 
       setDatos({
         ...parsed,
+        documentos, // 🔥 AHORA SÍ EXISTE
         analisisUnificado,
         resultadoNormativoUnificado,
       });
     } else {
-      // 🟢 Caso REPORTE INDIVIDUAL (como ya funcionaba)
+      // 🟢 CASO REPORTE INDIVIDUAL
       setDatos(parsed);
     }
   }, []);
@@ -478,58 +493,92 @@ function ResultadosAnalisis() {
 
     try {
       const token = localStorage.getItem("authToken");
-      let response;
-      const url = esGeneral
-        ? "http://localhost:8000/documentos/reporte-general-pdf"
-        : `http://localhost:8000/documentos/${datos.id_documento}/reporte-pdf`;
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
 
-      const options = {
-        method: esGeneral ? "POST" : "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          ...(esGeneral && { "Content-Type": "application/json" }),
-        },
-        ...(esGeneral && {
-          body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
-        }),
-      };
+      // ==================================================
+      // 🟢 CASO 1: REPORTE GENERAL (UNIFICADO)
+      // ==================================================
+      if (esGeneral) {
+        if (!datos?.documentos || datos.documentos.length === 0) {
+          throw new Error("No hay documentos para generar el PDF");
+        }
 
-      response = await fetch(url, options);
+        const ids_documentos = datos.documentos.map((d) => d.id_documento);
+        console.log("IDs enviados al backend:", ids_documentos);
+
+        const response = await fetch(
+          "http://localhost:8000/documentos/reporte-general-pdf",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ids_documentos }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Error generando el PDF general");
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Reporte_General_Unificado.pdf";
+        document.body.appendChild(a);
+        a.click();
+
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        return;
+      }
+
+      // ==================================================
+      // 🟢 CASO 2: REPORTE INDIVIDUAL
+      // ==================================================
+      if (!datos?.id_documento) {
+        throw new Error("No se encontró el documento para descargar");
+      }
+
+      console.log("Descargando PDF individual ID:", datos.id_documento);
+
+      const response = await fetch(
+        `http://localhost:8000/documentos/${datos.id_documento}/reporte-pdf`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
-        // Aquí arreglamos el [object Object]
         const errorData = await response.json();
-        let mensaje = "Error desconocido";
-
-        if (errorData.detail) {
-          // Si es un array u objeto (error de validación), lo convertimos a texto
-          mensaje =
-            typeof errorData.detail === "string"
-              ? errorData.detail
-              : JSON.stringify(errorData.detail);
-        }
-        throw new Error(mensaje);
+        throw new Error(
+          errorData.detail || "Error generando el PDF individual"
+        );
       }
 
       const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
 
-      // Validación extra: Si el blob está vacío, falló el backend
-      if (blob.size === 0)
-        throw new Error("El servidor devolvió un archivo vacío.");
-
-      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = `Reporte_${
-        esGeneral ? "General" : datos.nombre || "Doc"
-      }.pdf`;
+      a.href = url;
+      a.download = `Reporte_${datos.nombre || "Documento"}.pdf`;
       document.body.appendChild(a);
       a.click();
+
       a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error descarga:", error);
-      alert(`Error al descargar PDF: ${error.message}`);
+      console.error("Error al descargar PDF:", error);
+      alert(error.message || "No se pudo descargar el PDF");
     } finally {
       setGenerando(false);
     }
