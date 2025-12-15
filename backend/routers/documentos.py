@@ -344,3 +344,131 @@ def descargar_reporte_pdf(
             status_code=500,
             detail="Error generando el PDF"
         )
+
+# ============================================================
+# DETALLE DE DOCUMENTO (HISTORIAL - JSON)
+# ============================================================
+@router.get("/{id_documento}", response_model=schemas.DocumentoAnalisisOut)
+def obtener_detalle_documento(
+    id_documento: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    import json  # 👈 asegúrate de tener esto
+
+    doc = db.query(models.Documento).filter(
+        models.Documento.id_documento == id_documento,
+        models.Documento.id_cliente == current_user.id_cliente
+    ).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+
+    producto = db.query(models.Producto).filter(
+        models.Producto.id_producto == doc.id_producto
+    ).first()
+
+    categoria_prod = producto.nombre if producto else "Laptop"
+
+    cat_map = {
+        "laptop": "Laptop",
+        "smarttv": "SmartTV",
+        "smart tv": "SmartTV",
+        "tv": "SmartTV",
+        "luminaria": "Luminaria"
+    }
+    categoria_clean = cat_map.get(categoria_prod.lower(), "Laptop")
+
+    nombre_doc = doc.nombre.lower()
+    tipo_clean = "Ficha"
+    if "manual" in nombre_doc:
+        tipo_clean = "Manual"
+    elif "etiqueta" in nombre_doc:
+        tipo_clean = "Etiqueta"
+
+    # ==================================================
+    # 🔥 AQUÍ VA EXACTAMENTE EL BLOQUE QUE PREGUNTAS
+    # ==================================================
+    analisis_ia = doc.analisis_ia or []
+
+    if isinstance(analisis_ia, str):
+        try:
+            analisis_ia = json.loads(analisis_ia)
+        except Exception:
+            analisis_ia = []
+
+    # ==================================================
+    # 🔥 AHORA YA ES SEGURO USARLO
+    # ==================================================
+    resultado_normativo = construir_resultado_normativo(
+        categoria_producto=categoria_clean,
+        tipo_documento=tipo_clean,
+        resultados_ia=analisis_ia
+    )
+
+    # Inyectar el checklist en la respuesta
+    doc.resultado_normativo = resultado_normativo
+
+    return doc
+@router.get("/{id_documento}", response_model=schemas.DocumentoAnalisisOut)
+def obtener_detalle_documento(
+    id_documento: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    import json  # 👈 asegúrate de tener esto
+
+    doc = db.query(models.Documento).filter(
+        models.Documento.id_documento == id_documento,
+        models.Documento.id_cliente == current_user.id_cliente
+    ).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+
+    producto = db.query(models.Producto).filter(
+        models.Producto.id_producto == doc.id_producto
+    ).first()
+
+    categoria_prod = producto.nombre if producto else "Laptop"
+
+    cat_map = {
+        "laptop": "Laptop",
+        "smarttv": "SmartTV",
+        "smart tv": "SmartTV",
+        "tv": "SmartTV",
+        "luminaria": "Luminaria"
+    }
+    categoria_clean = cat_map.get(categoria_prod.lower(), "Laptop")
+
+    nombre_doc = doc.nombre.lower()
+    tipo_clean = "Ficha"
+    if "manual" in nombre_doc:
+        tipo_clean = "Manual"
+    elif "etiqueta" in nombre_doc:
+        tipo_clean = "Etiqueta"
+
+    # ==================================================
+    # 🔥 AQUÍ VA EXACTAMENTE EL BLOQUE QUE PREGUNTAS
+    # ==================================================
+    analisis_ia = doc.analisis_ia or []
+
+    if isinstance(analisis_ia, str):
+        try:
+            analisis_ia = json.loads(analisis_ia)
+        except Exception:
+            analisis_ia = []
+
+    # ==================================================
+    # 🔥 AHORA YA ES SEGURO USARLO
+    # ==================================================
+    resultado_normativo = construir_resultado_normativo(
+        categoria_producto=categoria_clean,
+        tipo_documento=tipo_clean,
+        resultados_ia=analisis_ia
+    )
+
+    # Inyectar el checklist en la respuesta
+    doc.resultado_normativo = resultado_normativo
+
+    return doc

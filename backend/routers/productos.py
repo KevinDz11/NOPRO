@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 
+from backend.services.resultado_normativo import construir_resultado_normativo
 from backend import crud, schemas, database, auth, models
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
@@ -58,20 +59,32 @@ def listar_productos_del_usuario(
         cliente_id=current_user.id_cliente
     )
 
-    # 🔧 FIX analisis_ia TAMBIÉN AQUÍ
     for producto in productos:
         for documento in producto.documentos:
-            if documento.analisis_ia and isinstance(documento.analisis_ia, str):
+
+            # ===============================
+            # 1️⃣ Normalizar analisis_ia
+            # ===============================
+            analisis = documento.analisis_ia or []
+
+            if isinstance(analisis, str):
                 try:
-                    documento.analisis_ia = json.loads(documento.analisis_ia)
-                except:
-                    documento.analisis_ia = []
+                    analisis = json.loads(analisis)
+                except Exception:
+                    analisis = []
+
+            documento.analisis_ia = analisis
+
+            # ===============================
+            # 2️⃣ 🔥 RECONSTRUIR CHECKLIST
+            # ===============================
+            documento.resultado_normativo = construir_resultado_normativo(
+                categoria_producto=producto.nombre or "Laptop",
+                tipo_documento="Ficha",  # o detecta por nombre si luego quieres
+                resultados_ia=analisis
+            )
 
     return productos
-
-    productos = crud.get_productos_by_cliente(db, cliente_id=current_user.id_cliente)
-    return productos
-
 
 
 # --- ENDPOINT ANTIGUO (AHORA PARA SUBIR DOCUMENTOS) ---
