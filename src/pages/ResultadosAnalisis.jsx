@@ -207,55 +207,74 @@ const TablaChecklist = ({ resultadoNormativo }) => {
   }
 
   return (
-    <div style={S.tableContainer}>
-      <table style={S.table}>
-        <thead>
-          <tr>
-            <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
-            <th style={{ ...S.th, width: "40%" }}>Requisito evaluado</th>
-            <th style={{ ...S.th, width: "15%", textAlign: "center" }}>
-              Estado
-            </th>
-            <th style={{ ...S.th, width: "15%", textAlign: "center" }}>
-              Score
-            </th>
+  <div style={S.tableContainer}>
+    <table style={S.table}>
+      <thead>
+        <tr>
+          <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
+          <th style={{ ...S.th, width: "40%" }}>Requisito evaluado</th>
+          <th style={{ ...S.th, width: "30%", textAlign: "center" }}>
+            Estado
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {resultadoNormativo.map((norma, idx) => (
+          <tr key={idx}>
+            <td style={S.td}>
+              <strong>{norma.norma}</strong>
+            </td>
+            <td style={S.td}>{norma.nombre}</td>
+            <td style={{ ...S.td, textAlign: "center" }}>
+              <span
+                style={{
+                  ...S.statusBadge,
+                  ...(norma.estado === "CUMPLE"
+                    ? S.statusOk
+                    : S.statusFail),
+                }}
+              >
+                {norma.estado === "CUMPLE"
+                  ? "✅ Cumple"
+                  : "❌ No detectado"}
+              </span>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {resultadoNormativo.map((norma, idx) => (
-            <tr key={idx}>
-              <td style={S.td}>
-                <strong>{norma.norma}</strong>
-              </td>
-              <td style={S.td}>{norma.nombre}</td>
-              <td style={{ ...S.td, textAlign: "center" }}>
-                <span
-                  style={{
-                    ...S.statusBadge,
-                    ...(norma.estado === "CUMPLE"
-                      ? S.statusOk
-                      : S.statusFail),
-                  }}
-                >
-                  {norma.estado === "CUMPLE"
-                    ? "✅ Cumple"
-                    : "❌ No detectado"}
-                </span>
-              </td>
-              <td style={{ ...S.td, textAlign: "center" }}>
-                {norma.score_confianza}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
 };
 
 
-const TablaHallazgos = ({ analisis }) => {
-  if (!analisis || analisis.length === 0) {
+
+const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
+  /* ===============================
+     NORMALIZACIÓN SEGURA DE DATOS
+     =============================== */
+  const analisisSeguro = Array.isArray(analisis) ? analisis : [];
+  const resultadoNormativoSeguro = Array.isArray(resultadoNormativo)
+    ? resultadoNormativo
+    : [];
+
+  /* ===============================
+     MAPA: NORMA → DESCRIPCIÓN
+     =============================== */
+  const mapaDescripcion = {};
+ resultadoNormativoSeguro.forEach((n) => {
+  if (n?.norma && n.descripcion && !mapaDescripcion[n.norma]) {
+    mapaDescripcion[n.norma] = n.descripcion;
+  }
+});
+console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
+
+
+
+  /* ===============================
+     SIN EVIDENCIAS
+     =============================== */
+  if (analisisSeguro.length === 0) {
     return (
       <div
         style={{
@@ -275,63 +294,81 @@ const TablaHallazgos = ({ analisis }) => {
     );
   }
 
+  /* ===============================
+     TABLA
+     =============================== */
   return (
     <div style={S.tableContainer}>
       <table style={S.table}>
         <thead>
           <tr>
-            <th style={{ ...S.th, width: "35%" }}>Norma y categoría</th>
-            <th style={{ ...S.th, width: "55%" }}>Evidencia encontrada</th>
-            <th style={{ ...S.th, width: "10%", textAlign: "center" }}>Pág.</th>
+            <th style={{ ...S.th, width: "25%" }}>Norma y categoría</th>
+            <th style={{ ...S.th, width: "30%" }}>
+              Descripción de la norma
+            </th>
+            <th style={{ ...S.th, width: "35%" }}>Evidencia encontrada</th>
+            <th
+              style={{
+                ...S.th,
+                width: "10%",
+                textAlign: "center",
+              }}
+            >
+              Pág.
+            </th>
           </tr>
         </thead>
+
         <tbody>
-          {analisis.map((item, index) => {
-            if (item.ImagenBase64) {
+          {analisisSeguro.map((item, index) => {
+            /* ===============================
+               EVIDENCIA VISUAL
+               =============================== */
+            if (item?.ImagenBase64) {
               return (
                 <tr key={index}>
-                  <td
-                    colSpan="3"
-                    style={{ padding: "0", borderBottom: "1px solid #e2e8f0" }}
-                  >
+                  <td colSpan="4" style={{ padding: 0 }}>
                     <div
                       style={{
-                        padding: "20px",
+                        padding: 20,
                         backgroundColor: "#f8fafc",
                         textAlign: "center",
+                        borderBottom: "1px solid #e2e8f0",
                       }}
                     >
                       <div
                         style={{
-                          marginBottom: "10px",
+                          marginBottom: 10,
                           borderBottom: "1px dashed #cbd5e1",
-                          paddingBottom: "10px",
+                          paddingBottom: 10,
                         }}
                       >
                         <span
                           style={{
                             fontWeight: "bold",
                             color: "#475569",
-                            fontSize: "11px",
+                            fontSize: 11,
                           }}
                         >
                           📸 EVIDENCIA VISUAL
                         </span>
                       </div>
+
                       <img
                         src={`data:image/jpeg;base64,${item.ImagenBase64}`}
                         alt="Evidencia"
                         style={{
-                          maxWidth: "250px",
-                          maxHeight: "150px",
+                          maxWidth: 250,
+                          maxHeight: 150,
                           border: "4px solid white",
                           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         }}
                       />
+
                       <p
                         style={{
-                          fontSize: "10px",
-                          marginTop: "10px",
+                          fontSize: 10,
+                          marginTop: 10,
                           color: "#64748b",
                           fontStyle: "italic",
                         }}
@@ -343,28 +380,42 @@ const TablaHallazgos = ({ analisis }) => {
                 </tr>
               );
             }
+
+            /* ===============================
+               EVIDENCIA TEXTUAL
+               =============================== */
             const esVisual =
-              item.Norma &&
-              (item.Norma.includes("Visual") || item.Norma.includes("Gráfica"));
-            const colorNorma = esVisual ? "#9333ea" : "#2563eb"; // Purple vs Blue
+              item?.Norma &&
+              (item.Norma.includes("Visual") ||
+                item.Norma.includes("Gráfica"));
+
+            const colorNorma = esVisual ? "#9333ea" : "#2563eb";
             const bgContext = esVisual ? "#faf5ff" : "#fefce8";
             const borderContext = esVisual ? "#c084fc" : "#facc15";
 
             return (
               <tr key={index}>
+                {/* Norma y categoría */}
                 <td style={S.td}>
                   <div
                     style={{
                       fontWeight: "bold",
-                      fontSize: "12px",
+                      fontSize: 12,
                       color: colorNorma,
-                      marginBottom: "2px",
+                      marginBottom: 2,
                     }}
                   >
                     {item.Norma}
                   </div>
                   <span style={S.tag}>{item.Categoria}</span>
                 </td>
+
+                {/* Descripción de la norma */}
+                <td style={{ ...S.td, fontSize: 11, color: "#374151" }}>
+                  {mapaDescripcion[item.Norma] || "—"}
+                </td>
+
+                {/* Evidencia */}
                 <td style={S.td}>
                   <div
                     style={{
@@ -373,19 +424,23 @@ const TablaHallazgos = ({ analisis }) => {
                       borderLeftColor: borderContext,
                     }}
                   >
-                    "{item.Contexto}"
+                    “{item.Contexto}”
                   </div>
                   <div
                     style={{
-                      fontSize: "10px",
+                      fontSize: 10,
                       color: "#64748b",
-                      marginTop: "4px",
+                      marginTop: 4,
                     }}
                   >
                     <strong>Patrón:</strong> {item.Hallazgo}
                   </div>
                 </td>
-                <td style={{ ...S.td, textAlign: "center" }}>{item.Pagina}</td>
+
+                {/* Página */}
+                <td style={{ ...S.td, textAlign: "center" }}>
+                  {item.Pagina}
+                </td>
               </tr>
             );
           })}
@@ -395,17 +450,42 @@ const TablaHallazgos = ({ analisis }) => {
   );
 };
 
+
 function ResultadosAnalisis() {
   useAuthListener();
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);
 
-  useEffect(() => {
-    const data = localStorage.getItem("ultimoAnalisis");
-    if (data) {
-      setDatos(JSON.parse(data));
-    }
-  }, []);
+ useEffect(() => {
+  const data = localStorage.getItem("ultimoAnalisis");
+  if (!data) return;
+
+  const parsed = JSON.parse(data);
+
+  // 🟢 Caso REPORTE GENERAL (unificado)
+  if (parsed.bloques_documentos) {
+    const bloques = parsed.bloques_documentos || [];
+
+    const analisisUnificado = bloques.flatMap(
+      b => Array.isArray(b.analisis) ? b.analisis : []
+    );
+
+    const resultadoNormativoUnificado = bloques.flatMap(
+      b => Array.isArray(b.resultado_normativo) ? b.resultado_normativo : []
+    );
+
+    setDatos({
+      ...parsed,
+      analisisUnificado,
+      resultadoNormativoUnificado,
+    });
+
+  } else {
+    // 🟢 Caso REPORTE INDIVIDUAL (como ya funcionaba)
+    setDatos(parsed);
+  }
+}, []);
+
 
   const esGeneral = datos?.tipo_vista === "general";
 
@@ -597,9 +677,10 @@ function ResultadosAnalisis() {
                       marginTop: "20px",
                     }}
                   >
-                    2. Evidencias encontradas
-                  </h4>
-                  <TablaHallazgos analisis={sub.data.analisis_ia} />
+                    2. Evidencias encontradas</h4>
+                  <TablaHallazgos
+                  analisis={sub.data.analisis_ia}
+                  resultadoNormativo={sub.data.resultado_normativo}/>
                 </div>
               ))}
             </div>
@@ -616,7 +697,12 @@ function ResultadosAnalisis() {
               <h3 style={S.sectionTitle}>
                 2. Detalle de evidencias encontradas
               </h3>
-              <TablaHallazgos analisis={datos.analisis_ia || []} />
+   <TablaHallazgos
+  analisis={datos.analisis_ia || []}
+  resultadoNormativo={datos.resultado_normativo || []}
+/>
+
+
             </div>
           )}
 

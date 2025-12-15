@@ -20,7 +20,7 @@ CATALOGO_NORMAS = {
 
     "NOM-008-SCFI-2002": {
         "nombre": "Sistema General de Unidades de Medida",
-        "descripcion": "Uso correcto de unidades del SI.",
+        "descripcion": "Verifica que las magnitudes físicas se expresen exclusivamente en unidades del Sistema Internacional de Unidades (SI)",
         "documentos_aplicables": ["Ficha", "Manual"],
         "fuente": "textual",
         "evidencia_esperada": [

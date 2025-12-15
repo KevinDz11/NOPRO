@@ -1,5 +1,6 @@
 import os
 from typing import List
+import json
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
@@ -12,11 +13,24 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+# --- ENDPOINT PARA LISTAR PRODUCTOS ---
+@router.get("/", response_model=List[schemas.ProductoOut])
+def listar_productos(
+    db: Session = Depends(database.get_db),
+    usuario=Depends(auth.get_current_user)
+):
+    productos = crud.obtener_productos_por_usuario(db, usuario.id)
 
-# --- ENDPOINT PARA LISTAR PRODUCTOS (Existente) ---
-@router.get("/", response_model=list[schemas.ProductoOut])
-def listar_productos(db: Session = Depends(database.get_db)):
-    productos = crud.get_productos(db)
+    # 🔧 FIX: convertir analisis_ia de str → list
+    for producto in productos:
+        for documento in producto.documentos:
+            if documento.analisis_ia and isinstance(documento.analisis_ia, str):
+                try:
+                    documento.analisis_ia = json.loads(documento.analisis_ia)
+                except Exception as e:
+                    print("❌ Error parseando analisis_ia:", e)
+                    documento.analisis_ia = []  # fallback seguro
+
     return productos
 
 
@@ -34,20 +48,30 @@ def crear_producto(
         raise HTTPException(status_code=500, detail=f"Error al crear el producto: {str(e)}")
     
 # --- NUEVO ENDPOINT DE HISTORIAL POR USUARIO ---
-@router.get("/me", response_model=list[schemas.ProductoOut])
+@router.get("/me", response_model=List[schemas.ProductoOut])
 def listar_productos_del_usuario(
     db: Session = Depends(database.get_db),
     current_user: models.Cliente = Depends(auth.get_current_user)
 ):
+    productos = crud.get_productos_by_cliente(
+        db,
+        cliente_id=current_user.id_cliente
+    )
+
+    # 🔧 FIX analisis_ia TAMBIÉN AQUÍ
+    for producto in productos:
+        for documento in producto.documentos:
+            if documento.analisis_ia and isinstance(documento.analisis_ia, str):
+                try:
+                    documento.analisis_ia = json.loads(documento.analisis_ia)
+                except:
+                    documento.analisis_ia = []
+
+    return productos
+
     productos = crud.get_productos_by_cliente(db, cliente_id=current_user.id_cliente)
     return productos
 
-# --- ENDPOINT PARA LISTAR PRODUCTOS (Existente) ---
-# Este endpoint ahora solo debería ser para Administradores, pero por ahora lo dejamos como está.
-@router.get("/", response_model=list[schemas.ProductoOut])
-def listar_productos(db: Session = Depends(database.get_db)):
-    productos = crud.get_productos(db)
-    return productos
 
 
 # --- ENDPOINT ANTIGUO (AHORA PARA SUBIR DOCUMENTOS) ---

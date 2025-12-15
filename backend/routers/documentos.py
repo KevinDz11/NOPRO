@@ -222,6 +222,42 @@ def generar_reporte_general_pdf(
             status_code=500,
             detail="Error generando el reporte general"
         )
+@router.post("/reporte-general")
+def generar_reporte_general(
+    data: ReporteGeneralRequest,
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    documentos = db.query(models.Documento).filter(
+        models.Documento.id_documento.in_(data.ids_documentos),
+        models.Documento.id_cliente == current_user.id_cliente
+    ).all()
+
+    bloques = []
+
+    for doc in documentos:
+        producto = db.query(models.Producto).filter(
+            models.Producto.id_producto == doc.id_producto
+        ).first()
+
+        categoria_clean = "Laptop"  # usa tu mapeo real
+        tipo_clean = "Ficha"
+
+        resultado_normativo = construir_resultado_normativo(
+            categoria_producto=categoria_clean,
+            tipo_documento=tipo_clean,
+            resultados_ia=doc.analisis_ia or []
+        )
+
+        bloques.append({
+            "documento_id": doc.id_documento,
+            "analisis": doc.analisis_ia or [],
+            "resultado_normativo": resultado_normativo
+        })
+
+    return {
+        "bloques_documentos": bloques
+    }
 
 # ============================================================
 # REPORTE PDF INDIVIDUAL
