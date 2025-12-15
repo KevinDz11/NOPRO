@@ -47,6 +47,22 @@ YOLO_A_NORMA = {
 }
 
 # =========================================================================
+#  DETECCIÓN DE ÍNDICE / TABLA DE CONTENIDO
+# =========================================================================
+
+PATRONES_INDICE = [
+    r"\bindice\b",
+    r"\btabla de contenido\b",
+    r"\bcontenido\b",
+    r"\bcap[ií]tulo\b\s+\d+",
+    r"\bsecci[oó]n\b\s+\d+",
+    r"\.{3,}\s*\d+$",      # ........ 12
+    r"\bpag\.\s*\d+",
+]
+
+
+
+# =========================================================================
 #  FUNCIONES DE EXTRACCIÓN Y ANÁLISIS
 # =========================================================================
 
@@ -69,14 +85,35 @@ def extraer_documento_spacy(ruta_pdf):
                     # 2. PROCESAMIENTO CON SPACY
                     doc = nlp(clean_text)
                     
+                    es_indice = es_pagina_indice(txt)
                     docs_paginas.append({
-                        "pagina": i+1,
+                        "pagina": i + 1,
                         "doc_spacy": doc,
-                        "original": txt
-                    })
+                        "original": txt,
+                        "es_indice": es_indice
+})
+
     except Exception as e:
         print(f"Error leyendo PDF: {e}")
     return docs_paginas
+
+def es_pagina_indice(texto: str) -> bool:
+    """
+    Determina si una página corresponde a un índice o tabla de contenido.
+    """
+    if not texto:
+        return False
+
+    texto_limpio = unidecode(texto.lower())
+
+    coincidencias = 0
+    for patron in PATRONES_INDICE:
+        if re.search(patron, texto_limpio):
+            coincidencias += 1
+
+    # Si cumple varios criterios, se considera índice
+    return coincidencias >= 2
+
 
 def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
     """
@@ -108,9 +145,15 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                             continue
 
                         for pag_data in docs_paginas:
+
+                            # 🚫 DESCARTAR ÍNDICE
+                            if pag_data.get("es_indice"):
+                                continue
+
                             doc = pag_data["doc_spacy"]
 
                             for sent in doc.sents:
+
                                 match = regex.search(sent.text)
                                 if not match:
                                     continue
@@ -152,6 +195,8 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
 
     else:
         print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
+
+
 
     # ==============================================================
     # 2. ANÁLISIS VISUAL (ETIQUETA)
