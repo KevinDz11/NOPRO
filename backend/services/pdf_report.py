@@ -11,9 +11,11 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
 
+
 # Importamos criterios
 from reportlab.platypus import Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from backend.services.criterios import CRITERIOS_POR_PRODUCTO
 
 styles = getSampleStyleSheet()
 
@@ -293,15 +295,22 @@ def generar_pdf_reporte(
         story.append(Spacer(1, 4*mm))
 
         if norma["evidencias"]:
-            story.append(Paragraph("<b>Evidencia encontrada:</b>", styles["Normal"]))
-            for ev in norma["evidencias"]:
-                texto_ev = f"• Página {ev['pagina']} — “{ev['contexto']}”"
-                story.append(Paragraph(texto_ev, styles["Normal"]))
+             story.append(Paragraph("<b>Evidencia encontrada:</b>", styles["Normal"]))
+
+    for ev in norma["evidencias"]:
+
+        # Evidencia VISUAL (YOLO)
+        if ev.get("tipo") == "visual":
+            texto_ev = f"• Evidencia visual detectada ({ev.get('fuente', 'IA')}) — {ev.get('descripcion', '')}"
+            story.append(Paragraph(texto_ev, styles["Normal"]))
+
+        # Evidencia TEXTUAL
         else:
-            story.append(Paragraph(
-                "No se encontró evidencia en el documento analizado.",
-                styles["Italic"]
-            ))
+            pagina = ev.get("pagina", "N/A")
+            contexto = ev.get("contexto", "Fragmento detectado por análisis IA")
+            texto_ev = f"• Página {pagina} — “{contexto}”"
+            story.append(Paragraph(texto_ev, styles["Normal"]))
+
 
         story.append(Spacer(1, 8*mm))
 
@@ -330,7 +339,7 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
     # 1. FUNCIÓN DE ORDENAMIENTO PERSONALIZADO
     # Prioridad: Ficha (1) -> Manual (2) -> Etiqueta (3) -> Otros (4)
     def get_priority(doc_item):
-        nombre = doc_item['doc'].nombre.lower()
+        nombre = doc_item['documento'].nombre.lower()
         if "ficha" in nombre: return 1
         if "manual" in nombre: return 2
         if "etiqueta" in nombre: return 3
@@ -341,8 +350,8 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
 
     # 2. GENERACIÓN DE SECCIONES DIRECTAS (Sin portada)
     for i, item in enumerate(lista_docs_sorted):
-        doc_obj = item['doc']
-        resultados = item['resultados']
+        doc_obj = item['documento']
+        resultados = item['resultados_ia']
         nombre_lower = doc_obj.nombre.lower()
 
         # Determinar Tipo para Lógica (Keys exactas del diccionario de criterios)

@@ -136,12 +136,12 @@ def construir_resultado_normativo(
         # -------------------------------
         if tipo_documento == "Etiqueta":
             estado = (
-                "NO DETECTADO"
+                "CUMPLE"
                 if clave_norma in normas_visuales_normalizadas
-                else "CUMPLE"
+                else "NO DETECTADO"
             )
         else:
-            estado = "NO DETECTADO" if evidencias else "CUMPLE"
+            estado = "CUMPLE" if evidencias else "NO DETECTADO"
 
         resultado.append({
             "norma": clave_norma,
