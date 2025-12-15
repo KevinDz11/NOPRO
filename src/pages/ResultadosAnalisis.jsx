@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-
 const S = {
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
@@ -207,47 +206,41 @@ const TablaChecklist = ({ resultadoNormativo }) => {
   }
 
   return (
-  <div style={S.tableContainer}>
-    <table style={S.table}>
-      <thead>
-        <tr>
-          <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
-          <th style={{ ...S.th, width: "40%" }}>Requisito evaluado</th>
-          <th style={{ ...S.th, width: "30%", textAlign: "center" }}>
-            Estado
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {resultadoNormativo.map((norma, idx) => (
-          <tr key={idx}>
-            <td style={S.td}>
-              <strong>{norma.norma}</strong>
-            </td>
-            <td style={S.td}>{norma.nombre}</td>
-            <td style={{ ...S.td, textAlign: "center" }}>
-              <span
-                style={{
-                  ...S.statusBadge,
-                  ...(norma.estado === "CUMPLE"
-                    ? S.statusOk
-                    : S.statusFail),
-                }}
-              >
-                {norma.estado === "CUMPLE"
-                  ? "✅ Cumple"
-                  : "❌ No detectado"}
-              </span>
-            </td>
+    <div style={S.tableContainer}>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={{ ...S.th, width: "30%" }}>Norma / Estándar</th>
+            <th style={{ ...S.th, width: "40%" }}>Requisito evaluado</th>
+            <th style={{ ...S.th, width: "30%", textAlign: "center" }}>
+              Estado
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+        <tbody>
+          {resultadoNormativo.map((norma, idx) => (
+            <tr key={idx}>
+              <td style={S.td}>
+                <strong>{norma.norma}</strong>
+              </td>
+              <td style={S.td}>{norma.nombre}</td>
+              <td style={{ ...S.td, textAlign: "center" }}>
+                <span
+                  style={{
+                    ...S.statusBadge,
+                    ...(norma.estado === "CUMPLE" ? S.statusOk : S.statusFail),
+                  }}
+                >
+                  {norma.estado === "CUMPLE" ? "✅ Cumple" : "❌ No detectado"}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 };
-
-
 
 const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
   /* ===============================
@@ -262,14 +255,12 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
      MAPA: NORMA → DESCRIPCIÓN
      =============================== */
   const mapaDescripcion = {};
- resultadoNormativoSeguro.forEach((n) => {
-  if (n?.norma && n.descripcion && !mapaDescripcion[n.norma]) {
-    mapaDescripcion[n.norma] = n.descripcion;
-  }
-});
-console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
-
-
+  resultadoNormativoSeguro.forEach((n) => {
+    if (n?.norma && n.descripcion && !mapaDescripcion[n.norma]) {
+      mapaDescripcion[n.norma] = n.descripcion;
+    }
+  });
+  console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
 
   /* ===============================
      SIN EVIDENCIAS
@@ -303,9 +294,7 @@ console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
         <thead>
           <tr>
             <th style={{ ...S.th, width: "25%" }}>Norma y categoría</th>
-            <th style={{ ...S.th, width: "30%" }}>
-              Descripción de la norma
-            </th>
+            <th style={{ ...S.th, width: "30%" }}>Descripción de la norma</th>
             <th style={{ ...S.th, width: "35%" }}>Evidencia encontrada</th>
             <th
               style={{
@@ -386,8 +375,7 @@ console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
                =============================== */
             const esVisual =
               item?.Norma &&
-              (item.Norma.includes("Visual") ||
-                item.Norma.includes("Gráfica"));
+              (item.Norma.includes("Visual") || item.Norma.includes("Gráfica"));
 
             const colorNorma = esVisual ? "#9333ea" : "#2563eb";
             const bgContext = esVisual ? "#faf5ff" : "#fefce8";
@@ -438,9 +426,7 @@ console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
                 </td>
 
                 {/* Página */}
-                <td style={{ ...S.td, textAlign: "center" }}>
-                  {item.Pagina}
-                </td>
+                <td style={{ ...S.td, textAlign: "center" }}>{item.Pagina}</td>
               </tr>
             );
           })}
@@ -450,42 +436,39 @@ console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
   );
 };
 
-
 function ResultadosAnalisis() {
   useAuthListener();
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);
 
- useEffect(() => {
-  const data = localStorage.getItem("ultimoAnalisis");
-  if (!data) return;
+  useEffect(() => {
+    const data = localStorage.getItem("ultimoAnalisis");
+    if (!data) return;
 
-  const parsed = JSON.parse(data);
+    const parsed = JSON.parse(data);
 
-  // 🟢 Caso REPORTE GENERAL (unificado)
-  if (parsed.bloques_documentos) {
-    const bloques = parsed.bloques_documentos || [];
+    // 🟢 Caso REPORTE GENERAL (unificado)
+    if (parsed.bloques_documentos) {
+      const bloques = parsed.bloques_documentos || [];
 
-    const analisisUnificado = bloques.flatMap(
-      b => Array.isArray(b.analisis) ? b.analisis : []
-    );
+      const analisisUnificado = bloques.flatMap((b) =>
+        Array.isArray(b.analisis) ? b.analisis : []
+      );
 
-    const resultadoNormativoUnificado = bloques.flatMap(
-      b => Array.isArray(b.resultado_normativo) ? b.resultado_normativo : []
-    );
+      const resultadoNormativoUnificado = bloques.flatMap((b) =>
+        Array.isArray(b.resultado_normativo) ? b.resultado_normativo : []
+      );
 
-    setDatos({
-      ...parsed,
-      analisisUnificado,
-      resultadoNormativoUnificado,
-    });
-
-  } else {
-    // 🟢 Caso REPORTE INDIVIDUAL (como ya funcionaba)
-    setDatos(parsed);
-  }
-}, []);
-
+      setDatos({
+        ...parsed,
+        analisisUnificado,
+        resultadoNormativoUnificado,
+      });
+    } else {
+      // 🟢 Caso REPORTE INDIVIDUAL (como ya funcionaba)
+      setDatos(parsed);
+    }
+  }, []);
 
   const esGeneral = datos?.tipo_vista === "general";
 
@@ -496,46 +479,56 @@ function ResultadosAnalisis() {
     try {
       const token = localStorage.getItem("authToken");
       let response;
+      const url = esGeneral
+        ? "http://localhost:8000/documentos/reporte-general-pdf"
+        : `http://localhost:8000/documentos/${datos.id_documento}/reporte-pdf`;
 
-      if (esGeneral) {
-        response = await fetch(
-          "http://localhost:8000/documentos/reporte-general-pdf",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
-          }
-        );
-      } else {
-        const idDocumento = datos.id_documento;
-        response = await fetch(
-          `http://localhost:8000/documentos/${idDocumento}/reporte-pdf`,
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
+      const options = {
+        method: esGeneral ? "POST" : "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(esGeneral && { "Content-Type": "application/json" }),
+        },
+        ...(esGeneral && {
+          body: JSON.stringify({ ids_documentos: datos.ids_documentos }),
+        }),
+      };
+
+      response = await fetch(url, options);
 
       if (!response.ok) {
+        // Aquí arreglamos el [object Object]
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Error en el servidor");
+        let mensaje = "Error desconocido";
+
+        if (errorData.detail) {
+          // Si es un array u objeto (error de validación), lo convertimos a texto
+          mensaje =
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : JSON.stringify(errorData.detail);
+        }
+        throw new Error(mensaje);
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+
+      // Validación extra: Si el blob está vacío, falló el backend
+      if (blob.size === 0)
+        throw new Error("El servidor devolvió un archivo vacío.");
+
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = `Reporte_${esGeneral ? "General" : datos.nombre}.pdf`;
+      a.href = downloadUrl;
+      a.download = `Reporte_${
+        esGeneral ? "General" : datos.nombre || "Doc"
+      }.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error(error);
+      console.error("Error descarga:", error);
       alert(`Error al descargar PDF: ${error.message}`);
     } finally {
       setGenerando(false);
@@ -664,8 +657,7 @@ function ResultadosAnalisis() {
                     1. Checklist normativo
                   </h4>
                   <TablaChecklist
-                      resultadoNormativo={sub.data.resultado_normativo}
-
+                    resultadoNormativo={sub.data.resultado_normativo}
                   />
 
                   <h4
@@ -677,10 +669,12 @@ function ResultadosAnalisis() {
                       marginTop: "20px",
                     }}
                   >
-                    2. Evidencias encontradas</h4>
+                    2. Evidencias encontradas
+                  </h4>
                   <TablaHallazgos
-                  analisis={sub.data.analisis_ia}
-                  resultadoNormativo={sub.data.resultado_normativo}/>
+                    analisis={sub.data.analisis_ia}
+                    resultadoNormativo={sub.data.resultado_normativo}
+                  />
                 </div>
               ))}
             </div>
@@ -689,21 +683,15 @@ function ResultadosAnalisis() {
               <h3 style={S.sectionTitle}>
                 1. Checklist de cumplimiento normativo
               </h3>
-              <TablaChecklist
-              resultadoNormativo={datos.resultado_normativo}
-
-              />
+              <TablaChecklist resultadoNormativo={datos.resultado_normativo} />
 
               <h3 style={S.sectionTitle}>
                 2. Detalle de evidencias encontradas
               </h3>
-   <TablaHallazgos
-  analisis={datos.analisis_ia || []}
-  resultadoNormativo={datos.resultado_normativo || []}
-/>
-
-
-
+              <TablaHallazgos
+                analisis={datos.analisis_ia || []}
+                resultadoNormativo={datos.resultado_normativo || []}
+              />
             </div>
           )}
 
