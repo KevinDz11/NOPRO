@@ -11,9 +11,6 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
 
-# Importamos criterios (Mantenemos tu lógica original)
-from backend.services.criterios import CRITERIOS_POR_PRODUCTO
-
 # --- 1. CONFIGURACIÓN DE ESTILOS ---
 C_SLATE_900 = HexColor('#0f172a')
 C_SLATE_800 = HexColor('#1e293b') 
@@ -31,14 +28,12 @@ C_RED_600   = HexColor('#dc2626')
 C_RED_700   = HexColor('#b91c1c')
 C_RED_100   = HexColor('#fee2e2')
 
-# Contextos (Textual vs Visual)
 BG_YELLOW_50   = HexColor('#fefce8')
 BORDER_YELLOW  = HexColor('#facc15') 
 BG_PURPLE_50   = HexColor('#faf5ff')
 BORDER_PURPLE  = HexColor('#c084fc') 
 TEXT_PURPLE    = HexColor('#9333ea') 
 
-# Estilos de Párrafo
 styles = getSampleStyleSheet()
 
 style_brand = ParagraphStyle('Brand', parent=styles['Normal'], fontSize=7, textColor=C_SLATE_500, spaceAfter=2, fontName='Helvetica-Bold')
@@ -62,8 +57,6 @@ style_legal_title = ParagraphStyle('LegalTitle', parent=styles['Normal'], fontSi
 style_legal_text = ParagraphStyle('LegalText', parent=styles['Normal'], fontSize=6, textColor=C_SLATE_500, alignment=TA_JUSTIFY, leading=8)
 style_footer = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=7, textColor=HexColor('#94a3b8'), alignment=TA_CENTER)
 
-
-# --- 2. COMPONENTES VISUALES ---
 
 def _crear_header(titulo_reporte, subtitulo, marca, modelo):
     fecha_texto = datetime.now().strftime('%d/%m/%Y')
@@ -113,9 +106,6 @@ def _crear_cards_resumen(categoria, tipo_reporte, total_hallazgos):
     return t
 
 def _crear_context_box(texto, hallazgo, es_visual):
-    """
-    CORREGIDO: Ancho reducido a 88mm para caber en la columna nueva de 94mm.
-    """
     color_bg = BG_PURPLE_50 if es_visual else BG_YELLOW_50
     color_border = BORDER_PURPLE if es_visual else BORDER_YELLOW
     
@@ -125,10 +115,9 @@ def _crear_context_box(texto, hallazgo, es_visual):
     content = [
         Paragraph(f'“{texto}”', s_ctx),
         Spacer(1, 3),
-        Paragraph(f"<b>Patrón:</b> {hallazgo}", s_pat)
+        Paragraph(f"<b>Fuente:</b> {hallazgo}", s_pat)
     ]
     
-    # Ancho ajustado para evitar overflow
     t_inner = Table([[ "", content ]], colWidths=[1.5*mm, 88*mm])
     t_inner.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (0,0), color_border), 
@@ -159,13 +148,9 @@ def _crear_badge_estado(cumple):
 def result_has_data(data):
     return data and len(data) > 0
 
-# --- 3. LOGICA DE SECCIONES (CORREGIDA) ---
+# --- 3. LÓGICA DE SECCIONES ---
 
 def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
-    """
-    CORREGIDO: Recibe analisis_ia para validar cruzado.
-    Si analisis_ia tiene hallazgo para la norma, fuerza estado 'Cumple'.
-    """
     elementos = []
     
     if not result_has_data(resultado_normativo):
@@ -178,7 +163,7 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
         Paragraph("Estado", style_th_center)
     ]]
 
-    # Set de normas con hallazgos reales
+    # Set de normas con hallazgos reales (IA)
     normas_con_hallazgos = set()
     if analisis_ia:
         for item in analisis_ia:
@@ -190,9 +175,9 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
         desc = norma.get('nombre', '') 
         estado_original = norma.get('estado', '')
         
+        # Lógica de cumplimiento
         cumple = (estado_original == "CUMPLE")
         
-        # Corrección Lógica: Si hay evidencia, es un "Cumple" tácito
         if not cumple and nombre_norma in normas_con_hallazgos:
             cumple = True
 
@@ -215,16 +200,36 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
     elementos.append(t)
     return elementos
 
+
 def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
     """
-    CORREGIDO: Columnas redistribuidas y lógica de imagen mejorada.
+    Combina hallazgos RAW de la IA con evidencias específicas de validación normativa.
     """
     elementos = []
     
-    if not result_has_data(analisis_ia):
+    # 1. Combinar listas
+    items_a_mostrar = list(analisis_ia) if analisis_ia else []
+
+    # 🔥 NUEVO: Extraer evidencias "visual" de resultado_normativo y agregarlas como hallazgos
+    if resultado_normativo:
+        for r in resultado_normativo:
+            evidencias = r.get("evidencias", [])
+            for ev in evidencias:
+                if ev.get("tipo") == "visual":
+                    # Creamos un objeto similar a analisis_ia para la tabla
+                    items_a_mostrar.append({
+                        "Norma": r.get("norma"),
+                        "Categoria": "Validación Visual",
+                        "Contexto": ev.get("descripcion", "Elemento visual detectado"),
+                        "Hallazgo": ev.get("fuente", "Regla de Negocio"),
+                        "Pagina": "1", # Asumimos página 1 para etiquetas
+                        "EsValidacion": True # Flag para identificar
+                    })
+
+    if not items_a_mostrar:
         msg = [
             Paragraph("<b>Sin coincidencias normativas</b>", ParagraphStyle('WarnT', parent=styles['Normal'], textColor=HexColor('#9a3412'), fontSize=9)),
-            Paragraph("No se detectaron elementos clave en el análisis de texto.", ParagraphStyle('WarnB', parent=styles['Normal'], textColor=HexColor('#9a3412'), fontSize=8))
+            Paragraph("No se detectaron elementos clave en el análisis.", ParagraphStyle('WarnB', parent=styles['Normal'], textColor=HexColor('#9a3412'), fontSize=8))
         ]
         t_warn = Table([[msg]], colWidths=[180*mm])
         t_warn.setStyle(TableStyle([
@@ -248,7 +253,7 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
         Paragraph("Pág.", style_th_center)
     ]]
 
-    for item in analisis_ia:
+    for item in items_a_mostrar:
         def get_attr(obj, key): return obj.get(key) if isinstance(obj, dict) else getattr(obj, key, None)
         
         norma = get_attr(item, 'Norma') or ''
@@ -260,13 +265,11 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
         
         desc_norma = mapa_desc.get(norma, "—")
 
-        # --- CASO 1: EVIDENCIA VISUAL (Imagen) ---
+        # --- CASO 1: EVIDENCIA VISUAL (IMAGEN RAW) ---
         if img_b64:
             try:
                 img_bytes = base64.b64decode(img_b64)
                 img_stream = io.BytesIO(img_bytes)
-                
-                # CORREGIDO: Imagen más grande (90mm ancho x 75mm alto)
                 im_flowable = Image(img_stream, width=90*mm, height=75*mm, kind='proportional')
                 
                 celda_img_content = [
@@ -277,7 +280,6 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
                     Paragraph(contexto, ParagraphStyle('VisCaption', parent=styles['Normal'], fontSize=7, textColor=C_SLATE_500, fontName='Helvetica-Oblique', alignment=TA_CENTER))
                 ]
                 
-                # CORREGIDO: Label real de la norma (antes decía "Visual")
                 c1_img = [
                     Paragraph(norma, style_cell_norma_v),
                     Spacer(1,2),
@@ -285,21 +287,20 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
                 ]
                 
                 row_img = [
-                    c1_img,                         # Col 1: Nombre real
-                    Paragraph("—", style_normal),   # Col 2: Vacío
-                    celda_img_content,              # Col 3: Imagen
-                    Paragraph(str(pagina or "-"), style_normal) # Col 4
+                    c1_img,                         
+                    Paragraph("—", style_normal),   
+                    celda_img_content,              
+                    Paragraph(str(pagina or "-"), style_normal) 
                 ]
-                
                 data.append(row_img)
                 
             except Exception as e:
                 print(f"Error imagen PDF: {e}")
                 continue
         
-        # --- CASO 2: EVIDENCIA TEXTUAL ---
+        # --- CASO 2: EVIDENCIA TEXTUAL O VALIDACIÓN VISUAL ---
         else:
-            es_visual_norma = any(x in norma for x in ["Visual", "Gráfica"])
+            es_visual_norma = any(x in norma for x in ["Visual", "Gráfica"]) or item.get("EsValidacion")
             estilo_norma = style_cell_norma_v if es_visual_norma else style_cell_norma_t
             
             c1 = [
@@ -308,14 +309,11 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
                 Paragraph(cat, style_tag)
             ]
             c2 = Paragraph(desc_norma, ParagraphStyle('DescSmall', parent=style_normal, fontSize=7))
-            
-            # Usamos context box corregida
             c3 = _crear_context_box(contexto, hallazgo, es_visual_norma)
             c4 = Paragraph(str(pagina), ParagraphStyle('PagCenter', parent=style_normal, alignment=TA_CENTER))
             
             data.append([c1, c2, c3, c4])
 
-    # CORREGIDO: Anchos optimizados [38, 38, 94, 10]
     t = Table(data, colWidths=[38*mm, 38*mm, 94*mm, 10*mm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), C_SLATE_50),
@@ -324,10 +322,11 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('TOPPADDING', (0,0), (-1,-1), 6),
         ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('RIGHTPADDING', (2,0), (2,-1), 4), # Padding extra para no pegar con la pagina
+        ('RIGHTPADDING', (2,0), (2,-1), 4),
     ]))
     elementos.append(t)
     return elementos
+
 
 def _crear_disclaimer_legal():
     elementos = []
@@ -346,7 +345,7 @@ def _crear_disclaimer_legal():
     elementos.append(Paragraph("Sistema NOPRO AI Platform v1.0 — Documento confidencial", style_footer))
     return elementos
 
-# --- 4. FUNCIONES EXPORTADAS (GENERADORES) ---
+# --- 4. FUNCIONES EXPORTADAS ---
 
 def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, categoria_producto, tipo_documento, marca_producto, modelo_producto):
     buffer = io.BytesIO()
@@ -367,16 +366,21 @@ def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, catego
     story.append(_crear_header(titulo, subtitulo, marca_producto, modelo_producto))
     story.append(Spacer(1, 6*mm))
 
-    # 2. Cards Resumen
-    total_hallazgos = len(resultados_ia) if resultados_ia else 0
+    # 2. Resumen
+    total_hallazgos = len(resultados_ia or [])
+    # Sumar evidencias normativas específicas
+    if resultado_normativo:
+        for r in resultado_normativo:
+            total_hallazgos += len([e for e in r.get('evidencias', []) if e.get('tipo') == 'visual'])
+
     story.append(_crear_cards_resumen(categoria_producto, tipo_documento, total_hallazgos))
     story.append(Spacer(1, 8*mm))
 
-    # 3. Sección Checklist (Pasamos resultados_ia para validación)
+    # 3. Checklist
     story.append(Paragraph("1. Checklist de cumplimiento normativo", style_h2))
     story.extend(_crear_checklist_unificado(resultado_normativo, resultados_ia))
     
-    # 4. Sección Hallazgos Detallados
+    # 4. Hallazgos
     story.append(Paragraph("2. Detalle de evidencias encontradas", style_h2))
     story.extend(_crear_tabla_hallazgos_unificada(resultados_ia, resultado_normativo))
 
@@ -387,22 +391,25 @@ def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, catego
     buffer.seek(0)
     return buffer
 
-
 def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, modelo_producto):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm, title="Reporte General NOPRO")
     story = []
 
-    # Portada
     story.append(_crear_header("Reporte General Unificado", "Análisis de Producto Completo", marca_producto, modelo_producto))
     story.append(Spacer(1, 6*mm))
 
-    # Cards Resumen Totales
-    total_hallazgos_global = sum([len(item['resultados_ia'] or []) for item in lista_docs])
+    total_hallazgos_global = 0
+    for item in lista_docs:
+        total_hallazgos_global += len(item['resultados_ia'] or [])
+        # Sumar evidencias normativas visuales
+        if item.get('resultado_normativo'):
+             for r in item['resultado_normativo']:
+                total_hallazgos_global += len([e for e in r.get('evidencias', []) if e.get('tipo') == 'visual'])
+
     story.append(_crear_cards_resumen(categoria_producto, "Completo", total_hallazgos_global))
     story.append(Spacer(1, 10*mm))
 
-    # Ordenar docs
     def get_priority(doc_item):
         n = doc_item['documento'].nombre.lower()
         if "ficha" in n: return 1
@@ -419,13 +426,11 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
         
         if i > 0:
             story.append(Spacer(1, 5*mm))
-            story.append(Paragraph("", ParagraphStyle('Sep', parent=styles['Normal'], borderPadding=0, borderWidth=0, spaceAfter=10)))
             story.append(PageBreak())
 
         story.append(Paragraph(f"{i+1}. Documento: {doc_obj.nombre}", style_h2))
         
         story.append(Paragraph("1. Checklist Normativo", style_h3))
-        # Validacion cruzada en reporte general tambien
         story.extend(_crear_checklist_unificado(res_norm, res_ia))
         story.append(Spacer(1, 5*mm))
 

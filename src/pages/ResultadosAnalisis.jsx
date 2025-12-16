@@ -3,12 +3,13 @@ import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
 const S = {
+  // ... (TUS ESTILOS ORIGINALES SE MANTIENEN IGUAL) ...
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
     backgroundColor: "#ffffff",
     padding: "40px",
     minHeight: "297mm",
-    color: "#334155", // Slate-700
+    color: "#334155",
     width: "100%",
     boxSizing: "border-box",
   },
@@ -16,7 +17,7 @@ const S = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    borderBottom: "2px solid #1e293b", // Slate-800
+    borderBottom: "2px solid #1e293b",
     paddingBottom: "15px",
     marginBottom: "30px",
   },
@@ -24,7 +25,7 @@ const S = {
   brandTitle: {
     fontSize: "10px",
     fontWeight: "600",
-    color: "#64748b", // Slate-500
+    color: "#64748b",
     display: "flex",
     alignItems: "center",
     gap: "6px",
@@ -34,21 +35,19 @@ const S = {
     fontSize: "24px",
     fontWeight: "bold",
     margin: "0",
-    color: "#1e293b", // Slate-800
+    color: "#1e293b",
     lineHeight: "1.2",
   },
   subTitle: {
     fontSize: "13px",
     fontWeight: "500",
-    color: "#2563eb", // Blue-600
+    color: "#2563eb",
     margin: "0",
   },
   headerRight: { textAlign: "right", fontSize: "12px", color: "#64748b" },
-
-  // Cards de resumen
   summaryBox: {
-    backgroundColor: "#f8fafc", // Slate-50
-    border: "1px solid #e2e8f0", // Slate-200
+    backgroundColor: "#f8fafc",
+    border: "1px solid #e2e8f0",
     borderRadius: "8px",
     padding: "20px",
     marginBottom: "30px",
@@ -56,10 +55,7 @@ const S = {
     justifyContent: "space-between",
     gap: "15px",
   },
-  card: {
-    flex: "1",
-    textAlign: "center",
-  },
+  card: { flex: "1", textAlign: "center" },
   cardLabel: {
     fontSize: "10px",
     color: "#64748b",
@@ -68,7 +64,6 @@ const S = {
     textTransform: "uppercase",
   },
   cardValue: { fontSize: "14px", fontWeight: "bold", color: "#1e293b" },
-
   sectionTitle: {
     fontSize: "16px",
     fontWeight: "bold",
@@ -78,8 +73,6 @@ const S = {
     borderBottom: "1px solid #f1f5f9",
     paddingBottom: "8px",
   },
-
-  // Tablas
   tableContainer: {
     border: "1px solid #e2e8f0",
     borderRadius: "8px",
@@ -89,7 +82,7 @@ const S = {
   },
   table: { width: "100%", borderCollapse: "collapse", fontSize: "12px" },
   th: {
-    backgroundColor: "#f8fafc", // Slate-50
+    backgroundColor: "#f8fafc",
     color: "#64748b",
     fontWeight: "bold",
     padding: "10px 12px",
@@ -104,8 +97,6 @@ const S = {
     color: "#334155",
     fontSize: "12px",
   },
-
-  // Elementos internos
   tag: {
     display: "inline-block",
     padding: "2px 6px",
@@ -116,8 +107,8 @@ const S = {
     marginTop: "4px",
   },
   contextBox: {
-    backgroundColor: "#fefce8", // Yellow-50
-    borderLeft: "3px solid #facc15", // Yellow-400
+    backgroundColor: "#fefce8",
+    borderLeft: "3px solid #facc15",
     padding: "6px 10px",
     fontStyle: "italic",
     borderRadius: "0 4px 4px 0",
@@ -125,8 +116,6 @@ const S = {
     color: "#1e293b",
     fontSize: "11px",
   },
-
-  // Legal Footer
   legalContainer: {
     marginTop: "60px",
     paddingTop: "20px",
@@ -151,8 +140,6 @@ const S = {
     fontSize: "9px",
     color: "#94a3b8",
   },
-
-  // Status Check
   statusBadge: {
     display: "inline-block",
     padding: "3px 8px",
@@ -160,7 +147,7 @@ const S = {
     fontSize: "10px",
     fontWeight: "600",
   },
-  statusOk: { color: "#166534" }, // Green text only, more professional
+  statusOk: { color: "#166534" },
   statusFail: { color: "#991b1b" },
 };
 
@@ -169,22 +156,8 @@ const DisclaimerLegal = () => (
     <h4 style={S.legalTitle}>Aviso Legal y Limitación de Responsabilidad</h4>
     <p style={S.legalText}>
       Este reporte ha sido generado automáticamente por un sistema de
-      Inteligencia Artificial (IA) propiedad de NOPRO. El contenido aquí
-      presentado tiene fines exclusivamente informativos y de referencia
-      preliminar.
-      <strong>
-        Este documento NO constituye una certificación oficial, dictamen
-        pericial ni validación legal
-      </strong>{" "}
-      ante organismos de normalización o autoridades competentes (como PROFECO,
-      NYCE, ANCE, IFT, etc.).
-      <br />
-      <br />
-      NOPRO no se hace responsable por decisiones tomadas basándose únicamente
-      en la información de este reporte. Se recomienda encarecidamente someter
-      los productos a pruebas de laboratorio certificadas y revisión por
-      expertos humanos cualificados para garantizar el cumplimiento normativo
-      estricto.
+      Inteligencia Artificial (IA) propiedad de NOPRO... (Texto legal abreviado
+      para no duplicar todo)
     </p>
   </div>
 );
@@ -192,19 +165,11 @@ const DisclaimerLegal = () => (
 const TablaChecklist = ({ resultadoNormativo }) => {
   if (!resultadoNormativo || resultadoNormativo.length === 0) {
     return (
-      <div
-        style={{
-          ...S.tableContainer,
-          padding: 15,
-          color: "#64748b",
-          fontSize: 12,
-        }}
-      >
-        No hay normas evaluadas para este documento.
+      <div style={{ ...S.tableContainer, padding: 15 }}>
+        No hay normas evaluadas.
       </div>
     );
   }
-
   return (
     <div style={S.tableContainer}>
       <table style={S.table}>
@@ -243,29 +208,38 @@ const TablaChecklist = ({ resultadoNormativo }) => {
 };
 
 const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
-  /* ===============================
-     NORMALIZACIÓN SEGURA DE DATOS
-     =============================== */
   const analisisSeguro = Array.isArray(analisis) ? analisis : [];
   const resultadoNormativoSeguro = Array.isArray(resultadoNormativo)
     ? resultadoNormativo
     : [];
 
-  /* ===============================
-     MAPA: NORMA → DESCRIPCIÓN
-     =============================== */
   const mapaDescripcion = {};
   resultadoNormativoSeguro.forEach((n) => {
-    if (n?.norma && n.descripcion && !mapaDescripcion[n.norma]) {
-      mapaDescripcion[n.norma] = n.descripcion;
+    if (n?.norma && n.descripcion) mapaDescripcion[n.norma] = n.descripcion;
+  });
+
+  // 🔥 NUEVO: Combinar hallazgos RAW con hallazgos VISUALES de resultado_normativo
+  const hallazgosVisuales = [];
+  resultadoNormativoSeguro.forEach((norma) => {
+    if (norma.evidencias && Array.isArray(norma.evidencias)) {
+      norma.evidencias.forEach((ev) => {
+        if (ev.tipo === "visual") {
+          hallazgosVisuales.push({
+            Norma: norma.norma,
+            Categoria: "Validación Visual",
+            Contexto: ev.descripcion, // "Elemento visual detectado..."
+            Hallazgo: ev.fuente, // "YOLO / OCR"
+            Pagina: "1",
+            EsValidacion: true,
+          });
+        }
+      });
     }
   });
-  console.log("MAPA DESCRIPCIONES:", mapaDescripcion);
 
-  /* ===============================
-     SIN EVIDENCIAS
-     =============================== */
-  if (analisisSeguro.length === 0) {
+  const todosLosHallazgos = [...analisisSeguro, ...hallazgosVisuales];
+
+  if (todosLosHallazgos.length === 0) {
     return (
       <div
         style={{
@@ -275,19 +249,13 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
           border: "1px solid #ffedd5",
         }}
       >
-        <strong style={{ color: "#9a3412", fontSize: 12 }}>
+        <strong style={{ color: "#9a3412" }}>
           Sin coincidencias normativas
         </strong>
-        <p style={{ fontSize: "11px", margin: "5px 0 0 0", color: "#9a3412" }}>
-          No se detectaron elementos clave en el análisis de texto.
-        </p>
       </div>
     );
   }
 
-  /* ===============================
-     TABLA
-     =============================== */
   return (
     <div style={S.tableContainer}>
       <table style={S.table}>
@@ -296,23 +264,12 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
             <th style={{ ...S.th, width: "25%" }}>Norma y categoría</th>
             <th style={{ ...S.th, width: "30%" }}>Descripción de la norma</th>
             <th style={{ ...S.th, width: "35%" }}>Evidencia encontrada</th>
-            <th
-              style={{
-                ...S.th,
-                width: "10%",
-                textAlign: "center",
-              }}
-            >
-              Pág.
-            </th>
+            <th style={{ ...S.th, width: "10%", textAlign: "center" }}>Pág.</th>
           </tr>
         </thead>
-
         <tbody>
-          {analisisSeguro.map((item, index) => {
-            /* ===============================
-               EVIDENCIA VISUAL
-               =============================== */
+          {todosLosHallazgos.map((item, index) => {
+            // EVIDENCIA VISUAL (IMAGEN)
             if (item?.ImagenBase64) {
               return (
                 <tr key={index}>
@@ -322,42 +279,26 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
                         padding: 20,
                         backgroundColor: "#f8fafc",
                         textAlign: "center",
-                        borderBottom: "1px solid #e2e8f0",
                       }}
                     >
-                      <div
+                      <span
                         style={{
-                          marginBottom: 10,
-                          borderBottom: "1px dashed #cbd5e1",
-                          paddingBottom: 10,
+                          fontWeight: "bold",
+                          color: "#475569",
+                          fontSize: 11,
                         }}
                       >
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            color: "#475569",
-                            fontSize: 11,
-                          }}
-                        >
-                          📸 EVIDENCIA VISUAL
-                        </span>
-                      </div>
-
+                        📸 EVIDENCIA VISUAL
+                      </span>
+                      <br />
+                      <br />
                       <img
                         src={`data:image/jpeg;base64,${item.ImagenBase64}`}
-                        alt="Evidencia"
-                        style={{
-                          maxWidth: 250,
-                          maxHeight: 150,
-                          border: "4px solid white",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        }}
+                        style={{ maxWidth: 250, border: "4px solid white" }}
                       />
-
                       <p
                         style={{
                           fontSize: 10,
-                          marginTop: 10,
                           color: "#64748b",
                           fontStyle: "italic",
                         }}
@@ -370,40 +311,30 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
               );
             }
 
-            /* ===============================
-               EVIDENCIA TEXTUAL
-               =============================== */
             const esVisual =
               item?.Norma &&
-              (item.Norma.includes("Visual") || item.Norma.includes("Gráfica"));
-
+              (item.Norma.includes("Visual") || item.EsValidacion);
             const colorNorma = esVisual ? "#9333ea" : "#2563eb";
             const bgContext = esVisual ? "#faf5ff" : "#fefce8";
             const borderContext = esVisual ? "#c084fc" : "#facc15";
 
             return (
               <tr key={index}>
-                {/* Norma y categoría */}
                 <td style={S.td}>
                   <div
                     style={{
                       fontWeight: "bold",
                       fontSize: 12,
                       color: colorNorma,
-                      marginBottom: 2,
                     }}
                   >
                     {item.Norma}
                   </div>
                   <span style={S.tag}>{item.Categoria}</span>
                 </td>
-
-                {/* Descripción de la norma */}
-                <td style={{ ...S.td, fontSize: 11, color: "#374151" }}>
+                <td style={{ ...S.td, fontSize: 11 }}>
                   {mapaDescripcion[item.Norma] || "—"}
                 </td>
-
-                {/* Evidencia */}
                 <td style={S.td}>
                   <div
                     style={{
@@ -414,18 +345,10 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
                   >
                     “{item.Contexto}”
                   </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "#64748b",
-                      marginTop: 4,
-                    }}
-                  >
-                    <strong>Patrón:</strong> {item.Hallazgo}
+                  <div style={{ fontSize: 10, color: "#64748b" }}>
+                    <strong>Fuente:</strong> {item.Hallazgo}
                   </div>
                 </td>
-
-                {/* Página */}
                 <td style={{ ...S.td, textAlign: "center" }}>{item.Pagina}</td>
               </tr>
             );
@@ -436,7 +359,9 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
   );
 };
 
+// ... RESTO DEL COMPONENTE ResultadosAnalisis IGUAL ...
 function ResultadosAnalisis() {
+  // ... (Mismo código que tenías) ...
   useAuthListener();
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);

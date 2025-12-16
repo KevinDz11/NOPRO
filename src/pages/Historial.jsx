@@ -79,56 +79,97 @@ export default function HistorialProductos() {
   const [productosAgrupados, setProductosAgrupados] = useState([]);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const [abriendoReporte, setAbriendoReporte] = useState(false); // Nuevo estado para feedback visual
   const navigate = useNavigate();
 
-  // --- FUNCIÓN INDIVIDUAL: Abre en nueva pestaña ---
-  const handleVerReporte = (doc, grupo) => {
-    const datosParaReporte = {
-      ...doc,
-      titulo_reporte: `Reporte de ${doc.nombre}`,
-      tipo_vista: "individual",
-      // Datos cruciales para el Checklist y Encabezado del PDF/Vista
-      categoria_producto: grupo.tipo,
-      marca_producto: grupo.marca,
-      modelo_producto: grupo.modelo,
-    };
+  // 🔥 NUEVA FUNCIÓN: Obtiene el documento fresco desde el backend
+  // Esto fuerza a que se recalculen las normas con tu lógica Python más reciente
+  const fetchDocFresco = async (id_documento) => {
+    const token = localStorage.getItem("authToken");
+    const res = await fetch(`${API_URL}/documentos/${id_documento}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Error al obtener documento actualizado");
+    return await res.json();
+  };
 
-    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
-    window.open("/resultados-analisis", "_blank");
+  // --- FUNCIÓN INDIVIDUAL: Abre en nueva pestaña ---
+  const handleVerReporte = async (doc, grupo) => {
+    if (abriendoReporte) return;
+    setAbriendoReporte(true);
+
+    try {
+      // 1. Pedimos la versión más nueva del documento al backend (recalcula normas)
+      const docFresco = await fetchDocFresco(doc.id_documento);
+
+      const datosParaReporte = {
+        ...docFresco, // Usamos la data fresca, no la de la lista
+        titulo_reporte: `Reporte de ${docFresco.nombre}`,
+        tipo_vista: "individual",
+        categoria_producto: grupo.tipo,
+        marca_producto: grupo.marca,
+        modelo_producto: grupo.modelo,
+      };
+
+      localStorage.setItem("ultimoAnalisis", JSON.stringify(datosParaReporte));
+      window.open("/resultados-analisis", "_blank");
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo cargar el reporte actualizado. Intenta de nuevo.");
+    } finally {
+      setAbriendoReporte(false);
+    }
   };
 
   // --- FUNCIÓN GENERAL: Abre reporte unificado ---
-  const handleVerReporteGeneral = (grupo) => {
-    // 1. Filtrar solo los documentos que tienen análisis
-    const docsConAnalisis = grupo.documentos.filter(
+  const handleVerReporteGeneral = async (grupo) => {
+    if (abriendoReporte) return;
+
+    // 1. Filtrar documentos que tienen análisis (en la lista básica)
+    const docsConAnalisisPreview = grupo.documentos.filter(
       (d) => d.analisis_ia && d.analisis_ia.length > 0
     );
 
-    if (docsConAnalisis.length === 0) {
+    if (docsConAnalisisPreview.length === 0) {
       alert("Este grupo no tiene documentos analizados.");
       return;
     }
 
-    // 2. Construir objeto de reporte general
-    const datosGeneral = {
-      titulo_reporte: `Reporte General Unificado - ${grupo.marca}`,
-      tipo_vista: "general", // FLAG IMPORTANTE
-      categoria_producto: grupo.tipo,
-      marca_producto: grupo.marca,
-      modelo_producto: grupo.modelo,
+    setAbriendoReporte(true);
 
-      // IDs para el PDF backend
-      ids_documentos: docsConAnalisis.map((d) => d.id_documento),
+    try {
+      // 2. Obtener DATA FRESCA para TODOS los documentos del grupo
+      // Para que el reporte web muestre las normas corregidas
+      const docsFrescos = await Promise.all(
+        docsConAnalisisPreview.map((d) => fetchDocFresco(d.id_documento))
+      );
 
-      // Sub-reportes para la vista frontend
-      sub_reportes: docsConAnalisis.map((doc) => ({
-        titulo: doc.nombre,
-        data: doc,
-      })),
-    };
+      // 3. Construir objeto de reporte general
+      const datosGeneral = {
+        titulo_reporte: `Reporte General Unificado - ${grupo.marca}`,
+        tipo_vista: "general",
+        categoria_producto: grupo.tipo,
+        marca_producto: grupo.marca,
+        modelo_producto: grupo.modelo,
 
-    localStorage.setItem("ultimoAnalisis", JSON.stringify(datosGeneral));
-    window.open("/resultados-analisis", "_blank");
+        // IDs para el PDF backend
+        ids_documentos: docsFrescos.map((d) => d.id_documento),
+
+        // Sub-reportes para la vista frontend (Usando data fresca)
+        sub_reportes: docsFrescos.map((doc) => ({
+          titulo: doc.nombre,
+          data: doc,
+        })),
+      };
+
+      localStorage.setItem("ultimoAnalisis", JSON.stringify(datosGeneral));
+      window.open("/resultados-analisis", "_blank");
+    } catch (e) {
+      console.error(e);
+      alert("Error generando el reporte general actualizado.");
+    } finally {
+      setAbriendoReporte(false);
+    }
   };
 
   const agruparProductos = (data) => {
@@ -261,11 +302,10 @@ export default function HistorialProductos() {
       <main className="p-6 md:p-10 max-w-7xl mx-auto animate-fade-in-up">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
-            Historial de análisis.
+            Historial de análisis
           </h1>
           <p className="text-slate-500">
-            Consulta tus documentos originales y los reportes generados por la
-            aplicación web.
+            Consulta tus documentos originales y los reportes generados.
           </p>
         </div>
 
@@ -278,7 +318,17 @@ export default function HistorialProductos() {
             {error}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative">
+            {/* Overlay de carga cuando se abre un reporte */}
+            {abriendoReporte && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-600 rounded-full border-t-transparent mb-2"></div>
+                <span className="text-sm font-bold text-slate-600">
+                  Actualizando normas...
+                </span>
+              </div>
+            )}
+
             <table className="w-full text-left border-collapse">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 ">
                 <tr>
@@ -292,7 +342,6 @@ export default function HistorialProductos() {
               <tbody className="divide-y divide-slate-100">
                 {productosAgrupados.length > 0 ? (
                   productosAgrupados.map((grupo, index) => {
-                    // Verificamos si hay al menos un análisis en el grupo
                     const tieneAnalisis = grupo.documentos.some(
                       (d) => d.analisis_ia && d.analisis_ia.length > 0
                     );
@@ -326,7 +375,6 @@ export default function HistorialProductos() {
                         </td>
                         <td className="p-5 align-top">
                           <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                            {/* Pasamos onVerReporte al componente hijo */}
                             <ListaDocumentos
                               documentos={grupo.documentos}
                               grupo={grupo}
@@ -339,7 +387,6 @@ export default function HistorialProductos() {
                         </td>
                         <td className="p-5 text-center align-top">
                           <div className="flex flex-col gap-2 items-center">
-                            {/* BOTÓN REPORTE GENERAL */}
                             {tieneAnalisis && (
                               <button
                                 onClick={() => handleVerReporteGeneral(grupo)}
