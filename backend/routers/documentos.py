@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
-
+from datetime import datetime  # 🔥 IMPORT NECESARIO
 from .. import crud, schemas, database, auth, models
 
 # Servicios
@@ -26,6 +26,8 @@ class ReporteGeneralRequest(BaseModel):
 # ============================================================
 # SUBIR Y ANALIZAR DOCUMENTO
 # ============================================================
+
+
 @router.post("/subir-analizar", response_model=schemas.DocumentoAnalisisOut)
 def subir_y_analizar(
     id_producto: int = Form(...),
@@ -42,9 +44,15 @@ def subir_y_analizar(
         id_cliente = current_user.id_cliente
         file_path = os.path.join(UPLOAD_DIR, archivo.filename)
 
+        # ----------------------------------------------------
+        # 1. Guardar archivo
+        # ----------------------------------------------------
         with open(file_path, "wb") as f:
             f.write(archivo.file.read())
 
+        # ----------------------------------------------------
+        # 2. Crear registro del documento
+        # ----------------------------------------------------
         documento_data = schemas.DocumentoCreate(
             id_cliente=id_cliente,
             id_producto=id_producto,
@@ -60,10 +68,15 @@ def subir_y_analizar(
         resultados_ia = []
         resultado_normativo = []
 
+        # ----------------------------------------------------
+        # 3. Ejecutar análisis si aplica
+        # ----------------------------------------------------
         if analizar and archivo.filename.lower().endswith(".pdf"):
             cat_map = {
                 "laptop": "Laptop",
-                "smarttv": "SmartTV", "smart tv": "SmartTV", "tv": "SmartTV",
+                "smarttv": "SmartTV",
+                "smart tv": "SmartTV",
+                "tv": "SmartTV",
                 "luminaria": "Luminaria"
             }
             categoria_clean = cat_map.get(categoria.lower(), "Laptop")
@@ -90,16 +103,39 @@ def subir_y_analizar(
             )
 
             if resultados_ia:
-                crud.update_documento_analisis(db, doc_db.id_documento, resultados_ia)
+                # Guardar análisis en BD
+                crud.update_documento_analisis(
+                    db,
+                    doc_db.id_documento,
+                    resultados_ia
+                )
 
+                # ------------------------------------------------
+                # 🔥 FIX CLAVE: actualizar fecha del producto
+                # ------------------------------------------------
+                producto = db.query(models.Producto).filter(
+                    models.Producto.id_producto == id_producto
+                ).first()
+
+                if producto:
+                    producto.fecha_registro = datetime.utcnow()
+                    db.commit()
+
+        # ----------------------------------------------------
+        # 4. Adjuntar resultados al response
+        # ----------------------------------------------------
         doc_db.analisis_ia = resultados_ia
         doc_db.resultado_normativo = resultado_normativo
 
         return doc_db
 
     except Exception as e:
-        print(f"❌ Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        print(f"❌ Error en subir_y_analizar: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error: {str(e)}"
+        )
+
 
 # ============================================================
 # LISTAR DOCUMENTOS
@@ -177,7 +213,12 @@ def generar_reporte_general_pdf(
             modelo_producto="Varios"
         )
 
-        # 🔥 FIX CRITICO: Regresar al inicio del archivo
+        if not pdf_buffer:
+            raise HTTPException(
+        status_code=500,
+        detail="Error generando PDF general (buffer vacío)"
+    )
+
         pdf_buffer.seek(0)
 
         return StreamingResponse(

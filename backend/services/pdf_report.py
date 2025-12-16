@@ -10,6 +10,7 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
+from backend.services.recomendacion_laboratorios import recomendar_laboratorios
 
 # --- 1. CONFIGURACIÓN DE ESTILOS ---
 C_SLATE_900 = HexColor('#0f172a')
@@ -393,52 +394,183 @@ def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, catego
 
 def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, modelo_producto):
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm, title="Reporte General NOPRO")
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=15*mm,
+        leftMargin=15*mm,
+        topMargin=15*mm,
+        bottomMargin=15*mm,
+        title="Reporte General NOPRO"
+    )
+
     story = []
 
-    story.append(_crear_header("Reporte General Unificado", "Análisis de Producto Completo", marca_producto, modelo_producto))
+    # =====================================================
+    # HEADER
+    # =====================================================
+    story.append(
+        _crear_header(
+            "Reporte General Unificado",
+            "Análisis de Producto Completo",
+            marca_producto,
+            modelo_producto
+        )
+    )
     story.append(Spacer(1, 6*mm))
 
+    # =====================================================
+    # RESUMEN GLOBAL
+    # =====================================================
     total_hallazgos_global = 0
-    for item in lista_docs:
-        total_hallazgos_global += len(item['resultados_ia'] or [])
-        # Sumar evidencias normativas visuales
-        if item.get('resultado_normativo'):
-             for r in item['resultado_normativo']:
-                total_hallazgos_global += len([e for e in r.get('evidencias', []) if e.get('tipo') == 'visual'])
 
-    story.append(_crear_cards_resumen(categoria_producto, "Completo", total_hallazgos_global))
+    for item in lista_docs:
+        total_hallazgos_global += len(item.get("resultados_ia") or [])
+
+        # Evidencias visuales del checklist normativo
+        if item.get("resultado_normativo"):
+            for r in item["resultado_normativo"]:
+                total_hallazgos_global += len(
+                    [e for e in r.get("evidencias", []) if e.get("tipo") == "visual"]
+                )
+
+    story.append(
+        _crear_cards_resumen(
+            categoria_producto,
+            "Completo",
+            total_hallazgos_global
+        )
+    )
     story.append(Spacer(1, 10*mm))
 
+    # =====================================================
+    # ORDENAR DOCUMENTOS
+    # =====================================================
     def get_priority(doc_item):
-        n = doc_item['documento'].nombre.lower()
-        if "ficha" in n: return 1
-        if "manual" in n: return 2
-        if "etiqueta" in n: return 3
+        n = doc_item["documento"].nombre.lower()
+        if "ficha" in n:
+            return 1
+        if "manual" in n:
+            return 2
+        if "etiqueta" in n:
+            return 3
         return 4
-    
+
     lista_sorted = sorted(lista_docs, key=get_priority)
 
+    # =====================================================
+    # CONTENIDO POR DOCUMENTO
+    # =====================================================
     for i, item in enumerate(lista_sorted):
-        doc_obj = item['documento']
-        res_ia = item['resultados_ia']
-        res_norm = item['resultado_normativo']
-        
+        doc_obj = item["documento"]
+        res_ia = item["resultados_ia"]
+        res_norm = item["resultado_normativo"]
+
         if i > 0:
             story.append(Spacer(1, 5*mm))
             story.append(PageBreak())
 
-        story.append(Paragraph(f"{i+1}. Documento: {doc_obj.nombre}", style_h2))
-        
+        story.append(
+            Paragraph(
+                f"{i+1}. Documento: {doc_obj.nombre}",
+                style_h2
+            )
+        )
+
         story.append(Paragraph("1. Checklist Normativo", style_h3))
         story.extend(_crear_checklist_unificado(res_norm, res_ia))
         story.append(Spacer(1, 5*mm))
 
         story.append(Paragraph("2. Evidencias Encontradas", style_h3))
         story.extend(_crear_tabla_hallazgos_unificada(res_ia, res_norm))
-        
+
+    # =====================================================
+    # 🔎 OBTENER NORMAS DETECTADAS (GLOBAL)
+    # =====================================================
+    normas_detectadas = set()
+
+    for item in lista_docs:
+        # Desde resultados IA
+        for r in item.get("resultados_ia", []):
+            norma = r.get("Norma")
+            if norma:
+                normas_detectadas.add(norma)
+
+        # Desde checklist normativo
+        for r in item.get("resultado_normativo", []):
+            norma = r.get("norma")
+            if norma:
+                normas_detectadas.add(norma)
+
+    normas_detectadas = list(normas_detectadas)
+
+    # =====================================================
+    # 🧪 RECOMENDACIÓN DE LABORATORIOS
+    # =====================================================
+    from backend.services.recomendacion_laboratorios import recomendar_laboratorios
+
+    laboratorios_recomendados = recomendar_laboratorios(
+        producto=categoria_producto,
+        normas_detectadas=normas_detectadas
+    )
+    # =====================================================
+    # SECCIÓN: LABORATORIOS RECOMENDADOS
+    # =====================================================
+    story.append(PageBreak())
+    story.append(Paragraph("Recomendación de Laboratorios Acreditados", style_h2))
+    story.append(Spacer(1, 4*mm))
+
+    if not laboratorios_recomendados:
+        story.append(
+            Paragraph(
+                "No se encontraron laboratorios compatibles con las normas detectadas.",
+                style_normal
+            )
+        )
+    else:
+        for i, lab in enumerate(laboratorios_recomendados[:3]):
+            nombre = lab.get("nombre") or "Laboratorio no especificado"
+            abrev = lab.get("abreviatura") or ""
+            direccion = lab.get("direccion") or "No disponible"
+            telefono = lab.get("telefono") or "No disponible"
+            servicio = lab.get("tipo_servicio") or "No especificado"
+            motivo = lab.get("motivo") or "Laboratorio disponible para pruebas técnicas"
+
+            tipo_ensayo = lab.get("tipo_ensayo")
+            if isinstance(tipo_ensayo, list):
+                tipo_ensayo_txt = ", ".join(tipo_ensayo)
+            else:
+                tipo_ensayo_txt = "No especificado"
+
+            story.append(
+                Paragraph(
+                    f"<b>{i+1}. {nombre} ({abrev})</b>",
+                    style_h3
+                )
+            )
+            story.append(Paragraph(f"<b>Dirección:</b> {direccion}", style_normal))
+            story.append(Paragraph(f"<b>Teléfono:</b> {telefono}", style_normal))
+            story.append(Paragraph(f"<b>Tipo de servicio:</b> {servicio}", style_normal))
+            story.append(
+                Paragraph(
+                    f"<b>Tipo de ensayos:</b> {tipo_ensayo_txt}",
+                    style_normal
+                )
+            )
+            story.append(
+                Paragraph(
+                    f"<b>Motivo de recomendación:</b> {motivo}",
+                    style_normal
+                )
+            )
+            story.append(Spacer(1, 4*mm))
+
+    # =====================================================
+    # DISCLAIMER + CIERRE DEL PDF
+    # =====================================================
     story.extend(_crear_disclaimer_legal())
 
     doc.build(story)
     buffer.seek(0)
     return buffer
+

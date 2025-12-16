@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
+
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -81,6 +82,7 @@ export default function HistorialProductos() {
   const [cargando, setCargando] = useState(true);
   const [abriendoReporte, setAbriendoReporte] = useState(false); // Nuevo estado para feedback visual
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 🔥 NUEVA FUNCIÓN: Obtiene el documento fresco desde el backend
   // Esto fuerza a que se recalculen las normas con tu lógica Python más reciente
@@ -202,32 +204,34 @@ export default function HistorialProductos() {
   };
 
   useEffect(() => {
-    const fetchProductos = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+  const fetchProductos = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-      try {
-        const response = await fetch(`${API_URL}/productos/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+    try {
+      const response = await fetch(`${API_URL}/productos/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        if (!response.ok) throw new Error("Error al cargar historial");
+      if (!response.ok) throw new Error("Error al cargar historial");
 
-        const data = await response.json();
-        const agrupados = agruparProductos(data);
-        setProductosAgrupados(agrupados);
-      } catch (e) {
-        console.error(e);
-        setError("No se pudo cargar el historial.");
-      } finally {
-        setCargando(false);
-      }
-    };
-    fetchProductos();
-  }, [navigate]);
+      const data = await response.json();
+      const agrupados = agruparProductos(data);
+      setProductosAgrupados(agrupados);
+    } catch (e) {
+      console.error(e);
+      setError("No se pudo cargar el historial.");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  fetchProductos();
+}, [location.pathname]);
+
 
   const handleEliminar = async (grupo) => {
     if (!window.confirm("¿Estás seguro de eliminar este historial completo?"))
