@@ -318,7 +318,7 @@ export default function SubirArchivos() {
       formData.append("analizar", "true");
 
       const response = await axios.post(
-        "http://localhost:8000/documentos/subir-analizar",
+        `${API_URL}/documentos/subir-analizar`,
         formData,
         {
           headers: {
