@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const S = {
   // ... (TUS ESTILOS ORIGINALES SE MANTIENEN IGUAL) ...
   container: {
@@ -434,7 +436,7 @@ function ResultadosAnalisis() {
         console.log("IDs enviados al backend:", ids_documentos);
 
         const response = await fetch(
-          "http://localhost:8000/documentos/reporte-general-pdf",
+          `${API_URL}/documentos/reporte-general-pdf`,
           {
             method: "POST",
             headers: {
@@ -474,7 +476,7 @@ function ResultadosAnalisis() {
       console.log("Descargando PDF individual ID:", datos.id_documento);
 
       const response = await fetch(
-        `http://localhost:8000/documentos/${datos.id_documento}/reporte-pdf`,
+        `${API_URL}/documentos/${datos.id_documento}/reporte-pdf`,
         {
           method: "GET",
           headers: {
