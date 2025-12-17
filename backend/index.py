@@ -8,9 +8,9 @@ from backend.routers import clientes, productos, documentos, auth, soporte #,hea
 from backend.database import Base, engine
 
 #Esta línea BORRA las tablas
-#Base.metadata.drop_all(bind=engine) 
+Base.metadata.drop_all(bind=engine) 
 #Esta línea CREARÁ las tablas de nuevo
-#Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 ENV = os.getenv("ENV", "dev")
 

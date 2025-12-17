@@ -15,6 +15,8 @@ class Cliente(Base):
     verification_code = Column(String(10), nullable=True)
     reset_token = Column(String(255), unique=True, nullable=True, index=True)
     reset_token_expires = Column(TIMESTAMP(timezone=True), nullable=True)
+    estado = Column(String(20), default="subido")
+    error_proceso = Column(String(255), nullable=True)
     productos = relationship("Producto", back_populates="cliente", cascade="all, delete-orphan")
     documentos = relationship("Documento", back_populates="cliente", cascade="all, delete-orphan")
 

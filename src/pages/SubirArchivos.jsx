@@ -179,6 +179,58 @@ export default function SubirArchivos() {
     }
   };
 
+  const esperarResultado = (idDocumento, tipoArchivo) => {
+    const token = localStorage.getItem("authToken");
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await axios.get(
+          `${API_URL}/documentos/${idDocumento}/estado`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const { estado, error } = res.data;
+
+        if (estado === "finalizado") {
+          clearInterval(interval);
+
+          // Obtener el documento completo
+          const docRes = await axios.get(
+            `${API_URL}/documentos/${idDocumento}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          updateResultado(tipoArchivo, docRes.data);
+          updateProgreso(tipoArchivo, 100);
+
+          setTimeout(() => {
+            setLoading(false);
+            setSuccessType(
+              tipoArchivo === "manual"
+                ? "Manual"
+                : tipoArchivo === "etiqueta"
+                ? "Etiqueta"
+                : "Ficha Técnica"
+            );
+            setShowSuccessModal(true);
+          }, 500);
+        }
+
+        if (estado === "error") {
+          clearInterval(interval);
+          setLoading(false);
+          alert(error || "Error procesando el documento.");
+        }
+      } catch (e) {
+        console.error("Error consultando estado:", e);
+      }
+    }, 3000); // cada 3 segundos
+  };
+
   const updateResultado = (tipo, data) => {
     if (tipo === "manual") {
       setResultadoManual(data);
@@ -328,13 +380,13 @@ export default function SubirArchivos() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-          timeout: 600000,
         }
       );
 
       clearInterval(simulationInterval);
       updateProgreso(tipoArchivo, 100);
-      updateResultado(tipoArchivo, response.data);
+      const { id_documento } = response.data;
+      esperarResultado(id_documento, tipoArchivo);
       setSuccessType(nombreUI);
 
       setTimeout(() => {

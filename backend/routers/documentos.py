@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from datetime import datetime 
 from .. import crud, schemas, database, auth, models
 import shutil
-
-# Servicios
+from fastapi import BackgroundTasks
+from backend.services.analisis_background import analizar_documento_background
 from ..services import ia_analisis, pdf_report
 from ..services.resultado_normativo import construir_resultado_normativo
 
@@ -21,109 +21,76 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 class ReporteGeneralRequest(BaseModel):
     ids_documentos: List[int]
 
-@router.post("/subir-analizar", response_model=schemas.DocumentoAnalisisOut)
+@router.post("/subir-analizar")
 def subir_y_analizar(
+    background_tasks: BackgroundTasks,
     id_producto: int = Form(...),
     nombre: str = Form(...),
     tipo: str = Form(...),
     categoria: str = Form(...),
     marca: str = Form(""),
     archivo: UploadFile = File(...),
-    analizar: bool = Form(True),
     db: Session = Depends(database.get_db),
     current_user: models.Cliente = Depends(auth.get_current_user)
 ):
+    id_cliente = current_user.id_cliente
+    file_path = os.path.join(UPLOAD_DIR, archivo.filename)
+
     try:
-        id_cliente = current_user.id_cliente
-        file_path = os.path.join(UPLOAD_DIR, archivo.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(archivo.file, buffer)
+    finally:
+        archivo.file.close()
 
-        try:
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(archivo.file, buffer)
-        finally:
-            archivo.file.close()
+    documento_data = schemas.DocumentoCreate(
+        id_cliente=id_cliente,
+        id_producto=id_producto,
+        nombre=nombre
+    )
 
-        documento_data = schemas.DocumentoCreate(
-            id_cliente=id_cliente,
-            id_producto=id_producto,
-            nombre=nombre
-        )
+    doc_db = crud.create_documento(
+        db,
+        documento_data,
+        archivo_url=file_path
+    )
 
-        doc_db = crud.create_documento(
-            db,
-            documento_data,
-            archivo_url=file_path
-        )
+    # 🆕 estado inicial
+    doc_db.estado = "subido"
+    db.commit()
+    db.refresh(doc_db)
 
-        resultados_ia = []
-        resultado_normativo = []
+    # 🔥 ANÁLISIS EN BACKGROUND
+    background_tasks.add_task(
+        analizar_documento_background,
+        doc_db.id_documento
+    )
 
-        if analizar and archivo.filename.lower().endswith(".pdf"):
-            cat_map = {
-                "laptop": "Laptop",
-                "smarttv": "SmartTV",
-                "smart tv": "SmartTV",
-                "tv": "SmartTV",
-                "luminaria": "Luminaria"
-            }
-            categoria_clean = cat_map.get(categoria.lower(), "Laptop")
+    # ⚡ RESPUESTA INMEDIATA
+    return {
+        "mensaje": "Archivo recibido y enviado a procesamiento",
+        "id_documento": doc_db.id_documento,
+        "estado": "procesando"
+    }
+    
+@router.get("/{id_documento}/estado")
+def estado_documento(
+    id_documento: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.Cliente = Depends(auth.get_current_user)
+):
+    doc = db.query(models.Documento).filter(
+        models.Documento.id_documento == id_documento,
+        models.Documento.id_cliente == current_user.id_cliente
+    ).first()
 
-            tipo_clean = "Ficha"
-            if "manual" in tipo.lower():
-                tipo_clean = "Manual"
-            elif "etiqueta" in tipo.lower():
-                tipo_clean = "Etiqueta"
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
 
-            print(f"Analizando: {categoria_clean} - {tipo_clean}")
-
-            resultados_ia = ia_analisis.analizar_documento(
-                file_path,
-                tipo_clean,
-                categoria_clean,
-                marca_esperada=marca
-            )
-
-            resultado_normativo = construir_resultado_normativo(
-                categoria_producto=categoria_clean,
-                tipo_documento=tipo_clean,
-                resultados_ia=resultados_ia
-            )
-
-            if resultados_ia:
-                # Guardar análisis en BD
-                crud.update_documento_analisis(
-                    db,
-                    doc_db.id_documento,
-                    resultados_ia
-                )
-
-                producto = db.query(models.Producto).filter(
-                    models.Producto.id_producto == id_producto
-                ).first()
-
-                if producto:
-                    producto.fecha_registro = datetime.utcnow()
-                    db.commit()
-
-        doc_db.analisis_ia = resultados_ia
-        doc_db.resultado_normativo = resultado_normativo
-
-        return doc_db
-
-    except Exception as e:
-        print(f"Error en subir_y_analizar: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error: {str(e)}"
-        )
-
-    except Exception as e:
-        print(f"Error en subir_y_analizar: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error: {str(e)}"
-        )
-
+    return {
+        "estado": doc.estado,
+        "error": doc.error_proceso
+    }
+        
 # LISTAR DOCUMENTOS
 @router.get("/", response_model=list[schemas.DocumentoAnalisisOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
