@@ -5,7 +5,6 @@ import { useAuthListener } from "../useAuthListener";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const S = {
-  // ... (TUS ESTILOS ORIGINALES SE MANTIENEN IGUAL) ...
   container: {
     fontFamily: "'Helvetica', 'Arial', sans-serif",
     backgroundColor: "#ffffff",
@@ -220,7 +219,7 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
     if (n?.norma && n.descripcion) mapaDescripcion[n.norma] = n.descripcion;
   });
 
-  // 🔥 NUEVO: Combinar hallazgos RAW con hallazgos VISUALES de resultado_normativo
+  //Combinar hallazgos RAW con hallazgos VISUALES de resultado_normativo
   const hallazgosVisuales = [];
   resultadoNormativoSeguro.forEach((norma) => {
     if (norma.evidencias && Array.isArray(norma.evidencias)) {
@@ -229,8 +228,8 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
           hallazgosVisuales.push({
             Norma: norma.norma,
             Categoria: "Validación Visual",
-            Contexto: ev.descripcion, // "Elemento visual detectado..."
-            Hallazgo: ev.fuente, // "YOLO / OCR"
+            Contexto: ev.descripcion,
+            Hallazgo: ev.fuente,
             Pagina: "1",
             EsValidacion: true,
           });
@@ -271,7 +270,6 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
         </thead>
         <tbody>
           {todosLosHallazgos.map((item, index) => {
-            // EVIDENCIA VISUAL (IMAGEN)
             if (item?.ImagenBase64) {
               return (
                 <tr key={index}>
@@ -290,7 +288,7 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
                           fontSize: 11,
                         }}
                       >
-                        📸 EVIDENCIA VISUAL
+                        EVIDENCIA VISUAL
                       </span>
                       <br />
                       <br />
@@ -361,9 +359,8 @@ const TablaHallazgos = ({ analisis, resultadoNormativo }) => {
   );
 };
 
-// ... RESTO DEL COMPONENTE ResultadosAnalisis IGUAL ...
+//RESTO DEL COMPONENTE
 function ResultadosAnalisis() {
-  // ... (Mismo código que tenías) ...
   useAuthListener();
   const [datos, setDatos] = useState(null);
   const [generando, setGenerando] = useState(false);
@@ -374,11 +371,11 @@ function ResultadosAnalisis() {
 
     const parsed = JSON.parse(data);
 
-    // 🟢 CASO REPORTE GENERAL (UNIFICADO)
+    //CASO REPORTE GENERAL (UNIFICADO)
     if (parsed.sub_reportes && Array.isArray(parsed.sub_reportes)) {
       const subReportes = parsed.sub_reportes;
 
-      // 🔥 DOCUMENTOS (ESTO ES LO CRÍTICO)
+      // DOCUMENTOS
       const documentos = subReportes
         .map((sub) => sub?.data)
         .filter(Boolean)
@@ -389,7 +386,7 @@ function ResultadosAnalisis() {
 
       console.log("DOCUMENTOS DEL REPORTE:", documentos);
 
-      // Análisis y checklist unificado (solo visual)
+      //Análisis y checklist unificado
       const analisisUnificado = subReportes.flatMap((sub) =>
         Array.isArray(sub?.data?.analisis_ia) ? sub.data.analisis_ia : []
       );
@@ -402,12 +399,12 @@ function ResultadosAnalisis() {
 
       setDatos({
         ...parsed,
-        documentos, // 🔥 AHORA SÍ EXISTE
+        documentos,
         analisisUnificado,
         resultadoNormativoUnificado,
       });
     } else {
-      // 🟢 CASO REPORTE INDIVIDUAL
+      //CASO REPORTE INDIVIDUAL
       setDatos(parsed);
     }
   }, []);
@@ -424,9 +421,7 @@ function ResultadosAnalisis() {
         throw new Error("No hay token de autenticación");
       }
 
-      // ==================================================
-      // 🟢 CASO 1: REPORTE GENERAL (UNIFICADO)
-      // ==================================================
+      //CASO 1: REPORTE GENERAL (UNIFICADO)
       if (esGeneral) {
         if (!datos?.documentos || datos.documentos.length === 0) {
           throw new Error("No hay documentos para generar el PDF");
@@ -466,9 +461,7 @@ function ResultadosAnalisis() {
         return;
       }
 
-      // ==================================================
-      // 🟢 CASO 2: REPORTE INDIVIDUAL
-      // ==================================================
+      //CASO 2: REPORTE INDIVIDUAL
       if (!datos?.id_documento) {
         throw new Error("No se encontró el documento para descargar");
       }

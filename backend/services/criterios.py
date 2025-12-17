@@ -7,32 +7,19 @@ Este archivo define LOS CRITERIOS TÉCNICOS DE DETECCIÓN
 para encontrar evidencia normativa dentro de documentos
 (Ficha Técnica, Manual, Etiqueta).
 
-❌ NO contiene descripciones normativas
-❌ NO contiene texto para el usuario
-✅ SOLO contiene patrones de búsqueda (regex)
+NO contiene descripciones normativas
+NO contiene texto para el usuario
+SOLO contiene patrones de búsqueda (regex)
 
 Se cruza posteriormente con:
 - catalogo_normas.py (qué evalúa la norma)
 - resultado_normativo.py (estado y score)
 """
 
-# ==========================================================
-# CRITERIOS POR PRODUCTO
-# ==========================================================
-
 CRITERIOS_POR_PRODUCTO = {
 
-    # ======================================================
-    # PRODUCTO: LAPTOP
-    # ======================================================
     "Laptop": {
-
-        # --------------------------------------------------
-        # DOCUMENTO: FICHA TÉCNICA
-        # --------------------------------------------------
         "Ficha": {
-
-            # ================= NOM-001 =====================
            "NOM-001-SCFI-2018": {
     "Seguridad eléctrica": [
         r"voltaje (nominal|de entrada).{0,10}\d+ ?v",
@@ -53,8 +40,6 @@ CRITERIOS_POR_PRODUCTO = {
     ]
 },
 
-
-            # ================= NOM-008 =====================
             "NOM-008-SCFI-2002": {
 
                 "Unidades de medida": [
@@ -65,7 +50,6 @@ CRITERIOS_POR_PRODUCTO = {
                 ]
             },
 
-            # ================= NOM-024 =====================
             "NOM-024-SCFI-2013": {
 
                 "Información técnica y comercial": [
@@ -84,12 +68,7 @@ CRITERIOS_POR_PRODUCTO = {
             }
         },
 
-        # --------------------------------------------------
-        # DOCUMENTO: MANUAL DE USUARIO
-        # --------------------------------------------------
         "Manual": {
-
-            # ================= NOM-001 =====================
             "NOM-001-SCFI-2018": {
 
                 "Advertencias de seguridad eléctrica": [
@@ -102,7 +81,6 @@ CRITERIOS_POR_PRODUCTO = {
                 ]
             },
 
-            # ================= NOM-019 =====================
             "NOM-019-SE-2021": {
 
                 "Marcado y advertencias de seguridad": [
@@ -124,7 +102,6 @@ CRITERIOS_POR_PRODUCTO = {
                 ]
             },
 
-            # ================= NMX-60950 =====================
             "NMX-I-60950-1-NYCE-2015": {
 
                 "Instrucciones de instalación segura": [
@@ -156,8 +133,7 @@ CRITERIOS_POR_PRODUCTO = {
 
         
         "Etiqueta": {
-
-    # ================= NMX-I-60950 =====================
+            
     "NMX-I-60950-1-NYCE-2015": {
         "Seguridad eléctrica": [
             r"s[ií]mbolo\s+de\s+doble\s+aislamiento",
@@ -170,7 +146,6 @@ CRITERIOS_POR_PRODUCTO = {
         ]
     },
 
-    # ================= NOM-008 =====================
     "NOM-008-SCFI-2002": {
         "Etiquetado comercial": [
             r"marca",
@@ -180,7 +155,6 @@ CRITERIOS_POR_PRODUCTO = {
         ]
     },
 
-    # ================= NOM-106 =====================
     "NOM-106-SCFI-2000": {
     "Contraseña oficial NOM": [
         r"logotipo nom",
@@ -189,7 +163,6 @@ CRITERIOS_POR_PRODUCTO = {
     ]
 },
 
-    # ================= NOM-024 =====================
     "NOM-024-SCFI-2013": {
         "Reciclado RAEE": [
             r"s[ií]mbolo\s+de\s+reciclado",
@@ -203,12 +176,7 @@ CRITERIOS_POR_PRODUCTO = {
 
 "SmartTV": {
 
-    # --------------------------------------------------
-    # DOCUMENTO: FICHA TÉCNICA
-    # --------------------------------------------------
     "Ficha": {
-
-        # ================= NOM-001 =====================
         "NOM-001-SCFI-2018": {
 
             "Seguridad eléctrica": [
@@ -222,7 +190,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-60065 =====================
         "NMX-I-60065-NYCE-2015": {
 
             "Seguridad térmica y ventilación": [
@@ -234,7 +201,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-60950 =====================
         "NMX-I-60950-1-NYCE-2015": {
 
             "Conexión de periféricos": [
@@ -255,7 +221,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-032 =====================
         "NOM-032-ENER-2013": {
 
             "Eficiencia energética": [
@@ -267,7 +232,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-192 =====================
         "NOM-192-SCFI/SCT1-2013": {
 
             "Conectividad inalámbrica": [
@@ -285,7 +249,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-640 =====================
         "NMX-J-640-ANCE-2010": {
 
             "Identificación del producto": [
@@ -304,12 +267,7 @@ CRITERIOS_POR_PRODUCTO = {
         }
     },
 
-    # --------------------------------------------------
-    # DOCUMENTO: MANUAL DE USUARIO
-    # --------------------------------------------------
     "Manual": {
-
-        # ================= NOM-001 =====================
         "NOM-001-SCFI-2018": {
 
             "Advertencias de seguridad eléctrica": [
@@ -328,7 +286,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-60065 =====================
         "NMX-I-60065-NYCE-2015": {
 
             "Ventilación y temperatura": [
@@ -345,7 +302,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-60950 =====================
         "NMX-I-60950-1-NYCE-2015": {
 
             "Conexión de periféricos": [
@@ -363,7 +319,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-032 =====================
         "NOM-032-ENER-2013": {
 
             "Uso eficiente de energía": [
@@ -374,7 +329,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-192 =====================
         "NOM-192-SCFI/SCT1-2013": {
 
             "Configuración inalámbrica": [
@@ -437,17 +391,9 @@ CRITERIOS_POR_PRODUCTO = {
 
 },
 
-    # ======================================================
-    # PRODUCTO: LUMINARIA (opcional)
-    # ======================================================
    "Luminaria": {
-
-    # --------------------------------------------------
-    # DOCUMENTO: FICHA TÉCNICA
-    # --------------------------------------------------
     "Ficha": {
 
-        # ================= NMX-J-038/1 =====================
         "NMX-J-038/1-ANCE-2005": {
 
             "Seguridad eléctrica": [
@@ -468,7 +414,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-031 =====================
         "NOM-031-ENER-2019": {
 
             "Eficacia luminosa": [
@@ -511,7 +456,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-507/2 =====================
         "NMX-J-507/2-ANCE-2013": {
 
             "Parámetros eléctricos": [
@@ -529,7 +473,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-543 =====================
         "NMX-J-543-ANCE-2013": {
 
             "Ensayos eléctricos": [
@@ -548,7 +491,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-610 =====================
         "NMX-J-610/4-5-ANCE-2013": {
 
             "Aislamiento y envejecimiento": [
@@ -576,7 +518,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-030 =====================
         "NOM-030-ENER-2016": {
 
             "Eficiencia energética": [
@@ -587,7 +528,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-024 =====================
         "NOM-024-ENER-2016": {
 
             "Control y compatibilidad": [
@@ -602,12 +542,8 @@ CRITERIOS_POR_PRODUCTO = {
         }
     },
 
-    # --------------------------------------------------
-    # DOCUMENTO: MANUAL DE USUARIO
-    # --------------------------------------------------
     "Manual": {
 
-        # ================= NMX-J-507/2 =====================
         "NMX-J-507/2-ANCE-2013": {
 
             "Instalación y montaje": [
@@ -627,7 +563,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-543 =====================
         "NMX-J-543-ANCE-2013": {
 
             "Conexiones eléctricas": [
@@ -646,7 +581,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NMX-J-610 =====================
         "NMX-J-610/4-5-ANCE-2013": {
 
             "Compatibilidad electromagnética": [
@@ -665,7 +599,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-030 =====================
         "NOM-030-ENER-2016": {
 
             "Información energética": [
@@ -686,7 +619,6 @@ CRITERIOS_POR_PRODUCTO = {
             ]
         },
 
-        # ================= NOM-024 =====================
         "NOM-024-ENER-2016": {
 
             "Instalación eficiente": [

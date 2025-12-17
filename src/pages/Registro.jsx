@@ -11,14 +11,13 @@ export default function Registro() {
   const [verificaContrasena, setVerificaContrasena] = useState("");
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarVerifica, setMostrarVerifica] = useState(false);
-  const [aceptarTerminos, setAceptarTerminos] = useState(false); // Nuevo estado checkbox
-  const [mostrarTerminosModal, setMostrarTerminosModal] = useState(false); // Estado para ver los términos
+  const [aceptarTerminos, setAceptarTerminos] = useState(false);
+  const [mostrarTerminosModal, setMostrarTerminosModal] = useState(false);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
-
   const navigate = useNavigate();
 
-  // Texto de Términos y Condiciones
+  //Texto de Términos y Condiciones
   const terminosTexto = (
     <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
       <h4 className="font-bold text-lg text-slate-900">
@@ -117,7 +116,7 @@ export default function Registro() {
     tieneMayuscula &&
     tieneNumero &&
     coinciden &&
-    aceptarTerminos; // Agregada validación del checkbox
+    aceptarTerminos;
 
   const handleRegistro = async (e) => {
     e.preventDefault();

@@ -74,7 +74,7 @@ def subir_y_analizar(
             elif "etiqueta" in tipo.lower():
                 tipo_clean = "Etiqueta"
 
-            print(f"📄 Analizando: {categoria_clean} - {tipo_clean}")
+            print(f"Analizando: {categoria_clean} - {tipo_clean}")
 
             resultados_ia = ia_analisis.analizar_documento(
                 file_path,
@@ -111,14 +111,14 @@ def subir_y_analizar(
         return doc_db
 
     except Exception as e:
-        print(f"❌ Error en subir_y_analizar: {e}")
+        print(f"Error en subir_y_analizar: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Error: {str(e)}"
         )
 
     except Exception as e:
-        print(f"❌ Error en subir_y_analizar: {e}")
+        print(f"Error en subir_y_analizar: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Error: {str(e)}"
@@ -129,7 +129,7 @@ def subir_y_analizar(
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
 
-# REPORTE PDF GENERAL (ARREGLADO)
+# REPORTE PDF GENERAL
 @router.post("/reporte-general-pdf")
 def generar_reporte_general_pdf(
     data: ReporteGeneralRequest,
@@ -184,7 +184,6 @@ def generar_reporte_general_pdf(
                 "modelo": modelo_prod
             })
 
-        # 3. Generar PDF
         print(f"Generando PDF unificado para {len(bloques_documentos)} docs...")
         
         pdf_buffer = pdf_report.generar_pdf_reporte_general(
@@ -212,7 +211,6 @@ def generar_reporte_general_pdf(
         raise he
     except Exception as e:
         print(f"Error PDF general: {e}")
-        # 🔥 FIX CRITICO: Convertir error a string simple
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
 # REPORTE PDF INDIVIDUAL

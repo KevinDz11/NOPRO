@@ -2,10 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Any
 from datetime import datetime
 
-# ============================================================
-# 1. SCHEMAS DE RESULTADOS IA Y DOCUMENTOS
-# ============================================================
-
+#SCHEMAS DE RESULTADOS IA Y DOCUMENTOS
 class ResultadoIA(BaseModel):
     Norma: str
     Categoria: str
@@ -30,18 +27,13 @@ class DocumentoOut(BaseModel):
     id_documento: int
     nombre: str
     archivo_url: str
-
-    # 🔥 SIEMPRE LISTA (IA)
     analisis_ia: List[Any] = []
 
     class Config:
         from_attributes = True
 
 
-# ============================================================
-# 🔥 SCHEMA DEL RESULTADO NORMATIVO (OBLIGATORIO)
-# ============================================================
-
+#SCHEMA DEL RESULTADO NORMATIVO
 class ResultadoNormativoOut(BaseModel):
     norma: str
     nombre: str
@@ -51,25 +43,15 @@ class ResultadoNormativoOut(BaseModel):
     evidencia_esperada: Optional[List[str]] = None
     score_confianza: Optional[float] = None
 
-
-# ============================================================
-# 🔥 DOCUMENTO CON ANÁLISIS + CHECKLIST
-# ============================================================
-
+#DOCUMENTO CON ANÁLISIS + CHECKLIST
 class DocumentoAnalisisOut(DocumentoOut):
-    # 👇 ESTE ES EL CAMPO QUE FALTABA BIEN TIPADO
     resultado_normativo: Optional[List[ResultadoNormativoOut]] = []
 
-
-# ============================================================
-# 2. SCHEMAS DE PRODUCTO
-# ============================================================
-
+#SCHEMAS DE PRODUCTO
 class ProductoBase(BaseModel):
     nombre: str
     marca: Optional[str] = None
     descripcion: Optional[str] = None
-
 
 class ProductoCreate(ProductoBase):
     pass
@@ -81,18 +63,13 @@ class ProductoOut(BaseModel):
     marca: Optional[str]
     descripcion: Optional[str]
     fecha_registro: Optional[datetime]
-
-    # 🔥 DOCUMENTOS CON IA + CHECKLIST
     documentos: List[DocumentoAnalisisOut] = []
 
     class Config:
         from_attributes = True
 
 
-# ============================================================
-# 3. SCHEMAS DE CLIENTE
-# ============================================================
-
+#SCHEMAS DE CLIENTE
 class ClienteBase(BaseModel):
     nombre: str
     email: str
@@ -113,10 +90,7 @@ class ClienteOut(BaseModel):
         from_attributes = True
 
 
-# ============================================================
-# 4. OTROS
-# ============================================================
-
+#OTROS
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -139,8 +113,6 @@ class DocumentoMeOut(BaseModel):
     id_documento: int
     nombre: str
     archivo_url: str
-
-    # 🔥 JAMÁS None
     analisis_ia: List[dict] = []
 
     class Config:

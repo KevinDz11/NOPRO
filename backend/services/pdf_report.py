@@ -12,7 +12,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
 from backend.services.recomendacion_laboratorios import recomendar_laboratorios
 
-# --- 1. CONFIGURACIÓN DE ESTILOS ---
+#CONFIGURACIÓN DE ESTILOS
 C_SLATE_900 = HexColor('#0f172a')
 C_SLATE_800 = HexColor('#1e293b') 
 C_SLATE_700 = HexColor('#334155') 
@@ -164,7 +164,7 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
         Paragraph("Estado", style_th_center)
     ]]
 
-    # Set de normas con hallazgos reales (IA)
+    #Set de normas con hallazgos reales (IA)
     normas_con_hallazgos = set()
     if analisis_ia:
         for item in analisis_ia:
@@ -176,7 +176,7 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
         desc = norma.get('nombre', '') 
         estado_original = norma.get('estado', '')
         
-        # Lógica de cumplimiento
+        #Lógica de cumplimiento
         cumple = (estado_original == "CUMPLE")
         
         if not cumple and nombre_norma in normas_con_hallazgos:
@@ -203,15 +203,13 @@ def _crear_checklist_unificado(resultado_normativo, analisis_ia=None):
 
 
 def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
-    """
-    Combina hallazgos RAW de la IA con evidencias específicas de validación normativa.
-    """
+    #Combina hallazgos RAW de la IA con evidencias específicas de validación normativa.
     elementos = []
     
-    # 1. Combinar listas
+    #Nombinar listas
     items_a_mostrar = list(analisis_ia) if analisis_ia else []
 
-    # 🔥 NUEVO: Extraer evidencias "visual" de resultado_normativo y agregarlas como hallazgos
+    #NUEVO: Extraer evidencias "visual" de resultado_normativo y agregarlas como hallazgos
     if resultado_normativo:
         for r in resultado_normativo:
             evidencias = r.get("evidencias", [])
@@ -266,7 +264,7 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
         
         desc_norma = mapa_desc.get(norma, "—")
 
-        # --- CASO 1: EVIDENCIA VISUAL (IMAGEN RAW) ---
+        #EVIDENCIA VISUAL (IMAGEN RAW)
         if img_b64:
             try:
                 img_bytes = base64.b64decode(img_b64)
@@ -299,7 +297,7 @@ def _crear_tabla_hallazgos_unificada(analisis_ia, resultado_normativo):
                 print(f"Error imagen PDF: {e}")
                 continue
         
-        # --- CASO 2: EVIDENCIA TEXTUAL O VALIDACIÓN VISUAL ---
+        #EVIDENCIA TEXTUAL O VALIDACIÓN VISUAL
         else:
             es_visual_norma = any(x in norma for x in ["Visual", "Gráfica"]) or item.get("EsValidacion")
             estilo_norma = style_cell_norma_v if es_visual_norma else style_cell_norma_t
@@ -346,8 +344,7 @@ def _crear_disclaimer_legal():
     elementos.append(Paragraph("Sistema NOPRO AI Platform v1.0 — Documento confidencial", style_footer))
     return elementos
 
-# --- 4. FUNCIONES EXPORTADAS ---
-
+#FUNCIONES EXPORTADAS
 def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, categoria_producto, tipo_documento, marca_producto, modelo_producto):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -361,15 +358,15 @@ def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, catego
     )
     story = []
 
-    # 1. Header
+    #Header
     titulo = f"Reporte {tipo_documento}"
     subtitulo = "Análisis Automatizado por IA"
     story.append(_crear_header(titulo, subtitulo, marca_producto, modelo_producto))
     story.append(Spacer(1, 6*mm))
 
-    # 2. Resumen
+    #Resumen
     total_hallazgos = len(resultados_ia or [])
-    # Sumar evidencias normativas específicas
+    #Sumar evidencias normativas específicas
     if resultado_normativo:
         for r in resultado_normativo:
             total_hallazgos += len([e for e in r.get('evidencias', []) if e.get('tipo') == 'visual'])
@@ -377,15 +374,15 @@ def generar_pdf_reporte(documento_db, resultados_ia, resultado_normativo, catego
     story.append(_crear_cards_resumen(categoria_producto, tipo_documento, total_hallazgos))
     story.append(Spacer(1, 8*mm))
 
-    # 3. Checklist
+    #Checklist
     story.append(Paragraph("1. Checklist de cumplimiento normativo", style_h2))
     story.extend(_crear_checklist_unificado(resultado_normativo, resultados_ia))
     
-    # 4. Hallazgos
+    #Hallazgos
     story.append(Paragraph("2. Detalle de evidencias encontradas", style_h2))
     story.extend(_crear_tabla_hallazgos_unificada(resultados_ia, resultado_normativo))
 
-    # 5. Footer
+    #Footer
     story.extend(_crear_disclaimer_legal())
 
     doc.build(story)
@@ -405,10 +402,8 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
     )
 
     story = []
-
-    # =====================================================
+    
     # HEADER
-    # =====================================================
     story.append(
         _crear_header(
             "Reporte General Unificado",
@@ -419,15 +414,13 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
     )
     story.append(Spacer(1, 6*mm))
 
-    # =====================================================
     # RESUMEN GLOBAL
-    # =====================================================
     total_hallazgos_global = 0
 
     for item in lista_docs:
         total_hallazgos_global += len(item.get("resultados_ia") or [])
 
-        # Evidencias visuales del checklist normativo
+        #Evidencias visuales del checklist normativo
         if item.get("resultado_normativo"):
             for r in item["resultado_normativo"]:
                 total_hallazgos_global += len(
@@ -443,9 +436,7 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
     )
     story.append(Spacer(1, 10*mm))
 
-    # =====================================================
     # ORDENAR DOCUMENTOS
-    # =====================================================
     def get_priority(doc_item):
         n = doc_item["documento"].nombre.lower()
         if "ficha" in n:
@@ -458,9 +449,7 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
 
     lista_sorted = sorted(lista_docs, key=get_priority)
 
-    # =====================================================
     # CONTENIDO POR DOCUMENTO
-    # =====================================================
     for i, item in enumerate(lista_sorted):
         doc_obj = item["documento"]
         res_ia = item["resultados_ia"]
@@ -484,9 +473,7 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
         story.append(Paragraph("2. Evidencias Encontradas", style_h3))
         story.extend(_crear_tabla_hallazgos_unificada(res_ia, res_norm))
 
-    # =====================================================
-    # 🔎 OBTENER NORMAS DETECTADAS (GLOBAL)
-    # =====================================================
+    #OBTENER NORMAS DETECTADAS (GLOBAL)
     normas_detectadas = set()
 
     for item in lista_docs:
@@ -504,18 +491,15 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
 
     normas_detectadas = list(normas_detectadas)
 
-    # =====================================================
-    # 🧪 RECOMENDACIÓN DE LABORATORIOS
-    # =====================================================
+    #RECOMENDACIÓN DE LABORATORIOS
     from backend.services.recomendacion_laboratorios import recomendar_laboratorios
 
     laboratorios_recomendados = recomendar_laboratorios(
         producto=categoria_producto,
         normas_detectadas=normas_detectadas
     )
-    # =====================================================
+ 
     # SECCIÓN: LABORATORIOS RECOMENDADOS
-    # =====================================================
     story.append(PageBreak())
     story.append(Paragraph("Recomendación de Laboratorios Acreditados", style_h2))
     story.append(Spacer(1, 4*mm))
@@ -565,9 +549,7 @@ def generar_pdf_reporte_general(lista_docs, categoria_producto, marca_producto, 
             )
             story.append(Spacer(1, 4*mm))
 
-    # =====================================================
     # DISCLAIMER + CIERRE DEL PDF
-    # =====================================================
     story.extend(_crear_disclaimer_legal())
 
     doc.build(story)

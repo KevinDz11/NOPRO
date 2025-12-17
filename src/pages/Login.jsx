@@ -7,16 +7,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Estado para mostrar/ocultar contraseña
   const [mostrarPassword, setMostrarPassword] = useState(false);
-
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
-
   const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
-
-  // CAMBIO: Ahora validamos que la contraseña tenga al menos 8 caracteres
   const esFormularioValido = () =>
     esCorreoValido(email) && password.length >= 8;
 
@@ -25,7 +20,6 @@ export default function Login() {
     setMensaje("");
 
     if (!esFormularioValido()) {
-      // CAMBIO: Mensaje de error actualizado
       setMensaje(
         "El correo debe ser válido y la contraseña de al menos 8 caracteres."
       );
@@ -192,7 +186,7 @@ export default function Login() {
 
             <button
               type="submit"
-              // CAMBIO: El botón se deshabilita si no cumple los 8 caracteres
+              //El botón se deshabilita si no cumple los 8 caracteres
               disabled={!esFormularioValido() || cargando}
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 hover:shadow-blue-500/30 
                 ${

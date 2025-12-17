@@ -1,12 +1,10 @@
 import os
 from typing import List
 import json
-
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-
 from backend.services.resultado_normativo import construir_resultado_normativo
 from backend import crud, schemas, database, auth, models
 
@@ -14,7 +12,8 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-# --- ENDPOINT PARA LISTAR PRODUCTOS ---
+
+#ENDPOINT PARA LISTAR PRODUCTOS
 @router.get("/", response_model=List[schemas.ProductoOut])
 def listar_productos(
     db: Session = Depends(database.get_db),
@@ -36,7 +35,7 @@ def listar_productos(
 
 
 
-# --- NUEVO ENDPOINT PARA CREAR UN PRODUCTO ---
+#ENDPOINT PARA CREAR UN PRODUCTO
 @router.post("/", response_model=schemas.ProductoOut)
 def crear_producto(
     producto: schemas.ProductoCreate, 
@@ -48,7 +47,7 @@ def crear_producto(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear el producto: {str(e)}")
     
-# --- NUEVO ENDPOINT DE HISTORIAL POR USUARIO ---
+#ENDPOINT DE HISTORIAL POR USUARIO
 @router.get("/me", response_model=List[schemas.ProductoOut])
 def listar_productos_del_usuario(
     db: Session = Depends(database.get_db),
@@ -61,23 +60,14 @@ def listar_productos_del_usuario(
 
     for producto in productos:
         for documento in producto.documentos:
-
-            # ===============================
-            # 1️⃣ Normalizar analisis_ia
-            # ===============================
             analisis = documento.analisis_ia or []
-
             if isinstance(analisis, str):
                 try:
                     analisis = json.loads(analisis)
                 except Exception:
                     analisis = []
-
             documento.analisis_ia = analisis
 
-            # ===============================
-            # 2️⃣ 🔥 RECONSTRUIR CHECKLIST
-            # ===============================
             documento.resultado_normativo = construir_resultado_normativo(
                 categoria_producto=producto.nombre or "Laptop",
                 tipo_documento="Ficha",  # o detecta por nombre si luego quieres
@@ -87,8 +77,7 @@ def listar_productos_del_usuario(
     return productos
 
 
-# --- ENDPOINT ANTIGUO (AHORA PARA SUBIR DOCUMENTOS) ---
-# Cambié la ruta de "/" a "/documentos/" para evitar conflictos.
+#ENDPOINT PARA SUBIR DOCUMENTOS
 @router.post("/documentos/", response_model=schemas.DocumentoOut)
 def subir_documento(
     id_cliente: int = Form(...),
@@ -104,7 +93,6 @@ def subir_documento(
             f.write(archivo.file.read())
 
         # Registrar documento en la BD
-        # Ajustamos el schema create
         documento_data = schemas.DocumentoCreate(
             id_cliente=id_cliente,
             id_producto=id_producto,
@@ -116,8 +104,7 @@ def subir_documento(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al subir documento: {str(e)}")
 
-# Puedes mantener este endpoint si también necesitas listar documentos por producto,
-# pero asegúrate de que la ruta sea única. Por ejemplo: "/documentos/".
+#ENDPOINT PARA LISTAR DOCUMENTOS
 @router.get("/documentos/", response_model=list[schemas.DocumentoOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
@@ -128,8 +115,6 @@ def eliminar_producto(producto_id: int, db: Session = Depends(database.get_db)):
     producto = db.query(models.Producto).filter(models.Producto.id_producto == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
-    # Recuerda que si tienes cascade en models, esto borra los documentos también
     db.delete(producto)
     db.commit()
     return {"mensaje": "Producto eliminado"}

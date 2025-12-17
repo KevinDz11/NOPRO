@@ -20,9 +20,9 @@ export default function ContactoSoporte() {
   const [cargandoDatosUsuario, setCargandoDatosUsuario] = useState(true);
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
-  const [mostrarTerminosModal, setMostrarTerminosModal] = useState(false); // Estado para ver los términos
+  const [mostrarTerminosModal, setMostrarTerminosModal] = useState(false);
 
-  // Texto de Términos y Condiciones (Idéntico al de Registro)
+  //Texto de Términos y Condiciones
   const terminosTexto = (
     <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
       <h4 className="font-bold text-lg text-slate-900">
@@ -112,7 +112,7 @@ export default function ContactoSoporte() {
     const fetchUserData = async () => {
       const token = localStorage.getItem("authToken");
 
-      // Si no hay token, redirigimos al login (seguridad básica)
+      //Si no hay token, redirigimos al login (seguridad básica)
       if (!token) {
         navigate("/login");
         return;
@@ -129,7 +129,7 @@ export default function ContactoSoporte() {
 
         const data = await response.json();
 
-        // Rellenamos el formulario con los datos de la BD
+        //Rellenamos el formulario con los datos de la BD
         setFormData((prev) => ({
           ...prev,
           name: data.nombre,
@@ -146,28 +146,28 @@ export default function ContactoSoporte() {
     fetchUserData();
   }, [navigate]);
 
-  // --- NUEVA FUNCIÓN DE VALIDACIÓN ---
+  //FUNCIÓN DE VALIDACIÓN
   const validarMensaje = (texto) => {
     const textoLimpio = texto.trim();
 
-    // 1. Validar que no esté vacío (espacios en blanco)
+    //Validar que no esté vacío (espacios en blanco)
     if (!textoLimpio) return "El mensaje no puede estar vacío.";
 
-    // 2. Validar longitud mínima (evita "hola" o "ayuda")
+    //Validar longitud mínima
     if (textoLimpio.length < 20)
       return "Por favor, detalla más tu consulta (mínimo 20 caracteres).";
 
-    // 3. Validar caracteres repetidos excesivos (ej. "aaaaaaa", ".......")
+    //Validar caracteres repetidos excesivos
     const repeticiones = /(.)\1{4,}/;
     if (repeticiones.test(textoLimpio))
       return "El mensaje parece contener caracteres repetidos sin sentido.";
 
-    // 4. Validar que tenga al menos algunas letras (evita puros números o símbolos)
+    //Validar que tenga al menos algunas letras (evita puros números o símbolos)
     const tieneLetras = /[a-zA-Z]/;
     if (!tieneLetras.test(textoLimpio))
       return "El mensaje debe contener texto descriptivo válido.";
 
-    return null; // Pasó todas las pruebas
+    return null;
   };
 
   const handleChange = (e) => {
@@ -183,7 +183,7 @@ export default function ContactoSoporte() {
     setError("");
     setMensajeExito("");
 
-    // Validación básica de campos vacíos
+    //Validación básica de campos vacíos
     if (
       !formData.name ||
       !formData.email ||
@@ -194,7 +194,7 @@ export default function ContactoSoporte() {
       return;
     }
 
-    // --- INTEGRACIÓN DE LA VALIDACIÓN AVANZADA ---
+    //INTEGRACIÓN DE LA VALIDACIÓN AVANZADA
     const errorMensaje = validarMensaje(formData.message);
     if (errorMensaje) {
       setError(errorMensaje);

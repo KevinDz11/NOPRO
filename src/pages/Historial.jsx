@@ -3,10 +3,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
-
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// --- COMPONENTE LISTA DE DOCUMENTOS ---
+//COMPONENTE LISTA DE DOCUMENTOS
 const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
   if (!documentos || documentos.length === 0) {
     return (
@@ -19,13 +18,13 @@ const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
   return (
     <ul className="space-y-3">
       {documentos.map((doc, idx) => {
-        // Generar URL pública para ver el archivo original
+        //Generar URL pública para ver el archivo original
         const nombreArchivo = doc.archivo_url
           ? doc.archivo_url.split(/[\\/]/).pop()
           : "archivo.dat";
         const urlPublica = `${API_URL}/uploads/${nombreArchivo}`;
 
-        // Verificamos si tiene análisis para habilitar el botón
+        //Verificamos si tiene análisis para habilitar el botón
         const tieneAnalisis = doc.analisis_ia && doc.analisis_ia.length > 0;
 
         return (
@@ -74,18 +73,18 @@ const ListaDocumentos = ({ documentos, grupo, onVerReporte }) => {
   );
 };
 
-// --- COMPONENTE PRINCIPAL ---
+//COMPONENTE PRINCIPAL
 export default function HistorialProductos() {
   useAuthListener();
   const [productosAgrupados, setProductosAgrupados] = useState([]);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [abriendoReporte, setAbriendoReporte] = useState(false); // Nuevo estado para feedback visual
+  const [abriendoReporte, setAbriendoReporte] = useState(false); //Nuevo estado para feedback visual
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔥 NUEVA FUNCIÓN: Obtiene el documento fresco desde el backend
-  // Esto fuerza a que se recalculen las normas con tu lógica Python más reciente
+  //Obtiene el documento fresco desde el backend
+  //Esto fuerza a que se recalculen las normas la lógica de Python más reciente
   const fetchDocFresco = async (id_documento) => {
     const token = localStorage.getItem("authToken");
     const res = await fetch(`${API_URL}/documentos/${id_documento}`, {
@@ -95,17 +94,17 @@ export default function HistorialProductos() {
     return await res.json();
   };
 
-  // --- FUNCIÓN INDIVIDUAL: Abre en nueva pestaña ---
+  //Abre en nueva pestaña
   const handleVerReporte = async (doc, grupo) => {
     if (abriendoReporte) return;
     setAbriendoReporte(true);
 
     try {
-      // 1. Pedimos la versión más nueva del documento al backend (recalcula normas)
+      //Pedimos la versión más nueva del documento al backend (recalcula normas)
       const docFresco = await fetchDocFresco(doc.id_documento);
 
       const datosParaReporte = {
-        ...docFresco, // Usamos la data fresca, no la de la lista
+        ...docFresco, //Usamos la data fresca, no la de la lista
         titulo_reporte: `Reporte de ${docFresco.nombre}`,
         tipo_vista: "individual",
         categoria_producto: grupo.tipo,
@@ -123,11 +122,11 @@ export default function HistorialProductos() {
     }
   };
 
-  // --- FUNCIÓN GENERAL: Abre reporte unificado ---
+  //FUNCIÓN GENERAL: Abre reporte unificado
   const handleVerReporteGeneral = async (grupo) => {
     if (abriendoReporte) return;
 
-    // 1. Filtrar documentos que tienen análisis (en la lista básica)
+    //Filtrar documentos que tienen análisis
     const docsConAnalisisPreview = grupo.documentos.filter(
       (d) => d.analisis_ia && d.analisis_ia.length > 0
     );
@@ -140,13 +139,13 @@ export default function HistorialProductos() {
     setAbriendoReporte(true);
 
     try {
-      // 2. Obtener DATA FRESCA para TODOS los documentos del grupo
-      // Para que el reporte web muestre las normas corregidas
+      //Obtener DATA FRESCA para TODOS los documentos del grupo
+      //Para que el reporte web muestre las normas corregidas
       const docsFrescos = await Promise.all(
         docsConAnalisisPreview.map((d) => fetchDocFresco(d.id_documento))
       );
 
-      // 3. Construir objeto de reporte general
+      //Construir objeto de reporte general
       const datosGeneral = {
         titulo_reporte: `Reporte General Unificado - ${grupo.marca}`,
         tipo_vista: "general",
@@ -154,10 +153,10 @@ export default function HistorialProductos() {
         marca_producto: grupo.marca,
         modelo_producto: grupo.modelo,
 
-        // IDs para el PDF backend
+        //IDs para el PDF backend
         ids_documentos: docsFrescos.map((d) => d.id_documento),
 
-        // Sub-reportes para la vista frontend (Usando data fresca)
+        //Sub-reportes para la vista frontend
         sub_reportes: docsFrescos.map((doc) => ({
           titulo: doc.nombre,
           data: doc,
@@ -204,34 +203,33 @@ export default function HistorialProductos() {
   };
 
   useEffect(() => {
-  const fetchProductos = async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    const fetchProductos = async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-    try {
-      const response = await fetch(`${API_URL}/productos/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const response = await fetch(`${API_URL}/productos/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      if (!response.ok) throw new Error("Error al cargar historial");
+        if (!response.ok) throw new Error("Error al cargar historial");
 
-      const data = await response.json();
-      const agrupados = agruparProductos(data);
-      setProductosAgrupados(agrupados);
-    } catch (e) {
-      console.error(e);
-      setError("No se pudo cargar el historial.");
-    } finally {
-      setCargando(false);
-    }
-  };
+        const data = await response.json();
+        const agrupados = agruparProductos(data);
+        setProductosAgrupados(agrupados);
+      } catch (e) {
+        console.error(e);
+        setError("No se pudo cargar el historial.");
+      } finally {
+        setCargando(false);
+      }
+    };
 
-  fetchProductos();
-}, [location.pathname]);
-
+    fetchProductos();
+  }, [location.pathname, navigate]);
 
   const handleEliminar = async (grupo) => {
     if (!window.confirm("¿Estás seguro de eliminar este historial completo?"))

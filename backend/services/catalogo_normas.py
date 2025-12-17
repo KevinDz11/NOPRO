@@ -1,10 +1,6 @@
 # backend/services/catalogo_normas.py
 
 CATALOGO_NORMAS = {
-
-    # ==========================================================
-    # LAPTOP
-    # ==========================================================
   "Laptop": {
 
     "NOM-001-SCFI-2018": {
@@ -73,7 +69,6 @@ CATALOGO_NORMAS = {
             ]
         },
 
-        # 🔥 AGREGADO: La que pediste en lugar de la NOM-019
         "NMX-J-640-ANCE-2010": {
             "nombre": "Identificación y marca",
             "descripcion": "Datos del producto, modelo y marcaje de marca.",
@@ -85,10 +80,6 @@ CATALOGO_NORMAS = {
         }
     },
 
-
-    # ==========================================================
-    # SMART TV
-    # ==========================================================
     "SmartTV": {
 
         "NOM-001-SCFI-2018": {
@@ -212,9 +203,6 @@ CATALOGO_NORMAS = {
         }
     },
 
-    # ==========================================================
-    # LUMINARIA
-    # ==========================================================
     "Luminaria": {
 
         "NMX-J-038/1-ANCE-2005": {

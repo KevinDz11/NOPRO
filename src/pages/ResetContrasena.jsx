@@ -7,19 +7,16 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function ResetContrasena() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
   const [token, setToken] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [verificaContrasena, setVerificaContrasena] = useState("");
-
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarVerifica, setMostrarVerifica] = useState(false);
-
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
 
-  // Obtener el token de la URL al cargar
+  //Obtener el token de la URL al cargar
   useEffect(() => {
     const tokenDeURL = searchParams.get("token");
     if (tokenDeURL) {
@@ -29,7 +26,7 @@ export default function ResetContrasena() {
     }
   }, [searchParams]);
 
-  // Validaciones
+  //Validaciones
   const longitudValida = contrasena.length >= 8;
   const tieneMayuscula = /[A-Z]/.test(contrasena);
   const tieneNumero = /\d/.test(contrasena);
@@ -76,7 +73,7 @@ export default function ResetContrasena() {
       localStorage.removeItem("authToken");
       localStorage.removeItem("auth");
 
-      // Espera 3 segundos y redirige al login
+      //Espera 3 segundos y redirige al login
       setTimeout(() => {
         navigate("/login");
       }, 3000);
@@ -91,7 +88,7 @@ export default function ResetContrasena() {
     }
   };
 
-  // Componente auxiliar para los items de validación
+  //Componente auxiliar para los items de validación
   const RequisitoItem = ({ valido, texto }) => (
     <li
       className={`flex items-center gap-2 text-xs font-medium transition-colors duration-300 ${

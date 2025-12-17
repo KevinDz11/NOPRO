@@ -8,16 +8,16 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const PerfilUsuario = () => {
   useAuthListener();
 
-  // Estados para datos del usuario
+  //Estados para datos del usuario
   const [nombre, setNombre] = useState("Cargando...");
   const [correo, setCorreo] = useState("Cargando...");
 
-  // Estados para UI
+  //Estados para UI
   const [error, setError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
   const [cargando, setCargando] = useState(false);
 
-  // Modales
+  //Modales
   const [mostrarModal, setMostrarModal] = useState(false); // Modal de confirmar "¿Estás seguro?"
   const [mostrarModalExito, setMostrarModalExito] = useState(false); // Nuevo Modal de éxito (Verde)
 
@@ -57,11 +57,11 @@ const PerfilUsuario = () => {
     fetchUserData();
   }, [navigate]);
 
-  // Lógica de eliminación MEJORADA (Sin alert feo)
+  // Lógica de eliminación
   const ejecutarEliminacion = async () => {
     setError("");
     setMensajeExito("");
-    setMostrarModal(false); // Cerramos el modal de pregunta
+    setMostrarModal(false);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -71,7 +71,6 @@ const PerfilUsuario = () => {
 
     setCargando(true);
     try {
-      // Nota: Asegúrate de que en tu backend la ruta /me esté ANTES que /{id}
       const response = await fetch(`${API_URL}/clientes/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -79,17 +78,14 @@ const PerfilUsuario = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Convertimos el error a texto para que no salga [object Object]
         const mensajeError = JSON.stringify(errorData, null, 2);
         throw new Error(mensajeError);
       }
 
-      // ÉXITO: Limpiamos todo y mostramos el modal bonito
       localStorage.clear();
       setMostrarModalExito(true);
     } catch (err) {
       console.error("Error eliminando cuenta:", err);
-      // Aquí sí usamos alert o setError para errores técnicos
       alert("No se pudo eliminar: \n" + err.message);
       setError("Ocurrió un error. Revisa la consola.");
     } finally {
@@ -101,7 +97,6 @@ const PerfilUsuario = () => {
     setMostrarModal(true);
   };
 
-  // Función para irse al inicio cuando el usuario de click en "Entendido"
   const handleFinalizar = () => {
     window.location.href = "/";
   };
@@ -283,7 +278,7 @@ const PerfilUsuario = () => {
         </div>
       )}
 
-      {/* MODAL DE ÉXITO (VERDE - NUEVO) */}
+      {/* MODAL DE ÉXITO */}
       {mostrarModalExito && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 transition-all duration-300">
           <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full animate-bounce-in border border-white/50 text-center relative overflow-hidden">

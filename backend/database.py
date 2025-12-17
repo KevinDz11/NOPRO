@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 # Cargar variables de entorno (para local)
 load_dotenv()
 
-# 1. INTENTO PRINCIPAL: Buscar la URL que nos da Render
+#Buscar la URL que nos da Render
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# 2. INTENTO SECUNDARIO: Si no existe (estamos en local), la construimos
+#Si no existe se construye con los datos el .env
 if not DATABASE_URL:
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
@@ -20,7 +20,6 @@ if not DATABASE_URL:
     
     DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# 3. PARCHE PARA RENDER: SQLAlchemy a veces no acepta 'postgres://', requiere 'postgresql://'
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 

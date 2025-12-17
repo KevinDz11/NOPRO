@@ -1,7 +1,4 @@
-# backend/services/recomendacion_laboratorios.py
-
 from backend.services.laboratorios_catalogo import LABORATORIOS_BASE
-
 
 def recomendar_laboratorios(producto: str, normas_detectadas: list):
     recomendaciones = []

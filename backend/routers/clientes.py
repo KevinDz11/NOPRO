@@ -4,14 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from backend import crud, schemas, database, auth, models
-# IMPORTAMOS TU NUEVO SERVICIO
 from backend.services.email_service import send_email
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
-
-# --- SE ELIMINÓ LA CONFIGURACIÓN VIEJA DE FASTAPI-MAIL ---
 
 class PasswordUpdateRequest(BaseModel):
     nueva_contrasena: str = Field(..., min_length=8)
@@ -44,7 +41,6 @@ async def solicitar_reset_password(
 
         reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
 
-        # --- ENVÍO CON RESEND ---
         subject = "Restablece tu contraseña en NOPRO"
         body = f"""
         <h1>Hola {user.nombre},</h1>
@@ -88,7 +84,6 @@ async def crear_cliente(
     
     db_cliente = crud.create_cliente(db, cliente)
 
-    # --- ENVÍO CON RESEND ---
     subject = "Verifica tu cuenta en NOPRO"
     body = f"""
     <h1>Bienvenido a NOPRO, {db_cliente.nombre}</h1>
@@ -169,7 +164,6 @@ async def reenviar_correo_verificacion(
     if cliente.estado:
         raise HTTPException(status_code=400, detail="Cuenta ya verificada.")
 
-    # --- ENVÍO CON RESEND ---
     subject = "Código de verificación NOPRO"
     body = f"""
     <p>Hola {cliente.nombre}, aquí tienes tu código nuevamente:</p>

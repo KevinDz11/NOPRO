@@ -19,7 +19,7 @@ async def enviar_mensaje_soporte(
     request: SupportRequest,
     background_tasks: BackgroundTasks
 ):
-    # Cargamos credenciales
+    #CARGA CONFIGURACIÓN DE RESEND
     resend.api_key = os.getenv("RESEND_API_KEY")
     mail_from = os.getenv("MAIL_FROM")     # soporte@nopro.site
     admin_email = os.getenv("ADMIN_EMAIL") # sistema.nopro@gmail.com
@@ -27,7 +27,7 @@ async def enviar_mensaje_soporte(
     if not mail_from or not admin_email:
          raise HTTPException(status_code=500, detail="Error de configuración de email.")
 
-    # Función interna para enviar en segundo plano
+    #FUNCION PARA ENVIAR CORREO EN SEGUNDO PLANO
     def _enviar():
         try:
             resend.Emails.send({
@@ -39,7 +39,7 @@ async def enviar_mensaje_soporte(
                     <p><strong>Mensaje:</strong></p>
                     <p>{request.message}</p>
                 """,
-                "reply_to": request.email  # <--- MAGIA: Respondes directo al usuario
+                "reply_to": request.email 
             })
         except Exception as e:
             print(f"Error enviando soporte: {e}")

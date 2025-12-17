@@ -7,7 +7,7 @@ import { useAuthListener } from "../useAuthListener";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ALMACENAMIENTO = {};
 
-// Función para obtener el estado inicial limpio
+//Función para obtener el estado inicial limpio
 const getDefaultState = () => ({
   marca: "",
   modelo: "",
@@ -21,7 +21,7 @@ const getDefaultState = () => ({
   inputKeys: { manual: 0, ficha: 0, etiqueta: 0 },
 });
 
-//COMPONENTE VISUAL: MODAL DE CARGA CON PROGRESO
+//COMPONENTE VISUAL: MODAL DE CARGA
 const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
   const porcentajeVisual = Number.isFinite(porcentaje)
     ? Math.round(porcentaje)
@@ -75,7 +75,7 @@ const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
   );
 };
 
-// --- COMPONENTE VISUAL: MODAL DE ÉXITO ---
+//COMPONENTE VISUAL: MODAL DE ÉXITO
 const ModalFeedback = ({ tipo, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
     <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full animate-bounce-in border border-slate-100">
@@ -102,8 +102,6 @@ export default function SubirArchivos() {
   useAuthListener();
   const { producto } = useParams();
   const navigate = useNavigate();
-
-  //HELPER PARA CARGAR ESTADO
   const getStoredState = (prodKey) => {
     if (!ALMACENAMIENTO[prodKey]) {
       ALMACENAMIENTO[prodKey] = getDefaultState();
@@ -113,7 +111,7 @@ export default function SubirArchivos() {
 
   const initialState = getStoredState(producto);
 
-  // Estados locales
+  //Estados locales
   const [marca, setMarca] = useState(initialState.marca);
   const [modelo, setModelo] = useState(initialState.modelo);
 
@@ -134,7 +132,7 @@ export default function SubirArchivos() {
     initialState.resultadoEtiqueta
   );
 
-  // UI States
+  //UI States
   const [loading, setLoading] = useState(false);
   const [loadingType, setLoadingType] = useState("");
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -286,7 +284,6 @@ export default function SubirArchivos() {
 
     updateProgreso(tipoArchivo, 0);
 
-    //Intervalo de simulación fluido
     const simulationInterval = setInterval(() => {
       setProgreso((prev) => {
         const current = prev[tipoArchivo] || 0;

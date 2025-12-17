@@ -23,10 +23,9 @@ class Producto(Base):
 
     id_producto = Column(Integer, primary_key=True, index=True)
     id_cliente = Column(Integer, ForeignKey("clientes.id_cliente"))
-    nombre = Column(String(100), nullable=False) # Tipo (Laptop, etc)
-    marca = Column(String(100), nullable=True)   # <-- CAMBIO AÑADIDO
-    descripcion = Column(String(255)) # Modelo
-    # Valor por defecto para fecha_registro
+    nombre = Column(String(100), nullable=False)
+    marca = Column(String(100), nullable=True)
+    descripcion = Column(String(255))
     fecha_registro = Column(TIMESTAMP, server_default=func.now())
 
     cliente = relationship("Cliente", back_populates="productos")

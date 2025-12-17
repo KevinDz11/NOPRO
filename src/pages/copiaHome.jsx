@@ -3,14 +3,10 @@ import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
 import { Link } from "react-router-dom";
 
-// Eliminamos la verificación global que estaba aquí arriba
-
-// Componente de Tarjeta (Estilo Landing Page)
 function TarjetaLanding({ titulo, icono, descripcion, ruta, isAuthenticated }) {
-  // Recibimos isAuthenticated como prop
   return (
     <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 flex flex-col h-full transition-transform hover:-translate-y-1">
-      <div className="flex-grow flex flex-col items-center text-center">
+      <div className="grow flex flex-col items-center text-center">
         <div className="text-5xl mb-6 filter drop-shadow-sm">{icono}</div>
         <h2 className="font-bold text-2xl text-slate-800 mb-3">{titulo}</h2>
         <p className="text-slate-500 text-sm leading-relaxed mb-8">
@@ -26,7 +22,6 @@ function TarjetaLanding({ titulo, icono, descripcion, ruta, isAuthenticated }) {
             </button>
           </Link>
         ) : (
-          /* BOTÓN BLOQUEADO (Este es el que quieres ver al salir) */
           <button
             disabled
             className="w-full py-3.5 rounded-xl font-bold text-slate-400 bg-slate-200 border border-slate-300 cursor-not-allowed flex items-center justify-center gap-2 select-none"
@@ -54,9 +49,6 @@ function TarjetaLanding({ titulo, icono, descripcion, ruta, isAuthenticated }) {
 
 export default function CopiaHome() {
   const [tourOpen, setTourOpen] = useState(false);
-
-  // --- CORRECCIÓN: Mover la verificación DENTRO del componente ---
-  // Esto asegura que se vuelva a calcular cada vez que entras a la página
   const isAuthenticated = localStorage.getItem("auth") === "true";
 
   const steps = [
@@ -73,8 +65,7 @@ export default function CopiaHome() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative overflow-hidden">
-      {/* Fondo sutil */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white to-slate-100 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-white to-slate-100 -z-10"></div>
 
       <Joyride
         steps={steps}
@@ -125,7 +116,6 @@ export default function CopiaHome() {
                 Ir al Panel Principal
               </Link>
             ) : (
-              /* ESTO es lo que verás ahora al cerrar sesión (Imagen 2) */
               <>
                 <Link
                   to="/login"

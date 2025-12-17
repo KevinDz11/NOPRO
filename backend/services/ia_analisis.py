@@ -3,16 +3,12 @@ import re
 import spacy
 from unidecode import unidecode
 from backend.services import ia_vision
-from backend.services.criterios import CRITERIOS_POR_PRODUCTO  # ✅ ESTA
+from backend.services.criterios import CRITERIOS_POR_PRODUCTO
 
-
-# =========================================================================
 #  CONFIGURACIÓN SPACY (LAZY LOADING)
-# =========================================================================
 _nlp_instance = None
-
+ #Carga el modelo spaCy solo cuando se necesita.
 def get_nlp():
-    """Carga el modelo spaCy solo cuando se necesita."""
     global _nlp_instance
     if _nlp_instance is None:
         try:
@@ -46,9 +42,7 @@ YOLO_A_NORMA = {
     "marca": "NOM-024-SCFI-2013"
 }
 
-# =========================================================================
-#  DETECCIÓN DE ÍNDICE / TABLA DE CONTENIDO
-# =========================================================================
+#DETECCIÓN DE ÍNDICE / TABLA DE CONTENIDO
 
 PATRONES_INDICE = [
     r"\bindice\b",
@@ -56,22 +50,16 @@ PATRONES_INDICE = [
     r"\bcontenido\b",
     r"\bcap[ií]tulo\b\s+\d+",
     r"\bsecci[oó]n\b\s+\d+",
-    r"\.{3,}\s*\d+$",      # ........ 12
+    r"\.{3,}\s*\d+$",
     r"\bpag\.\s*\d+",
 ]
 
 
-
-# =========================================================================
-#  FUNCIONES DE EXTRACCIÓN Y ANÁLISIS
-# =========================================================================
-
+#FUNCIONES DE EXTRACCIÓN Y ANÁLISIS
+#Extrae texto y genera un objeto DOC de spaCy por página.
 def extraer_documento_spacy(ruta_pdf):
-    """
-    Extrae texto y genera un objeto DOC de spaCy por página.
-    """
     docs_paginas = []
-    nlp = get_nlp() # <--- LAZY LOADING: Aquí se carga Spacy
+    nlp = get_nlp() #LAZY LOADING: Aquí se carga Spacy
     
     try:
         with pdfplumber.open(ruta_pdf) as pdf:
@@ -97,10 +85,8 @@ def extraer_documento_spacy(ruta_pdf):
         print(f"Error leyendo PDF: {e}")
     return docs_paginas
 
+#Determina si una página corresponde a un índice o tabla de contenido.
 def es_pagina_indice(texto: str) -> bool:
-    """
-    Determina si una página corresponde a un índice o tabla de contenido.
-    """
     if not texto:
         return False
 
@@ -114,20 +100,13 @@ def es_pagina_indice(texto: str) -> bool:
     # Si cumple varios criterios, se considera índice
     return coincidencias >= 2
 
-
+#ANÁLISIS PRINCIPAL CON SPACY Y REGEX
 def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=None):
-    """
-    Analiza el documento usando spaCy (por oraciones) y Regex para patrones normativos.
-    Incluye extracción de valores técnicos (PASO 6).
-    Mantiene análisis VISUAL para Etiqueta.
-    """
     resultados = []
 
-    # ==============================================================
-    # 1. ANÁLISIS DE TEXTO (Ficha Técnica / Manual)
-    # ==============================================================
+    #ANÁLISIS DE TEXTO (Ficha Técnica / Manual)
     if tipo_doc != "Etiqueta":
-        print(f"📄 Analizando TEXTO (Motor spaCy) para {tipo_doc} de {categoria_producto}...")
+        print(f"Analizando TEXTO (Motor spaCy) para {tipo_doc} de {categoria_producto}...")
 
         prod_criterios = CRITERIOS_POR_PRODUCTO.get(categoria_producto, {})
         normas_a_buscar = prod_criterios.get(tipo_doc, {})
@@ -146,7 +125,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
 
                         for pag_data in docs_paginas:
 
-                            # 🚫 DESCARTAR ÍNDICE
+                            #DESCARTAR ÍNDICE
                             if pag_data.get("es_indice"):
                                 continue
 
@@ -160,9 +139,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
 
                                 texto_lower = sent.text.lower()
 
-                                # -----------------------------
-                                # Detección simple de sección
-                                # -----------------------------
+                                #Detección simple de sección
                                 seccion = "General"
                                 if any(w in texto_lower for w in ["advertencia", "precaucion", "riesgo"]):
                                     seccion = "Advertencias"
@@ -173,9 +150,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                                 elif any(w in texto_lower for w in ["mantenimiento", "limpieza"]):
                                     seccion = "Mantenimiento"
 
-                                # -----------------------------
-                                # PASO 6: extracción de valores técnicos
-                                # -----------------------------
+                                #Extracción de valores técnicos
                                 valores = extraer_valores_tecnicos(sent.text)
 
                                 hallazgo = f"Declaración explícita de {categoria.lower()}"
@@ -194,15 +169,12 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                                 })
 
     else:
-        print(f"⏩ OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
+        print(f"OMITIENDO análisis de texto para {tipo_doc} (Se requiere solo Visual).")
 
 
-
-    # ==============================================================
-    # 2. ANÁLISIS VISUAL (ETIQUETA)
-    # ==============================================================
+    #ANÁLISIS VISUAL (ETIQUETA)
     if ruta_pdf.lower().endswith(".pdf") and tipo_doc == "Etiqueta":
-        print(f"\n--- 🔍 DEBUG VISUAL (Solo Etiqueta) ---")
+        print(f"\n--- DEBUG VISUAL (Solo Etiqueta) ---")
         try:
             hallazgos = ia_vision.analizar_imagen_pdf(ruta_pdf)
 
@@ -216,7 +188,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
             if yolo_list:
                 hallazgos_totales.extend(yolo_list)
 
-            # 🧩 PASO 4 — YOLO → NORMAS
+            #YOLO → NORMAS
             normas_detectadas = set()
             for h in hallazgos_totales:
                 h_lower = h.lower()
@@ -257,7 +229,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
                 })
 
         except Exception as e:
-            print(f"❌ ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
+            print(f"ERROR CRÍTICO EN ANALISIS.PY (Visual): {e}")
             resultados.append({
                 "Norma": "Error Sistema",
                 "Categoria": "Fallo en Visión",
@@ -271,9 +243,7 @@ def analizar_documento(ruta_pdf, tipo_doc, categoria_producto, marca_esperada=No
 
 
 def extraer_valores_tecnicos(texto: str) -> dict:
-    """
-    Extrae valores técnicos estructurados desde un texto.
-    """
+    #Extrae valores técnicos estructurados desde un texto.
     valores = {}
 
     for nombre, patron in PATRONES_TECNICOS.items():

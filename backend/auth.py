@@ -12,7 +12,7 @@ from backend import database
 from backend import models
 
 
-# --- Configuración de Seguridad ---
+#Configuración de Seguridad
 SECRET_KEY = "080361" 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -20,7 +20,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# --- Funciones de Contraseña ---
+#Funciones de Contraseña
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -30,7 +30,7 @@ def get_password_hash(password):
 def create_reset_token():
     return secrets.token_urlsafe(32)
 
-# --- Funciones de Token JWT ---
+#Funciones de Token JWT
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -41,7 +41,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# --- Dependencia de Seguridad ---
+#Dependencia de Seguridad
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     """Decodifica el token y devuelve el usuario actual de la base de datos."""
     credentials_exception = HTTPException(

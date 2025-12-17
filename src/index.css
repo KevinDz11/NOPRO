@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* --- Animaciones Personalizadas --- */
+/* Animaciones Personalizadas */
 @keyframes fade-in-up {
   0% {
     opacity: 0;

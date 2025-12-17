@@ -8,17 +8,14 @@ export default function VerificarCuenta() {
   const location = useLocation();
   const navigate = useNavigate();
   const correo = location.state?.correo || "";
-
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
-
-  // Nuevos estados
-  const [exito, setExito] = useState(false); // Para controlar la vista de éxito
-  const [mensajeExito, setMensajeExito] = useState(""); // Para mensajes de reenvío
+  const [exito, setExito] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
   const [cargandoReenvio, setCargandoReenvio] = useState(false);
 
-  // --- FUNCIÓN PARA VERIFICAR ---
+  //FUNCIÓN PARA VERIFICAR
   const handleVerificar = async () => {
     setError("");
     setMensajeExito("");
@@ -50,16 +47,11 @@ export default function VerificarCuenta() {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Error al verificar la cuenta.");
       }
-
-      // ÉXITO: Cambiamos a vista visual en lugar de alert/console.log
       setExito(true);
-
-      // Redirigir después de 3 segundos
       setTimeout(() => {
         navigate("/login");
       }, 3000);
     } catch (err) {
-      // Mantenemos el console.error solo para depuración interna de errores reales
       console.error("Error en la verificación:", err);
       setError(err.message || "Ocurrió un error inesperado.");
     } finally {
@@ -67,7 +59,7 @@ export default function VerificarCuenta() {
     }
   };
 
-  // Función para reenviar el correo
+  //Función para reenviar el correo
   const handleReenviar = async () => {
     setError("");
     setMensajeExito("");
@@ -127,7 +119,7 @@ export default function VerificarCuenta() {
           </div>
 
           {exito ? (
-            // --- VISTA DE ÉXITO ---
+            //VISTA DE ÉXITO
             <div className="flex flex-col items-center animate-fade-in text-center py-6">
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-inner animate-bounce-slow">
                 <svg
@@ -164,7 +156,7 @@ export default function VerificarCuenta() {
               </div>
             </div>
           ) : (
-            // --- VISTA DEL FORMULARIO (Original) ---
+            //VISTA DEL FORMULARIO
             <div className="animate-fade-in">
               <h3 className="text-2xl font-extrabold text-slate-900 mb-2">
                 Verificar cuenta.

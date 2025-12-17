@@ -2,11 +2,9 @@ import re
 from backend.services.catalogo_normas import CATALOGO_NORMAS
 from backend.services.criterios import CRITERIOS_POR_PRODUCTO
 
-# =====================================================
-# 🏷️ LISTA AMPLIADA DE MARCAS (Smart TV + Laptops)
-# =====================================================
+#LISTA AMPLIADA DE MARCAS (Smart TV + Laptops)
 MARCAS_COMUNES = [
-    # Principales Globales
+    #Principales Globales
     "SAMSUNG", "SAMSUNG ELECTRONICS",
     "LG", "LG ELECTRONICS", "LUCKY GOLDSTAR", "LUCKY-GOLDSTAR",
     "SONY",
@@ -17,7 +15,7 @@ MARCAS_COMUNES = [
     "ASUS",
     "ACER",
     "APPLE",
-    "MACBOOK", # A veces el OCR lee el modelo como marca
+    "MACBOOK",
     
     # TV y Monitores
     "HISENSE",
@@ -39,8 +37,8 @@ MARCAS_COMUNES = [
     "INSIGNIA",
     "ELEMENT",
     "WESTINGHOUSE",
-    "ATVIO", # Marca común en supermercados (Walmart)
-    "ONN",   # Marca propia Walmart
+    "ATVIO",
+    "ONN",
     
     # Computo y Móviles
     "XIAOMI", "MI",
@@ -67,9 +65,7 @@ MARCAS_COMUNES = [
     "SENWA"
 ]
 
-# =====================================================
-# 🔎 UTILIDAD: EXTRAER NOMs DESDE TEXTO / CONTEXTO
-# =====================================================
+#UTILIDAD: EXTRAER NOMs DESDE TEXTO / CONTEXTO
 def extraer_noms_de_texto(texto: str):
     """
     Extrae NOMs tipo:
@@ -122,10 +118,7 @@ def es_evidencia_visual(r: dict):
         return True
     return False
 
-
-# =====================================================
-# 📊 SCORE DE CONFIANZA
-# =====================================================
+#SCORE DE CONFIANZA
 def calcular_score_norma(
     categoria_producto: str,
     tipo_documento: str,
@@ -152,19 +145,14 @@ def calcular_score_norma(
     return round((detectadas / total) * 100, 2) if total > 0 else 0
 
 
-# =====================================================
-# 🧠 CONSTRUCTOR PRINCIPAL DEL CHECKLIST
-# =====================================================
+#CONSTRUCTOR PRINCIPAL DEL CHECKLIST
 def construir_resultado_normativo(
     categoria_producto: str,
     tipo_documento: str,
     resultados_ia: list
 ):
-    """
-    Construye el checklist normativo final combinando evidencias textuales y visuales.
-    """
 
-    # Normalización del tipo de documento
+    #Normalización del tipo de documento
     td = (tipo_documento or "").lower().strip()
     if "ficha" in td:
         tipo_documento = "Ficha"
@@ -178,9 +166,7 @@ def construir_resultado_normativo(
     resultado = []
     normas_catalogo = CATALOGO_NORMAS.get(categoria_producto, {})
 
-    # -------------------------------
-    # 2. Agrupar evidencias IA
-    # -------------------------------
+    #Agrupar evidencias IA
     evidencias_por_norma = {}
     normas_detectadas_visual = set()
     texto_visual_completo = ""
@@ -189,85 +175,63 @@ def construir_resultado_normativo(
         norma_r = r.get("Norma", "")
         contexto = r.get("Contexto", "") or ""
 
-        # =============================
-        # VISUAL (cualquier evidencia visual)
-        # =============================
+        #VISUAL (cualquier evidencia visual)
         if es_evidencia_visual(r):
             # Acumular texto visual para reglas por norma
             texto_visual_completo += " " + contexto
 
-            # a) NOMs completas en el contexto
+            #NOMs completas en el contexto
             for nom in extraer_noms_de_texto(contexto):
                 normas_detectadas_visual.add(nom)
 
-            # b) NOM genérico (palabra sola)
+            #NOM genérico (palabra sola)
             if re.search(r"(?<![A-Z0-9-])NOM(?![A-Z0-9-])", contexto.upper()):
                 normas_detectadas_visual.add("NOM")
 
-            # c) Logos detectados
+            #Logos detectados
             for n in r.get("NormasDetectadas", []) or []:
                 normas_detectadas_visual.add(normalizar_logo_visual(n))
                 texto_visual_completo += " " + str(n)
 
             continue
 
-        # =============================
         # TEXTUAL (spaCy/regex)
-        # =============================
         if norma_r:
             evidencias_por_norma.setdefault(norma_r, []).append(r)
 
     texto_visual_completo = (texto_visual_completo or "").lower()
 
-    # =====================================================
-    # ✅ REGLAS DE VALIDACIÓN VISUAL (DINÁMICAS)
-    # =====================================================
-    
+    #REGLAS DE VALIDACIÓN VISUAL (DINÁMICAS)
     def val_nom_106():
-        """Identifica NOM"""
         if "NOM" in normas_detectadas_visual:
             return True
         return bool(re.search(r"(?<![a-z0-9-])nom(?![a-z0-9-])", texto_visual_completo))
 
     def val_nmx_60950():
-        """Identifica doble aislamiento, choque eléctrico, NOM-CE, NOM-UL, NOM-NYCE"""
         claves = ["doble aislamiento", "choque electr", "nom-ce", "nom-ul", "nom-nyce"]
         if any(x in normas_detectadas_visual for x in ["NOM-CE", "NOM-UL", "NOM-NYCE"]):
             return True
         return any(k in texto_visual_completo for k in claves)
 
     def val_nom_024():
-        """
-        Identifica contenido especial O Símbolo RAEE.
-        """
         claves = ["contenido", "cont.", "incluye", "contenido especial", "raee", "reciclado"]
         return any(k in texto_visual_completo for k in claves)
 
     def val_nmx_640():
-        """
-        Identifica marca.
-        """
-        # A) Palabra clave explícita
+        #Palabra clave explícita
         if "marca" in texto_visual_completo:
             return True
             
-        # B) Búsqueda de marcas conocidas (dinámico)
+        #Búsqueda de marcas conocidas (dinámico)
         for marca in MARCAS_COMUNES:
-            # Buscamos la marca como palabra completa para evitar falsos positivos cortos (ej: "MI")
+            #Buscamos la marca como palabra completa para evitar falsos positivos cortos (ej: "MI")
             if re.search(rf"\b{re.escape(marca)}\b", texto_visual_completo.upper()):
                 return True
                 
         return False
 
-    # -------------------------------
-    # 3. Construir checklist final
-    # -------------------------------
+    #Construir checklist final
     for clave_norma, info in normas_catalogo.items():
-
-        # ==========================================================
-        # 🔥 FIX: FORZAR APARICIÓN EN ETIQUETA
-        # ==========================================================
-        # Forzamos estas normas específicas si es Etiqueta
         normas_forzadas_etiqueta = [
             "NOM-106-SCFI-2000",
             "NMX-I-60950-1-NYCE-2015", 
@@ -283,42 +247,42 @@ def construir_resultado_normativo(
 
         evidencias = []
 
-        # Texto
+        #Texto
         if clave_norma in evidencias_por_norma:
             evidencias.extend(evidencias_por_norma[clave_norma])
 
-        # Visual (Reglas específicas)
+        #Visual (Reglas específicas)
         cumple_visual = False
 
         if tipo_documento == "Etiqueta":
             
-            # === LAPTOP ===
+            #LAPTOP
             if categoria_producto == "Laptop":
                 if clave_norma == "NMX-I-60950-1-NYCE-2015":
                     cumple_visual = val_nmx_60950()
                 elif clave_norma == "NMX-J-640-ANCE-2010":
-                    cumple_visual = val_nmx_640() # 🔥 Nueva lógica de marca
+                    cumple_visual = val_nmx_640()
                 elif clave_norma == "NOM-106-SCFI-2000":
                     cumple_visual = val_nom_106()
                 elif clave_norma == "NOM-024-SCFI-2013":
-                    cumple_visual = val_nom_024() # 🔥 RAEE + Contenido
+                    cumple_visual = val_nom_024()
                 else:
                     cumple_visual = (clave_norma in normas_detectadas_visual)
 
-            # === SMART TV ===
+            #SMART TV
             elif categoria_producto == "SmartTV":
                 if clave_norma == "NOM-106-SCFI-2000":
                     cumple_visual = val_nom_106()
                 elif clave_norma == "NMX-I-60950-1-NYCE-2015":
                     cumple_visual = val_nmx_60950()
                 elif clave_norma == "NOM-024-SCFI-2013":
-                    cumple_visual = val_nom_024() # 🔥 RAEE + Contenido
+                    cumple_visual = val_nom_024()
                 elif clave_norma == "NMX-J-640-ANCE-2010":
-                    cumple_visual = val_nmx_640() # 🔥 Marca
+                    cumple_visual = val_nmx_640()
                 else:
                     cumple_visual = (clave_norma in normas_detectadas_visual)
 
-            # === LUMINARIA Y OTROS ===
+            #LUMINARIA Y OTROS
             else:
                 if clave_norma == "NOM-106-SCFI-2000":
                     cumple_visual = val_nom_106()
@@ -332,7 +296,7 @@ def construir_resultado_normativo(
                     "fuente": "YOLO / OCR"
                 })
 
-        # Estado Final
+        #Estado Final
         if tipo_documento == "Etiqueta":
             estado = "CUMPLE" if cumple_visual else "NO DETECTADO"
         else:

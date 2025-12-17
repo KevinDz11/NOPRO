@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import Joyride from "react-joyride";
 import logo from "../assets/logo.PNG";
-import { Link, useNavigate } from "react-router-dom"; // Importamos useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthListener } from "../useAuthListener";
 
-// ... (El código de TarjetaProducto se mantiene igual) ...
+//El código de TarjetaProducto se mantiene igual
 function TarjetaProducto({ titulo, icono, descripcion, ruta, colorBase }) {
   return (
     <div className="group relative bg-white rounded-3xl p-8 shadow-lg border border-slate-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full overflow-hidden">
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${colorBase} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+        className={`absolute inset-0 bg-linear-to-br ${colorBase} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
       ></div>
-      <div className="relative z-10 flex-grow flex flex-col items-center text-center">
+      <div className="relative z-10 grow flex flex-col items-center text-center">
         <div className="mb-6 p-4 bg-slate-50 rounded-2xl text-5xl shadow-sm group-hover:scale-110 transition-transform duration-300 border border-slate-100">
           {icono}
         </div>
@@ -49,15 +49,15 @@ function TarjetaProducto({ titulo, icono, descripcion, ruta, colorBase }) {
 export default function Home() {
   useAuthListener();
   const [tourOpen, setTourOpen] = useState(false);
-  const navigate = useNavigate(); // Hook para redirigir
+  const navigate = useNavigate();
 
-  // --- FUNCIÓN PARA CERRAR SESIÓN ---
+  //FUNCIÓN PARA CERRAR SESIÓN
   const handleLogout = () => {
-    // 1. Borramos las credenciales
+    //Borramos las credenciales
     localStorage.removeItem("authToken");
     localStorage.removeItem("auth");
 
-    // 2. Redirigimos a la raíz (Landing Page)
+    //Redirigimos a la raíz
     navigate("/");
   };
 
@@ -141,8 +141,6 @@ export default function Home() {
               Soporte
             </Link>
 
-            {/* --- BOTÓN CORREGIDO --- */}
-            {/* Ya no es un Link, es un botón que ejecuta la limpieza */}
             <button
               onClick={handleLogout}
               className="ml-4 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-red-500/30 cursor-pointer"
@@ -160,7 +158,7 @@ export default function Home() {
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
             Identificación de normas <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
               simple y rápida.
             </span>
           </h1>

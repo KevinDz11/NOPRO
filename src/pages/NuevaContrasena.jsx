@@ -9,9 +9,7 @@ export default function NuevaContrasena() {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
-
   const esCorreoValido = (correo) => /\S+@\S+\.\S+/.test(correo);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");

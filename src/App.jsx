@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import ResultadosAnalisis from "./pages/ResultadosAnalisis";
-
-// Importa tus páginas
 import Home from "./pages/Home";
 import Registro from "./pages/Registro";
 import Login from "./pages/Login";
@@ -12,7 +10,7 @@ import PerfilUsuario from "./pages/PerfilUsuario";
 import HistorialProductos from "./pages/Historial";
 import ContactoSoporte from "./pages/ContactoSoporte";
 import VerificarCuenta from "./pages/VerificarCuenta";
-import CopiaHome from "./pages/copiaHome"; // Tu página pública
+import CopiaHome from "./pages/copiaHome";
 import ListaClientes from "./pages/ListaClientes";
 import ResetContrasena from "./pages/ResetContrasena";
 
@@ -30,8 +28,7 @@ function App() {
         <Route path="/reset-password" element={<ResetContrasena />} />
 
         {/* --- RUTAS PROTEGIDAS --- */}
-        {/* Estas rutas SÍ requieren login. Las envolvemos. */}
-
+        {/* Estas rutas SÍ requieren login. */}
         <Route
           path="/Home"
           element={

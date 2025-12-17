@@ -14,12 +14,9 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best.pt")
 
-# ==========================================================
 # MAPEO YOLO → NORMA OFICIAL
-# ==========================================================
-
 YOLO_A_NORMA = {
-    # 🔴 ESPECÍFICOS PRIMERO
+    #ESPECÍFICOS PRIMERO
     "nom-nyce": "NMX-I-60950-1-NYCE-2015",
     "nyce": "NMX-I-60950-1-NYCE-2015",
     "ce": "NMX-I-60950-1-NYCE-2015",
@@ -29,17 +26,17 @@ YOLO_A_NORMA = {
     "choque electr": "NMX-I-60950-1-NYCE-2015",
     "alto voltaje": "NMX-I-60950-1-NYCE-2015",
 
-    # ♻️ RECICLADO
+    #RECICLADO
     "raee": "NOM-024-SCFI-2013",
     "reciclado": "NOM-024-SCFI-2013",
 
-    # 🟢 GENÉRICO AL FINAL
+    #GENÉRICO AL FINAL
     "nom (": "NOM-106-SCFI-2000",
 }
 
 
 
-# --- CONFIGURACIÓN DE COLORES ---
+#CONFIGURACIÓN DE COLORES
 COLOR_MAP = {
     "Samsung": "#1d4ed8",
     "LG": "#c50f46",
@@ -68,9 +65,7 @@ def get_color_for_label(label):
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-# ---------------------------
-#    THRESHOLDS POR CLASE
-# ---------------------------
+#THRESHOLDS POR CLASE
 THRESHOLDS = {
     "nom": 0.45,
     "nom-ce": 0.50,
@@ -84,21 +79,17 @@ THRESHOLDS = {
     "alto voltaje": 0.20,
 }
 
-# ---------------------------
-#      Cargar Modelo YOLO
-# ---------------------------
+#Cargar Modelo YOLO-
 try:
-    print(f"🔄 Intentando cargar modelo desde: {MODEL_PATH}")
+    print(f"Intentando cargar modelo desde: {MODEL_PATH}")
     model = YOLO(MODEL_PATH)
-    print("✅ Modelo 'best.pt' cargado exitosamente.")
+    print("Modelo 'best.pt' cargado exitosamente.")
 except Exception as e:
-    print(f"⚠️ Error cargando 'best.pt', usando fallback: {e}")
+    print(f"Error cargando 'best.pt', usando fallback: {e}")
     model = YOLO("yolov8n.pt")
 
 
-# ---------------------------
-#    Google Vision Logos
-# ---------------------------
+#Google Vision Logos
 def consultar_google_vision_avanzado(pil_image):
     detecciones = []
     nombres_simples = []
@@ -140,9 +131,7 @@ def consultar_google_vision_avanzado(pil_image):
         return [], []
 
 
-# ---------------------------
-#    APLICAR UMBRAL POR CLASE
-# ---------------------------
+#APLICAR UMBRAL POR CLASE
 def pasa_threshold(label, score):
     # Si la clase está configurada
     for key in THRESHOLDS:
@@ -152,10 +141,7 @@ def pasa_threshold(label, score):
     # Si la clase no está en el diccionario, usar 0.45 por defecto
     return score >= 0.45
 
-
-# ---------------------------
-#      ANALIZAR PDF
-# ---------------------------
+#ANALIZAR PDF
 def analizar_imagen_pdf(ruta_pdf):
     resultados = {
         "yolo_detections": [],
@@ -165,15 +151,15 @@ def analizar_imagen_pdf(ruta_pdf):
     }
 
     try:
-        print(f"📸 Procesando imagen del PDF: {os.path.basename(ruta_pdf)}")
+        print(f"Procesando imagen del PDF: {os.path.basename(ruta_pdf)}")
 
-        # 1. Leer PDF
+        #Leer PDF
         doc = fitz.open(ruta_pdf)
         page = doc.load_page(0)
         pix = page.get_pixmap(dpi=200)
         doc.close()
 
-        # 2. Convertir a PIL
+        #Convertir a PIL
         if pix.alpha:
             img = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, 4))
             pil_image = Image.fromarray(img[:, :, :3], 'RGB')
@@ -183,9 +169,7 @@ def analizar_imagen_pdf(ruta_pdf):
 
         objetos_a_dibujar = []
 
-        # -------------------------------
-        # 3. YOLO - DETECCIÓN INTERNA
-        # -------------------------------
+        #YOLO - DETECCIÓN INTERNA
         results = model(pil_image, conf=0.10, verbose=False)  # conf bajo para permitir thresholds por clase
         yolo_nombres = []
 
@@ -196,7 +180,7 @@ def analizar_imagen_pdf(ruta_pdf):
                 label = model.names[cls_id]
                 score = float(box.conf[0])
 
-                # ✔ Aplicar threshold específico por clase
+                #Aplicar threshold específico por clase
                 if not pasa_threshold(label, score):
                     continue
 
@@ -210,20 +194,15 @@ def analizar_imagen_pdf(ruta_pdf):
                 })
 
         resultados["yolo_detections"] = yolo_nombres
-        # 🧠 MAPEAR DETECCIONES YOLO → NORMAS
+        #MAPEAR DETECCIONES YOLO → NORMAS
         resultados["normas_detectadas"] = normalizar_detecciones_yolo(yolo_nombres)
 
-
-        # -------------------------------
-        # 4. GOOGLE VISION
-        # -------------------------------
+        #GOOGLE VISION
         google_objs, google_nombres = consultar_google_vision_avanzado(pil_image)
         objetos_a_dibujar.extend(google_objs)
         resultados["google_detections"] = google_nombres
 
-        # -------------------------------
-        # 5. DIBUJAR TODAS LAS CAJAS
-        # -------------------------------
+        #DIBUJAR TODAS LAS CAJAS
         draw = ImageDraw.Draw(pil_image)
         try:
             font = ImageFont.truetype("arial.ttf", 30)
@@ -246,9 +225,7 @@ def analizar_imagen_pdf(ruta_pdf):
             draw.rectangle([text_bbox[0]-5, text_y, text_bbox[2]+5, text_y+35], fill=color)
             draw.text((text_bbox[0], text_y), text, fill="white", font=font)
 
-        # -------------------------------
-        # 6. Base64 Output
-        # -------------------------------
+        #Base64 Output
         base_width = 800
         if pil_image.width > base_width:
             w_percent = (base_width / float(pil_image.width))
@@ -262,7 +239,7 @@ def analizar_imagen_pdf(ruta_pdf):
         return resultados
 
     except Exception as e:
-        print(f"❌ Error en ia_vision: {e}")
+        print(f"Error en ia_vision: {e}")
         resultados["status"] = "error"
         resultados["error"] = str(e)
         return resultados
