@@ -35,4 +35,4 @@ RUN chmod -R 777 /app/backend/uploads
 EXPOSE 8000
 
 # Usamos la ruta absoluta del módulo
-CMD ["sh", "-c", "uvicorn backend.index:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn backend.index:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]
