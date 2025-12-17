@@ -5,7 +5,6 @@ import logo from "../assets/logo.PNG";
 import { useAuthListener } from "../useAuthListener";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-// --- PERSISTENCIA POR PRODUCTO ---
 const ALMACENAMIENTO = {};
 
 // Función para obtener el estado inicial limpio
@@ -22,7 +21,7 @@ const getDefaultState = () => ({
   inputKeys: { manual: 0, ficha: 0, etiqueta: 0 },
 });
 
-// --- COMPONENTE VISUAL: MODAL DE CARGA CON PROGRESO ---
+//COMPONENTE VISUAL: MODAL DE CARGA CON PROGRESO
 const ModalCarga = ({ tipo, mensaje, porcentaje }) => {
   const porcentajeVisual = Number.isFinite(porcentaje)
     ? Math.round(porcentaje)
@@ -104,7 +103,7 @@ export default function SubirArchivos() {
   const { producto } = useParams();
   const navigate = useNavigate();
 
-  // --- HELPER PARA CARGAR ESTADO ---
+  //HELPER PARA CARGAR ESTADO
   const getStoredState = (prodKey) => {
     if (!ALMACENAMIENTO[prodKey]) {
       ALMACENAMIENTO[prodKey] = getDefaultState();
@@ -142,7 +141,7 @@ export default function SubirArchivos() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successType, setSuccessType] = useState("");
 
-  // --- EFECTO: CAMBIO DE PRODUCTO ---
+  //EFECTO: CAMBIO DE PRODUCTO
   useEffect(() => {
     const saved = getStoredState(producto);
     setMarca(saved.marca);
@@ -157,7 +156,7 @@ export default function SubirArchivos() {
     setResultadoEtiqueta(saved.resultadoEtiqueta);
   }, [producto]);
 
-  // --- WRAPPERS DE ACTUALIZACIÓN ---
+  //WRAPPERS DE ACTUALIZACIÓN
   const updateMarca = (val) => {
     setMarca(val);
     ALMACENAMIENTO[producto].marca = val;
@@ -206,6 +205,13 @@ export default function SubirArchivos() {
   const iniciarCarga = (e, tipo) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
+
+    const MAX_MB = 50;
+    if (archivo.size > MAX_MB * 1024 * 1024) {
+      alert(`El archivo es demasiado pesado. El límite es de ${MAX_MB}MB.`);
+      return;
+    }
+
     if (archivo.type !== "application/pdf") {
       alert("Solo se permiten archivos PDF.");
       return;
@@ -280,7 +286,7 @@ export default function SubirArchivos() {
 
     updateProgreso(tipoArchivo, 0);
 
-    // Intervalo de simulación fluido
+    //Intervalo de simulación fluido
     const simulationInterval = setInterval(() => {
       setProgreso((prev) => {
         const current = prev[tipoArchivo] || 0;
@@ -391,8 +397,7 @@ export default function SubirArchivos() {
     return progreso.ficha || 0;
   };
 
-  // --- COMPONENTE TARJETA ---
-  // Se eliminó la prop 'typeLabel' que no se usaba
+  //COMPONENTE TARJETA
   const RenderCard = ({
     tipoKey,
     titulo,

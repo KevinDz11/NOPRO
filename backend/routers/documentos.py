@@ -5,8 +5,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
-from datetime import datetime  # 🔥 IMPORT NECESARIO
+from datetime import datetime 
 from .. import crud, schemas, database, auth, models
+import shutil
 
 # Servicios
 from ..services import ia_analisis, pdf_report
@@ -17,16 +18,8 @@ router = APIRouter(prefix="/documentos", tags=["Documentos"])
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ============================================================
-# SCHEMA PARA REPORTE GENERAL
-# ============================================================
 class ReporteGeneralRequest(BaseModel):
     ids_documentos: List[int]
-
-# ============================================================
-# SUBIR Y ANALIZAR DOCUMENTO
-# ============================================================
-
 
 @router.post("/subir-analizar", response_model=schemas.DocumentoAnalisisOut)
 def subir_y_analizar(
@@ -44,15 +37,12 @@ def subir_y_analizar(
         id_cliente = current_user.id_cliente
         file_path = os.path.join(UPLOAD_DIR, archivo.filename)
 
-        # ----------------------------------------------------
-        # 1. Guardar archivo
-        # ----------------------------------------------------
-        with open(file_path, "wb") as f:
-            f.write(archivo.file.read())
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(archivo.file, buffer)
+        finally:
+            archivo.file.close()
 
-        # ----------------------------------------------------
-        # 2. Crear registro del documento
-        # ----------------------------------------------------
         documento_data = schemas.DocumentoCreate(
             id_cliente=id_cliente,
             id_producto=id_producto,
@@ -68,9 +58,6 @@ def subir_y_analizar(
         resultados_ia = []
         resultado_normativo = []
 
-        # ----------------------------------------------------
-        # 3. Ejecutar análisis si aplica
-        # ----------------------------------------------------
         if analizar and archivo.filename.lower().endswith(".pdf"):
             cat_map = {
                 "laptop": "Laptop",
@@ -110,9 +97,6 @@ def subir_y_analizar(
                     resultados_ia
                 )
 
-                # ------------------------------------------------
-                # 🔥 FIX CLAVE: actualizar fecha del producto
-                # ------------------------------------------------
                 producto = db.query(models.Producto).filter(
                     models.Producto.id_producto == id_producto
                 ).first()
@@ -121,9 +105,6 @@ def subir_y_analizar(
                     producto.fecha_registro = datetime.utcnow()
                     db.commit()
 
-        # ----------------------------------------------------
-        # 4. Adjuntar resultados al response
-        # ----------------------------------------------------
         doc_db.analisis_ia = resultados_ia
         doc_db.resultado_normativo = resultado_normativo
 
@@ -136,17 +117,19 @@ def subir_y_analizar(
             detail=f"Error: {str(e)}"
         )
 
+    except Exception as e:
+        print(f"❌ Error en subir_y_analizar: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error: {str(e)}"
+        )
 
-# ============================================================
 # LISTAR DOCUMENTOS
-# ============================================================
 @router.get("/", response_model=list[schemas.DocumentoAnalisisOut])
 def listar_documentos(db: Session = Depends(database.get_db)):
     return crud.get_documentos(db)
 
-# ============================================================
 # REPORTE PDF GENERAL (ARREGLADO)
-# ============================================================
 @router.post("/reporte-general-pdf")
 def generar_reporte_general_pdf(
     data: ReporteGeneralRequest,
@@ -154,7 +137,6 @@ def generar_reporte_general_pdf(
     current_user: models.Cliente = Depends(auth.get_current_user)
 ):
     try:
-        # 1. Obtener documentos
         documentos = db.query(models.Documento).filter(
             models.Documento.id_documento.in_(data.ids_documentos),
             models.Documento.id_cliente == current_user.id_cliente
@@ -163,7 +145,6 @@ def generar_reporte_general_pdf(
         if not documentos:
             raise HTTPException(status_code=404, detail="No se encontraron documentos válidos")
 
-        # 2. Construir estructura
         bloques_documentos = []
         cat_map = {
             "laptop": "Laptop", "smarttv": "SmartTV", "smart tv": "SmartTV", 
@@ -204,7 +185,7 @@ def generar_reporte_general_pdf(
             })
 
         # 3. Generar PDF
-        print(f"📄 Generando PDF unificado para {len(bloques_documentos)} docs...")
+        print(f"Generando PDF unificado para {len(bloques_documentos)} docs...")
         
         pdf_buffer = pdf_report.generar_pdf_reporte_general(
             lista_docs=bloques_documentos,
@@ -230,13 +211,11 @@ def generar_reporte_general_pdf(
     except HTTPException as he:
         raise he
     except Exception as e:
-        print(f"❌ Error PDF general: {e}")
+        print(f"Error PDF general: {e}")
         # 🔥 FIX CRITICO: Convertir error a string simple
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-# ============================================================
 # REPORTE PDF INDIVIDUAL
-# ============================================================
 @router.get("/{id_documento}/reporte-pdf")
 def descargar_reporte_pdf(
     id_documento: int,
@@ -288,7 +267,6 @@ def descargar_reporte_pdf(
             modelo_producto=modelo_prod
         )
         
-        # 🔥 FIX IMPORTANTE TAMBIÉN AQUÍ
         pdf_buffer.seek(0)
 
         filename = f"Reporte_{marca_prod}_{tipo_clean}.pdf"
@@ -304,9 +282,7 @@ def descargar_reporte_pdf(
         print(f"❌ Error generando PDF individual: {e}")
         raise HTTPException(status_code=500, detail=f"Error PDF: {str(e)}")
 
-# ============================================================
 # DETALLE DE DOCUMENTO (JSON)
-# ============================================================
 @router.get("/{id_documento}", response_model=schemas.DocumentoAnalisisOut)
 def obtener_detalle_documento(
     id_documento: int,

@@ -26,38 +26,84 @@ export default function ContactoSoporte() {
   const terminosTexto = (
     <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
       <h4 className="font-bold text-lg text-slate-900">
-        Términos y Condiciones de Uso de NOPRO
+        Términos y condiciones de uso de NOPRO
       </h4>
+
       <p>
-        <strong>1. Aceptación de los Términos:</strong> Al registrarse y
-        utilizar los servicios de NOPRO, usted acepta cumplir con estos términos
-        y condiciones. Si no está de acuerdo con alguna parte de los términos,
-        no podrá utilizar nuestros servicios de análisis de normas.
+        <strong>1. Aceptación explícita de los términos:</strong> Al registrarse
+        y utilizar los servicios de NOPRO, usted acepta de forma explícita y
+        voluntaria cumplir con estos términos y condiciones, así como con
+        nuestras políticas de privacidad. Si no está de acuerdo, no podrá
+        acceder a nuestros servicios.
       </p>
+
       <p>
-        <strong>2. Descripción del Servicio:</strong> NOPRO proporciona
-        herramientas basadas en inteligencia artificial para el análisis,
-        interpretación y gestión de normativas y documentos técnicos.
+        <strong>2. Descripción del servicio y cumplimiento legal:</strong> NOPRO
+        proporciona herramientas de IA para el análisis de normativas. Nuestra
+        política respeta estrictamente las leyes aplicables, incluyendo el
+        cumplimiento con la{" "}
+        <strong>Ley Federal de Protección de Datos Personales</strong> y
+        legislación vigente relacionada.
       </p>
+
       <p>
-        <strong>3. Responsabilidad del Usuario:</strong> El usuario es
-        responsable de mantener la confidencialidad de su cuenta y contraseña.
-        El análisis proporcionado por nuestra IA es una herramienta de apoyo y
-        no sustituye el juicio profesional o legal definitivo. NOPRO no se hace
-        responsable por decisiones tomadas basándose únicamente en los análisis
-        automáticos.
+        <strong>3. Privacidad y uso de datos personales:</strong>
+        <ul>
+          <li>
+            • <strong>Consentimiento:</strong> Sus datos personales y sensibles
+            son tratados únicamente bajo su consentimiento al aceptar estos
+            términos.
+          </li>
+          <li>
+            • <strong>Transparencia y Derechos ARCO:</strong> Usted tiene
+            derecho a acceder, modificar o eliminar su cuenta permanentemente en
+            cualquier momento.
+          </li>
+          <li>
+            • <strong>Eliminación segura:</strong> Al solicitar la baja de su
+            cuenta, sus datos se borrarán de forma segura y permanente de
+            nuestros sistemas si ya no son necesarios para fines legales.
+          </li>
+        </ul>
       </p>
+
       <p>
-        <strong>4. Privacidad y Datos:</strong> Nos comprometemos a proteger su
-        privacidad. Los documentos subidos serán utilizados únicamente para el
-        propósito del análisis solicitado y no serán compartidos con terceros
-        sin su consentimiento explícito, salvo requerimiento legal.
+        <strong>4. Seguridad de la información:</strong>
+        Implementamos medidas de seguridad robustas para proteger su
+        información:
+        <ul>
+          <li>
+            • <strong>Contraseñas:</strong> Su contraseña se almacena cifrada
+            (encriptada) en nuestra base de datos; nadie en NOPRO tiene acceso a
+            ella.
+          </li>
+          <li>
+            • <strong>Datos Sensibles:</strong> La aplicación trata cualquier
+            dato sensible con protocolos de alta seguridad.
+          </li>
+          <li>
+            • <strong>Buenas prácticas:</strong> Se exhorta al usuario a
+            proteger sus credenciales y no compartirlas. NOPRO le mantendrá
+            informado sobre nuestras medidas de seguridad vigentes.
+          </li>
+        </ul>
       </p>
+
       <p>
-        <strong>5. Modificaciones:</strong> NOPRO se reserva el derecho de
-        modificar estos términos en cualquier momento. Las modificaciones
-        entrarán en vigor inmediatamente después de su publicación en la
-        plataforma.
+        <strong>5. Responsabilidad del usuario:</strong> El usuario es
+        responsable de la confidencialidad de su acceso. El análisis de la IA es
+        una herramienta de apoyo y no sustituye el juicio profesional legal.
+        NOPRO no se hace responsable por decisiones tomadas basándose únicamente
+        en los análisis automáticos.
+      </p>
+
+      <p>
+        <strong>6. Disponibilidad y Modificaciones:</strong>
+        Estos términos detallan nuestras políticas, reglas y responsabilidades,
+        y están accesibles en todo momento en la{" "}
+        <strong>pestaña de Soporte</strong> (debajo del formulario). NOPRO se
+        reserva el derecho de modificar estos términos; los cambios entrarán en
+        vigor tras su publicación en la plataforma.
       </p>
     </div>
   );
