@@ -84,7 +84,7 @@ class ClienteOut(BaseModel):
     id_cliente: int
     nombre: str
     email: str
-    estado: bool
+    estado: str
 
     class Config:
         from_attributes = True

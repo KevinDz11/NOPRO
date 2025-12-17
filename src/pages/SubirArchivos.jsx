@@ -18,6 +18,7 @@ const getDefaultState = () => ({
   resultadoFicha: null,
   resultadoManual: null,
   resultadoEtiqueta: null,
+  estadoDocs: { ficha: null, manual: null, etiqueta: null },
   inputKeys: { manual: 0, ficha: 0, etiqueta: 0 },
 });
 
@@ -100,6 +101,7 @@ const ModalFeedback = ({ tipo, onClose }) => (
 
 export default function SubirArchivos() {
   useAuthListener();
+  const progressIntervalRef = React.useRef(null);
   const { producto } = useParams();
   const navigate = useNavigate();
   const getStoredState = (prodKey) => {
@@ -179,56 +181,136 @@ export default function SubirArchivos() {
     }
   };
 
+  useEffect(() => {
+    if (!loading || !loadingType) return;
+
+    const tipoKey =
+      loadingType === "Manual"
+        ? "manual"
+        : loadingType === "Etiqueta"
+        ? "etiqueta"
+        : "ficha";
+
+    progressIntervalRef.current = setInterval(() => {
+      setProgreso((prev) => {
+        const current = prev[tipoKey] || 0;
+        if (current >= 95) return prev;
+
+        const incremento = current < 50 ? 1.5 : 0.4;
+        return { ...prev, [tipoKey]: current + incremento };
+      });
+    }, 200);
+
+    return () => {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    };
+  }, [loading, loadingType]);
+
+  const [estadoDocs, setEstadoDocs] = useState({
+    ficha: initialState.resultadoFicha ? "finalizado" : null,
+    manual: initialState.resultadoManual ? "finalizado" : null,
+    etiqueta: initialState.resultadoEtiqueta ? "finalizado" : null,
+  });
+
   const esperarResultado = (idDocumento, tipoArchivo) => {
     const token = localStorage.getItem("authToken");
 
+    // 1️⃣ Marcar como procesando (una sola vez)
+    setEstadoDocs((prev) => {
+      const nuevo = { ...prev, [tipoArchivo]: "procesando" };
+      ALMACENAMIENTO[producto].estadoDocs = nuevo;
+      return nuevo;
+    });
+
     const interval = setInterval(async () => {
       try {
+        // 2️⃣ Consultar estado REAL del backend
         const res = await axios.get(
           `${API_URL}/documentos/${idDocumento}/estado`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const { estado, error } = res.data;
 
-        if (estado === "finalizado") {
-          clearInterval(interval);
-
-          // Obtener el documento completo
-          const docRes = await axios.get(
-            `${API_URL}/documentos/${idDocumento}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          updateResultado(tipoArchivo, docRes.data);
-          updateProgreso(tipoArchivo, 100);
-
-          setTimeout(() => {
-            setLoading(false);
-            setSuccessType(
-              tipoArchivo === "manual"
-                ? "Manual"
-                : tipoArchivo === "etiqueta"
-                ? "Etiqueta"
-                : "Ficha Técnica"
-            );
-            setShowSuccessModal(true);
-          }, 500);
-        }
-
+        // -------------------------
+        // ❌ ERROR REAL
+        // -------------------------
         if (estado === "error") {
           clearInterval(interval);
+
+          setEstadoDocs((prev) => {
+            const nuevo = { ...prev, [tipoArchivo]: "error" };
+            ALMACENAMIENTO[producto].estadoDocs = nuevo;
+            return nuevo;
+          });
+
           setLoading(false);
           alert(error || "Error procesando el documento.");
+          return;
         }
+
+        // -------------------------
+        // ⏳ AÚN PROCESANDO
+        // -------------------------
+        if (estado !== "finalizado") {
+          return;
+        }
+
+        // -------------------------
+        // 3️⃣ OBTENER DOCUMENTO COMPLETO
+        // -------------------------
+        const docRes = await axios.get(`${API_URL}/documentos/${idDocumento}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = docRes.data;
+
+        // -------------------------
+        // 🔐 VALIDACIÓN CLAVE
+        // -------------------------
+        const tieneContenido =
+          (Array.isArray(data?.resultado_normativo) &&
+            data.resultado_normativo.length > 0) ||
+          (Array.isArray(data?.analisis_ia) && data.analisis_ia.length > 0);
+
+        // Backend dice finalizado pero aún no hay datos reales
+        if (!tieneContenido) {
+          return;
+        }
+
+        // -------------------------
+        // ✅ TODO LISTO
+        // -------------------------
+        clearInterval(interval);
+
+        // 🔥 1️⃣ Forzar 100% REAL
+        updateProgreso(tipoArchivo, 100);
+
+        // 2️⃣ Guardar resultados
+        updateResultado(tipoArchivo, data);
+        setEstadoDocs((prev) => {
+          const nuevo = { ...prev, [tipoArchivo]: "finalizado" };
+          ALMACENAMIENTO[producto].estadoDocs = nuevo;
+          return nuevo;
+        });
+
+        // 🔥 3️⃣ Dejar visible el 100% antes de cerrar
+        setTimeout(() => {
+          setLoading(false);
+          setSuccessType(
+            tipoArchivo === "manual"
+              ? "Manual"
+              : tipoArchivo === "etiqueta"
+              ? "Etiqueta"
+              : "Ficha Técnica"
+          );
+          setShowSuccessModal(true);
+        }, 600); // ⏱️ 500–800 ms ideal
       } catch (e) {
         console.error("Error consultando estado:", e);
       }
-    }, 3000); // cada 3 segundos
+    }, 3000); // polling cada 3 segundos
   };
 
   const updateResultado = (tipo, data) => {
@@ -268,13 +350,6 @@ export default function SubirArchivos() {
     }
 
     updateArchivo(tipo, archivo);
-
-    let p = 0;
-    const interval = setInterval(() => {
-      p += 20;
-      updateProgreso(tipo, p > 100 ? 100 : p);
-      if (p >= 100) clearInterval(interval);
-    }, 50);
   };
 
   const limpiarArchivo = (tipo) => {
@@ -339,7 +414,7 @@ export default function SubirArchivos() {
     const simulationInterval = setInterval(() => {
       setProgreso((prev) => {
         const current = prev[tipoArchivo] || 0;
-        if (current >= 90) return prev;
+        if (current >= 95) return prev;
         const incremento = current < 50 ? 2 : 0.5;
         return { ...prev, [tipoArchivo]: current + incremento };
       });
@@ -384,15 +459,8 @@ export default function SubirArchivos() {
       );
 
       clearInterval(simulationInterval);
-      updateProgreso(tipoArchivo, 100);
       const { id_documento } = response.data;
       esperarResultado(id_documento, tipoArchivo);
-      setSuccessType(nombreUI);
-
-      setTimeout(() => {
-        setLoading(false);
-        setShowSuccessModal(true);
-      }, 600);
     } catch (error) {
       clearInterval(simulationInterval);
       updateProgreso(tipoArchivo, 0);
@@ -551,7 +619,7 @@ export default function SubirArchivos() {
             >
               {result ? "Analizado" : "Analizar"}
             </button>
-            {result && (
+            {estadoDocs[tipoKey] === "finalizado" && result && (
               <button
                 onClick={() => verReportePDF(result, `Reporte ${titulo}`)}
                 className={`py-2 px-3 rounded-lg font-bold text-xs ${textDark} ${bgLight} border border-slate-200 hover:bg-white`}
