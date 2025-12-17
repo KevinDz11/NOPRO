@@ -113,7 +113,7 @@ class DocumentoMeOut(BaseModel):
     id_documento: int
     nombre: str
     archivo_url: str
-    analisis_ia: List[dict] = []
+    analisis_ia: Optional[List[Any]] = None
 
     class Config:
         from_attributes = True
